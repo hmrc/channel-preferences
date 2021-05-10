@@ -10,7 +10,7 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "simple-reactivemongo"       % "7.31.0-play-27",
     "uk.gov.hmrc"             %% "emailaddress"               % "3.5.0",
     "com.typesafe.play"       %% "play-json-joda"             % "2.7.3",
-    "org.typelevel"           %% "cats-core"                  % "2.5.0"
+    "org.typelevel"           %% "cats-core"                  % "2.6.0"
   )
 
   // The fork of swagger-play requires a version of jackson-databind version >= 2.9.0 and < 2.10.0
