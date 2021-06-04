@@ -20,8 +20,9 @@ import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
+
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 @SuppressWarnings(Array("org.wartremover.warts.All"))
@@ -39,6 +40,15 @@ class PreferenceController @Inject()(
         case Left(NOT_FOUND)       => NotFound
         case Left(NOT_IMPLEMENTED) => NotImplemented
         case Left(_)               => BadGateway
+      }
+    }
+
+  def activate(entityId: String, itsaId: String): Action[AnyContent] =
+    Action.async {
+      if (entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
+        Future.successful(Ok(s"$entityId $itsaId"))
+      } else {
+        Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d $itsaId"))
       }
     }
 }

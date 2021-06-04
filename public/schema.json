@@ -53,6 +53,27 @@
         "tags" : [ "app" ]
       }
     },
+    "/channel-preferences/activate/{entityId}/itsa/{itsaId}" : {
+      "get" : {
+        "operationId" : "activate",
+        "parameters" : [ {
+          "schema" : {
+            "type" : "string"
+          },
+          "in" : "path",
+          "name" : "entityId",
+          "required" : true
+        }, {
+          "schema" : {
+            "type" : "string"
+          },
+          "in" : "path",
+          "name" : "itsaId",
+          "required" : true
+        } ],
+        "tags" : [ "app" ]
+      }
+    },
     "/{path}" : {
       "patch" : {
         "operationId" : "proxy",
@@ -119,7 +140,7 @@
   "produces" : [ "application/json" ],
   "info" : {
     "title" : "Channel Preferences API",
-    "version" : "0.15.0-SNAPSHOT"
+    "version" : "0.19.0-SNAPSHOT"
   },
   "consumes" : [ "application/json" ],
   "tags" : [ {
