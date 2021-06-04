@@ -17,6 +17,7 @@
 package uk.gov.hmrc.channelpreferences.controllers
 
 import akka.stream.Materializer
+import controllers.Assets.CONFLICT
 import org.joda.time.DateTime
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
@@ -71,6 +72,29 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       status(response) mustBe OK
       contentAsString(response) mustBe validEmailVerification
     }
+  }
+  "Calling itsa activation stub endpoint " should {
+    """return OK for any "non-magic" entityId""" in new TestSetup {
+      val response = controller.activate("00000", "itsa-id").apply(FakeRequest("GET", "/"))
+      status(response) mustBe OK
+    }
+    """return CONFLICT for a "magic" entityId""" in new TestSetup {
+      val response =
+        controller.activate("450262a0-1842-4885-8fa1-6fbc2aeb867d", "itsa-id").apply(FakeRequest("GET", "/"))
+      status(response) mustBe CONFLICT
+    }
+  }
+  trait TestSetup {
+    val controller = new PreferenceController(
+      new CdsPreference {
+        override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
+          implicit hc: HeaderCarrier,
+          ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
+          Future.successful(Left(SERVICE_UNAVAILABLE))
+      },
+      Helpers.stubControllerComponents()
+    )
+
   }
 
 }
