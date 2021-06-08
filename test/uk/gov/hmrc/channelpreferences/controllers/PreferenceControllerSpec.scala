@@ -19,9 +19,9 @@ package uk.gov.hmrc.channelpreferences.controllers
 import akka.stream.Materializer
 import controllers.Assets.CONFLICT
 import org.joda.time.DateTime
-import play.api.libs.json.{ JsString, JsValue, Json }
+import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.Headers
-import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import org.mockito.ArgumentMatchers.any
@@ -34,8 +34,7 @@ import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
-import play.api.http.Status.{ BAD_GATEWAY, OK, SERVICE_UNAVAILABLE }
-import uk.gov.hmrc.auth.core.AuthConnector
+import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -123,11 +122,29 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
           any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
-      val postData: JsValue = JsString("")
+      val postData: JsValue = Json.obj()
 
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.agentEnrolment().apply(fakePostRequest)
-      status(response) mustBe 400
+      status(response) mustBe BAD_REQUEST
+    }
+    """Check for UnAuthorisation for the AffinityGroup other than Agent""" in new TestSetup {
+      when(
+        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.failed(AuthorisationException.fromString("UnsupportedAffinityGroup")))
+
+      val postData: JsValue = Json.parse(s"""
+                                            |{
+                                            |  "arn": "testARN",
+                                            |  "itsaId": "testItsaId"
+                                            |}
+      """.stripMargin)
+
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.agentEnrolment().apply(fakePostRequest)
+      status(response) mustBe UNAUTHORIZED
     }
   }
   trait TestSetup {
