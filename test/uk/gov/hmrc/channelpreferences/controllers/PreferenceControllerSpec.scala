@@ -19,6 +19,13 @@ package uk.gov.hmrc.channelpreferences.controllers
 import akka.stream.Materializer
 import controllers.Assets.CONFLICT
 import org.joda.time.DateTime
+import play.api.libs.json.{ JsString, JsValue, Json }
+import play.api.mvc.Headers
+import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -28,6 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, OK, SERVICE_UNAVAILABLE }
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,6 +49,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   private val emailVerification = EmailVerification(EmailAddress("some@email.com"), new DateTime(1987, 3, 20, 1, 2, 3))
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
+  val mockAuthConnector: AuthConnector = mock[AuthConnector]
+
   "Calling preference" should {
     "return a Bad Gateway for unexpected error status" in {
       val controller = new PreferenceController(
@@ -50,6 +60,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Left(SERVICE_UNAVAILABLE))
         },
+        mockAuthConnector,
         Helpers.stubControllerComponents()
       )
 
@@ -65,6 +76,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Right(emailVerification))
         },
+        mockAuthConnector,
         Helpers.stubControllerComponents()
       )
 
@@ -84,6 +96,40 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       status(response) mustBe CONFLICT
     }
   }
+  "Calling Agent Enrolment Stub endpoint " should {
+    """return OK for any AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
+      when(
+        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+
+      val postData: JsValue = Json.parse(s"""
+                                            |{
+                                            |  "arn": "testARN",
+                                            |  "itsaId": "testItsaId"
+                                            |}
+      """.stripMargin)
+
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.agentEnrolment().apply(fakePostRequest)
+      status(response) mustBe OK
+    }
+
+    """return 400 for missing AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
+      when(
+        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+
+      val postData: JsValue = JsString("")
+
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.agentEnrolment().apply(fakePostRequest)
+      status(response) mustBe 400
+    }
+  }
   trait TestSetup {
     val controller = new PreferenceController(
       new CdsPreference {
@@ -92,6 +138,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
           ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
           Future.successful(Left(SERVICE_UNAVAILABLE))
       },
+      mockAuthConnector,
       Helpers.stubControllerComponents()
     )
 
