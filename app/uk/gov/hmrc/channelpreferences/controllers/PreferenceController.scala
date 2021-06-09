@@ -16,21 +16,25 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
+import uk.gov.hmrc.auth.core.AffinityGroup.{ Agent, Individual }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
+import uk.gov.hmrc.channelpreferences.model._
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 @Singleton
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
+  val authConnector: AuthConnector,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(controllerComponents) {
+    extends BackendController(controllerComponents) with AuthorisedFunctions {
 
   implicit val emailWrites = uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification.emailVerificationFormat
   def preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String): Action[AnyContent] =
@@ -51,4 +55,17 @@ class PreferenceController @Inject()(
         Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d $itsaId"))
       }
     }
+
+  def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[AgentEnrolment] { enrolment =>
+      authorised(Agent or (Individual and ConfidenceLevel.L200))
+        .retrieve(Retrievals.affinityGroup) { _ =>
+          Future.successful(Ok(s"Enrolment Successful for arn: '${enrolment.arn}', itsaId :'${enrolment.itsaId}'" +
+            s", nino: '${enrolment.nino.getOrElse("n/a")}', sautr: '${enrolment.sautr.getOrElse("n/a")}'"))
+        }
+        .recoverWith {
+          case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
+        }
+    }
+  }
 }
