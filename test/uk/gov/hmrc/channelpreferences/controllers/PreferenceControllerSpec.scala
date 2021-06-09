@@ -111,7 +111,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       """.stripMargin)
 
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.agentEnrolment().apply(fakePostRequest)
+      val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe OK
     }
 
@@ -125,7 +125,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val postData: JsValue = Json.obj()
 
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.agentEnrolment().apply(fakePostRequest)
+      val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
     }
     """Check for UnAuthorisation for the AffinityGroup other than Agent""" in new TestSetup {
@@ -143,7 +143,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       """.stripMargin)
 
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.agentEnrolment().apply(fakePostRequest)
+      val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe UNAUTHORIZED
     }
   }

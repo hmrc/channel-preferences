@@ -13,7 +13,7 @@
 #     description: map all upstream error codes to 502
 ###
 GET        /channel-preferences/preference/:channel     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)
-POST       /channel-preferences/agentEnrolment          @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.agentEnrolment()
+POST       /channel-preferences/enrolment          @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 
 GET        /channel-preferences/activate/:entityId/itsa/:itsaId     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.activate(entityId: String, itsaId: String)
 GET        /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)

@@ -19,7 +19,8 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
+import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
+import uk.gov.hmrc.auth.core.AffinityGroup.{ Agent, Individual }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
@@ -55,12 +56,12 @@ class PreferenceController @Inject()(
       }
     }
 
-  def agentEnrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[AgentEnrolment] { enrolment =>
-      authorised(AffinityGroup.Agent and ConfidenceLevel.L200)
+      authorised(Agent or (Individual and ConfidenceLevel.L200))
         .retrieve(Retrievals.affinityGroup) { _ =>
-          Future.successful(
-            Ok(s"Agent Enrolment Successful for ARN:'${enrolment.arn}'and itsaId '${enrolment.itsaId}''"))
+          Future.successful(Ok(s"Enrolment Successful for arn: '${enrolment.arn}', itsaId :'${enrolment.itsaId}'" +
+            s", nino: '${enrolment.nino.getOrElse("n/a")}', sautr: '${enrolment.sautr.getOrElse("n/a")}'"))
         }
         .recoverWith {
           case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
