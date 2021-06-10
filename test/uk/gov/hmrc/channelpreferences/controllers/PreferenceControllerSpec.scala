@@ -86,12 +86,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   }
   "Calling itsa activation stub endpoint " should {
     """return OK for any "non-magic" entityId""" in new TestSetup {
-      val response = controller.activate("00000", "itsa-id").apply(FakeRequest("GET", "/"))
+      val response = controller.confirm("00000", "itsa-id").apply(FakeRequest("GET", "/"))
       status(response) mustBe OK
     }
     """return CONFLICT for a "magic" entityId""" in new TestSetup {
       val response =
-        controller.activate("450262a0-1842-4885-8fa1-6fbc2aeb867d", "itsa-id").apply(FakeRequest("GET", "/"))
+        controller.confirm("450262a0-1842-4885-8fa1-6fbc2aeb867d", "itsa-id").apply(FakeRequest("GET", "/"))
       status(response) mustBe CONFLICT
     }
   }
