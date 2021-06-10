@@ -47,7 +47,7 @@ class PreferenceController @Inject()(
       }
     }
 
-  def activate(entityId: String, itsaId: String): Action[AnyContent] =
+  def confirm(entityId: String, itsaId: String): Action[AnyContent] =
     Action.async {
       if (entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
         Future.successful(Ok(s"$entityId $itsaId"))

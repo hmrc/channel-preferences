@@ -59,7 +59,7 @@
         "tags" : [ "app" ]
       }
     },
-    "/channel-preferences/activate/{entityId}/itsa/{itsaId}" : {
+    "/channel-preferences/confirm/{entityId}/itsa/{itsaId}" : {
       "get" : {
         "operationId" : "activate",
         "parameters" : [ {
