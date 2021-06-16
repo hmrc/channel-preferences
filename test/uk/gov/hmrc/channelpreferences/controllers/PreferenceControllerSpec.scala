@@ -106,7 +106,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val postData: JsValue = Json.parse(s"""
                                             |{
                                             |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId"
+                                            |  "itsaId": "testItsaId",
+                                            |  "nino": "SB000003A",
+                                            |  "sautr": "1234567890"
                                             |}
       """.stripMargin)
 
@@ -138,7 +140,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val postData: JsValue = Json.parse(s"""
                                             |{
                                             |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId"
+                                            |  "itsaId": "testItsaId",
+                                            |  "nino": "SB000003A",
+                                            |  "sautr": "1234567890"
                                             |}
       """.stripMargin)
 

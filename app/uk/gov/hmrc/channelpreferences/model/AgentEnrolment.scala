@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.model
 
 import play.api.libs.json.{ Json, OFormat }
 
-final case class AgentEnrolment(arn: String, itsaId: String, nino: Option[String], sautr: Option[String])
+final case class AgentEnrolment(arn: String, itsaId: String, nino: String, sautr: String)
 
 object AgentEnrolment {
   implicit val format: OFormat[AgentEnrolment] = Json.format[AgentEnrolment]
