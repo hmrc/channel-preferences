@@ -130,6 +130,44 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
     }
+    """return 400 for missing sautr""" in new TestSetup {
+      when(
+        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+
+      val postData: JsValue = Json.parse(s"""
+                                            |{
+                                            |  "arn": "testARN",
+                                            |  "itsaId": "testItsaId",
+                                            |  "nino": "SB000003A"
+                                            |}
+      """.stripMargin)
+
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe BAD_REQUEST
+    }
+    """return 400 for missing nino""" in new TestSetup {
+      when(
+        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+
+      val postData: JsValue = Json.parse(s"""
+                                            |{
+                                            |  "arn": "testARN",
+                                            |  "itsaId": "testItsaId",
+                                            |  "sautr": "1234567890"
+                                            |}
+      """.stripMargin)
+
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe BAD_REQUEST
+    }
     """Check for UnAuthorisation for the AffinityGroup other than Agent""" in new TestSetup {
       when(
         mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
