@@ -61,7 +61,7 @@ class PreferenceController @Inject()(
       authorised(Agent or (Individual and ConfidenceLevel.L200))
         .retrieve(Retrievals.affinityGroup) { _ =>
           Future.successful(Ok(s"Enrolment Successful for arn: '${enrolment.arn}', itsaId :'${enrolment.itsaId}'" +
-            s", nino: '${enrolment.nino.getOrElse("n/a")}', sautr: '${enrolment.sautr.getOrElse("n/a")}'"))
+            s", nino: '${enrolment.nino}', sautr: '${enrolment.sautr}'"))
         }
         .recoverWith {
           case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
