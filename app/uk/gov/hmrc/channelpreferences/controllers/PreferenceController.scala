@@ -47,14 +47,15 @@ class PreferenceController @Inject()(
       }
     }
 
-  def confirm(entityId: String, itsaId: String): Action[AnyContent] =
-    Action.async {
-      if (entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
-        Future.successful(Ok(s"$entityId $itsaId"))
+  def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[Enrolment] { enrolment =>
+      if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
+        Future.successful(Ok(s"$enrolment"))
       } else {
-        Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d $itsaId"))
+        Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}"))
       }
     }
+  }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[AgentEnrolment] { enrolment =>

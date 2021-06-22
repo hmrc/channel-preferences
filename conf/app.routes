@@ -15,7 +15,7 @@
 GET        /channel-preferences/preference/:channel     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)
 POST       /channel-preferences/enrolment          @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 
-GET        /channel-preferences/confirm/:entityId/itsa/:itsaId     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm(entityId: String, itsaId: String)
+POST       /channel-preferences/confirm                 uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
 GET        /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
 POST       /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
 PUT        /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
