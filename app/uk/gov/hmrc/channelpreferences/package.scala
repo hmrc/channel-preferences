@@ -21,7 +21,6 @@ import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 
 package object channelpreferences {
 
-  @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
   object ChannelBinder {
     implicit def channelBinder(implicit stringBinder: PathBindable[String]): PathBindable[Channel] =
       new PathBindable[Channel] {

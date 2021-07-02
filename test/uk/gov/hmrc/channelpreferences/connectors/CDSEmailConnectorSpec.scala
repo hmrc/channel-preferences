@@ -32,7 +32,6 @@ import play.api.http.Status.{ BAD_GATEWAY, NOT_FOUND, OK }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@SuppressWarnings(Array("org.wartremover.warts.All"))
 class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   private val emailVerification = EmailVerification(EmailAddress("some@email.com"), new DateTime(1987, 3, 20, 1, 2, 3))

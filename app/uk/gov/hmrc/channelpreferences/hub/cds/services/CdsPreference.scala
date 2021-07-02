@@ -28,7 +28,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import javax.inject._
 import scala.concurrent.{ ExecutionContext, Future }
 
-@SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
 @ImplementedBy(classOf[CdsPreferenceService])
 trait CdsPreference {
   def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
@@ -36,7 +35,6 @@ trait CdsPreference {
     ec: ExecutionContext): Future[Either[Int, EmailVerification]]
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.All"))
 class CdsPreferenceService @Inject()(cdsEmailCon: CDSEmailConnector, override val auditConnector: AuditConnector)
     extends CdsPreference with Auditing {
   private val log: LoggerLike = Logger(this.getClass)

@@ -28,12 +28,11 @@ import scala.util.{ Failure, Success, Try }
 
 final case class EmailVerification(address: EmailAddress, timestamp: DateTime)
 
-@SuppressWarnings(Array("org.wartremover.warts.All"))
 object EmailVerification {
   val dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
 
   implicit object EmailAddressReads extends Reads[EmailAddress] {
-    def reads(json: JsValue) = json match {
+    def reads(json: JsValue): JsResult[EmailAddress] = json match {
       case JsString(s) =>
         Try(EmailAddress(s)) match {
           case Success(v) => JsSuccess(v)
@@ -44,7 +43,7 @@ object EmailVerification {
   }
 
   implicit object EmailAddressWrites extends Writes[EmailAddress] {
-    def writes(e: EmailAddress) = JsString(e.value)
+    def writes(e: EmailAddress): JsString = JsString(e.value)
   }
 
   implicit val emailAddressFormat = Format(EmailAddressReads, EmailAddressWrites)

@@ -30,7 +30,6 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
-@SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
 class ProxyController @Inject()(
   outboundConnector: OutboundProxyConnector
 )(implicit ec: ExecutionContext, controllerComponents: ControllerComponents)
@@ -38,11 +37,9 @@ class ProxyController @Inject()(
 
   val log: Logger = Logger(this.getClass)
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any", "org.wartremover.warts.Nothing"))
   val streamedBodyParser: BodyParser[Source[ByteString, Any]] =
     BodyParser(_ => Accumulator.source[ByteString].map((x: Source[ByteString, Any]) => Right.apply(x)))
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   def proxy(path: String): Action[Source[ByteString, _]] =
     Action.async(streamedBodyParser) { implicit request =>
       populateMdc(request)

@@ -28,7 +28,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 import javax.inject.{ Inject, Singleton }
 import scala.util.{ Failure, Success, Try }
 
-@SuppressWarnings(Array("org.wartremover.warts.All"))
 @Singleton
 class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
