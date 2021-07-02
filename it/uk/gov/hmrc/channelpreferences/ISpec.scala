@@ -18,11 +18,9 @@ package uk.gov.hmrc.channelpreferences
 
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
-import play.api.http.{ ContentTypes, HeaderNames }
-import play.api.libs.ws.{ WSClient, WSResponse }
+import play.api.libs.ws.WSClient
 import uk.gov.hmrc.integration.ServiceSpec
-import java.io.File
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 
 trait ISpec extends PlaySpec with ServiceSpec with BeforeAndAfterEach {
 
