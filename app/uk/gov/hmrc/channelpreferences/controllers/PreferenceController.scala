@@ -21,6 +21,7 @@ import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.channelpreferences.config.AppConfig
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
@@ -33,6 +34,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
   val authConnector: AuthConnector,
+  val appConfig: AppConfig,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions {
 
@@ -47,26 +49,40 @@ class PreferenceController @Inject()(
       }
     }
 
-  def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[Enrolment] { enrolment =>
-      if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
-        Future.successful(Ok(s"$enrolment"))
-      } else {
-        Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}"))
+  def confirm(): Action[JsValue] =
+    if (appConfig.itsaEnabled) {
+      Action.async(parse.json) { implicit request =>
+        withJsonBody[Enrolment] { enrolment =>
+          if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
+            Future.successful(Ok(s"$enrolment"))
+          } else {
+            Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}"))
+          }
+        }
+      }
+    } else {
+      Action(parse.json) { _ =>
+        BadRequest("Feature disabled")
       }
     }
-  }
 
-  def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[AgentEnrolment] { enrolment =>
-      authorised(Agent)
-        .retrieve(Retrievals.affinityGroup) { _ =>
-          Future.successful(Ok(s"Enrolment Successful for arn: '${enrolment.arn}', itsaId :'${enrolment.itsaId}'" +
-            s", nino: '${enrolment.nino}', sautr: '${enrolment.sautr}'"))
+  def enrolment(): Action[JsValue] =
+    if (appConfig.itsaEnabled) {
+      Action.async(parse.json) { implicit request =>
+        withJsonBody[AgentEnrolment] { enrolment =>
+          authorised(Agent)
+            .retrieve(Retrievals.affinityGroup) { _ =>
+              Future.successful(Ok(s"Enrolment Successful for arn: '${enrolment.arn}', itsaId :'${enrolment.itsaId}'" +
+                s", nino: '${enrolment.nino}', sautr: '${enrolment.sautr}'"))
+            }
+            .recoverWith {
+              case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
+            }
         }
-        .recoverWith {
-          case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
-        }
+      }
+    } else {
+      Action(parse.json) { _ =>
+        BadRequest("Feature disabled")
+      }
     }
-  }
 }
