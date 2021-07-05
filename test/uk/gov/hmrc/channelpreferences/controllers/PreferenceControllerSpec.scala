@@ -30,11 +30,13 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, status }
+import play.api.test.Helpers.{ defaultAwaitTimeout, status }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import uk.gov.hmrc.channelpreferences.config.AppConfig
 import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,6 +51,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  val mockAppConfig: AppConfig = mock[AppConfig]
 
   "Calling preference" should {
     "return a Bad Gateway for unexpected error status" in {
@@ -60,6 +63,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             Future.successful(Left(SERVICE_UNAVAILABLE))
         },
         mockAuthConnector,
+        mockAppConfig,
         Helpers.stubControllerComponents()
       )
 
@@ -76,6 +80,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             Future.successful(Right(emailVerification))
         },
         mockAuthConnector,
+        mockAppConfig,
         Helpers.stubControllerComponents()
       )
 
@@ -85,112 +90,179 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
     }
   }
   "Calling itsa activation stub endpoint " should {
-    """return OK for any "non-magic" entityId""" in new TestSetup {
-      val postData: JsValue = Json.parse(s"""{"entityId": "00000","itsaId": "itsa-id"}""")
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.confirm().apply(fakePostRequest)
-      status(response) mustBe OK
+    "when itsa.enabled is set" should {
+      """return OK for any "non-magic" entityId""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        val postData: JsValue = Json.parse(s"""{"entityId": "00000","itsaId": "itsa-id"}""")
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe OK
+      }
+      """return CONFLICT for a "magic" entityId""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        val postData: JsValue =
+          Json.parse(s"""{"entityId": "450262a0-1842-4885-8fa1-6fbc2aeb867d","itsaId": "itsa-id"}""")
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe CONFLICT
+      }
     }
-    """return CONFLICT for a "magic" entityId""" in new TestSetup {
-      val postData: JsValue =
-        Json.parse(s"""{"entityId": "450262a0-1842-4885-8fa1-6fbc2aeb867d","itsaId": "itsa-id"}""")
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.confirm().apply(fakePostRequest)
-      status(response) mustBe CONFLICT
+
+    "when itsa.enabled is unset" should {
+      """return NOT_FOUND for any "non-magic" entityId""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(false)
+        val postData: JsValue = Json.parse(s"""{"entityId": "00000","itsaId": "itsa-id"}""")
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe BAD_REQUEST
+        contentAsString(response) mustBe "Feature disabled"
+      }
     }
   }
   "Calling Agent Enrolment Stub endpoint " should {
-    """return OK for any AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+    "when itsa.enabled is set" should {
 
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "nino": "SB000003A",
-                                            |  "sautr": "1234567890"
-                                            |}
+      """return OK for any AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        when(
+          mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+            any[HeaderCarrier](),
+            any[ExecutionContext]()))
+          .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+
+        val postData: JsValue = Json.parse(s"""
+                                              |{
+                                              |  "arn": "testARN",
+                                              |  "itsaId": "testItsaId",
+                                              |  "nino": "SB000003A",
+                                              |  "sautr": "1234567890"
+                                              |}
       """.stripMargin)
 
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe OK
-    }
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.enrolment().apply(fakePostRequest)
+        status(response) mustBe OK
+      }
 
-    """return 400 for missing AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+      """return 400 for missing AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        when(
+          mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+            any[HeaderCarrier](),
+            any[ExecutionContext]()))
+          .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
-      val postData: JsValue = Json.obj()
+        val postData: JsValue = Json.obj()
 
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe BAD_REQUEST
-    }
-    """return 400 for missing sautr""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.enrolment().apply(fakePostRequest)
+        status(response) mustBe BAD_REQUEST
+      }
+      """return 400 for missing sautr""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        when(
+          mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+            any[HeaderCarrier](),
+            any[ExecutionContext]()))
+          .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "nino": "SB000003A"
-                                            |}
+        val postData: JsValue = Json.parse(s"""
+                                              |{
+                                              |  "arn": "testARN",
+                                              |  "itsaId": "testItsaId",
+                                              |  "nino": "SB000003A"
+                                              |}
       """.stripMargin)
 
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe BAD_REQUEST
-    }
-    """return 400 for missing nino""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.enrolment().apply(fakePostRequest)
+        status(response) mustBe BAD_REQUEST
+      }
+      """return 400 for missing nino""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        when(
+          mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+            any[HeaderCarrier](),
+            any[ExecutionContext]()))
+          .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "sautr": "1234567890"
-                                            |}
+        val postData: JsValue = Json.parse(s"""
+                                              |{
+                                              |  "arn": "testARN",
+                                              |  "itsaId": "testItsaId",
+                                              |  "sautr": "1234567890"
+                                              |}
       """.stripMargin)
 
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe BAD_REQUEST
-    }
-    """Check for UnAuthorisation for the AffinityGroup other than Agent""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.failed(AuthorisationException.fromString("UnsupportedAffinityGroup")))
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.enrolment().apply(fakePostRequest)
+        status(response) mustBe BAD_REQUEST
+      }
+      """Check for UnAuthorisation for the AffinityGroup other than Agent""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(true)
+        when(
+          mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+            any[HeaderCarrier](),
+            any[ExecutionContext]()))
+          .thenReturn(Future.failed(AuthorisationException.fromString("UnsupportedAffinityGroup")))
 
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "nino": "SB000003A",
-                                            |  "sautr": "1234567890"
-                                            |}
+        val postData: JsValue = Json.parse(s"""
+                                              |{
+                                              |  "arn": "testARN",
+                                              |  "itsaId": "testItsaId",
+                                              |  "nino": "SB000003A",
+                                              |  "sautr": "1234567890"
+                                              |}
       """.stripMargin)
 
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe UNAUTHORIZED
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.enrolment().apply(fakePostRequest)
+        status(response) mustBe UNAUTHORIZED
+      }
+
+    }
+    "when itsa.enabled is unset" should {
+      """return NOT_FOUND for any AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
+        when(
+          mockAppConfig.itsaEnabled
+        ).thenReturn(false)
+        when(
+          mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
+            any[HeaderCarrier](),
+            any[ExecutionContext]()))
+          .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
+
+        val postData: JsValue = Json.parse(s"""
+                                              |{
+                                              |  "arn": "testARN",
+                                              |  "itsaId": "testItsaId",
+                                              |  "nino": "SB000003A",
+                                              |  "sautr": "1234567890"
+                                              |}
+      """.stripMargin)
+
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.enrolment().apply(fakePostRequest)
+        status(response) mustBe BAD_REQUEST
+        contentAsString(response) mustBe "Feature disabled"
+      }
+
     }
   }
   trait TestSetup {
@@ -202,6 +274,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
           Future.successful(Left(SERVICE_UNAVAILABLE))
       },
       mockAuthConnector,
+      mockAppConfig,
       Helpers.stubControllerComponents()
     )
 

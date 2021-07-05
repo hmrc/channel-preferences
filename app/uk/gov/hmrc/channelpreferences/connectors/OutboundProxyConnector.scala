@@ -29,7 +29,7 @@ import play.api.http.HeaderNames._
 import play.api.http.HttpEntity.Streamed
 import play.api.mvc._
 import play.api.{ Configuration, Logger, LoggerLike }
-import uk.gov.hmrc.play.bootstrap.config.{ ServicesConfig }
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 import scala.concurrent.{ ExecutionContext, Future }
