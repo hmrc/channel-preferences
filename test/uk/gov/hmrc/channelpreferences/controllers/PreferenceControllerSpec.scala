@@ -271,6 +271,22 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       status(response) mustBe BAD_REQUEST
     }
 
+    """return BAD REQUEST (400) when the payload has an invalid [event] field format, other than a Json value""" in new TestSetup {
+      val postData: JsValue = Json.parse(s"""
+                                            |{
+                                            |    "subject": "bounced-email",
+                                            |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
+                                            |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
+                                            |    "timeStamp" : "invalid",
+                                            |    "event" : ""
+                                            |}
+    """.stripMargin)
+
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.processBounce().apply(fakePostRequest)
+      status(response) mustBe BAD_REQUEST
+    }
+
     List(
       "subject",
       "eventId",
@@ -278,7 +294,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       "timeStamp",
       "event"
     ).foreach((fieldName: String) =>
-      s"""return BAD REQUEST (400) when the payload is missing the [$fieldName] field""" in new TestSetup {
+      s"""return BAD REQUEST (400) when the [$fieldName] field is missing""" in new TestSetup {
         val postData: JsValue = Json.parse(s"""
                                               |{
                                               |    "subject": "bounced-email",
@@ -294,11 +310,44 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
                                               |        "enrolment": "HMRC-MTD-VAT~VRN~GB123456789"
                                               |    }
                                               |}
-        """.stripMargin).as[JsObject] - fieldName
+        """.stripMargin)
 
-        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-        val response = controller.processBounce().apply(fakePostRequest)
-        status(response) mustBe BAD_REQUEST
+        val postDataWithoutField = postData.as[JsObject] - fieldName
+        val fakePostRequestWithoutField =
+          FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postDataWithoutField)
+        val responseWithoutField = controller.processBounce().apply(fakePostRequestWithoutField)
+        status(responseWithoutField) mustBe BAD_REQUEST
+    })
+
+    List(
+      "subject",
+      "eventId",
+      "groupId",
+      "timeStamp"
+    ).foreach((fieldName: String) =>
+      s"""return BAD REQUEST (400) when the [$fieldName] field is empty""" in new TestSetup {
+        val postData: JsValue = Json.parse(s"""
+                                              |{
+                                              |    "subject": "bounced-email",
+                                              |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
+                                              |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
+                                              |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                                              |    "event" : {
+                                              |        "event": "failed",
+                                              |        "emailAddress": "hmrc-customer@some-domain.org",
+                                              |        "detected": "2021-04-07T09:46:29+00:00",
+                                              |        "code": 605,
+                                              |        "reason": "Not delivering to previously bounced address",
+                                              |        "enrolment": "HMRC-MTD-VAT~VRN~GB123456789"
+                                              |    }
+                                              |}
+        """.stripMargin)
+
+        val postDataWithEmptyField = postData.as[JsObject] ++ Json.obj(fieldName -> "")
+        val fakePostRequestWithEmptyField =
+          FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postDataWithEmptyField)
+        val responseWithEmptyField = controller.processBounce().apply(fakePostRequestWithEmptyField)
+        status(responseWithEmptyField) mustBe BAD_REQUEST
     })
   }
 
