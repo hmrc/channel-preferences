@@ -35,7 +35,6 @@ class DIModule(environment: Environment, configuration: Configuration) extends A
     case _  => name
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Throw"))
   private def configException(path: String) = throw new ConfigException.Missing(path)
 
   def env: Environment = environment

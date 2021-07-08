@@ -35,7 +35,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@SuppressWarnings(Array("org.wartremover.warts.All"))
 class CdsPreferenceServiceSpec extends PlaySpec with ScalaFutures with MockitoSugar with Auditing {
   override val auditConnector: AuditConnector = mock[AuditConnector]
   implicit val hc: HeaderCarrier = HeaderCarrier()

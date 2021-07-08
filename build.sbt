@@ -23,9 +23,7 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= Seq(
       "-P:silencer:pathFilters=target/.*",
       s"-P:silencer:sourceRoots=${baseDirectory.value.getCanonicalPath}",
-      "-P:wartremover:excluded:/conf/app.routes",
       "-P:silencer:pathFilters=app.routes",
-      "-P:wartremover:traverser:org.wartremover.warts.Unsafe",
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-encoding",
       "utf-8", // Specify character encoding used by source files.
@@ -98,9 +96,6 @@ lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 compileScalastyle := scalastyle.in(Compile).toTask("").value
 (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value
 
-wartremoverErrors in (Compile, compile) ++= Warts.allBut(Wart.Equals)
-wartremoverExcluded ++= routes.in(Compile).value
-addCompilerPlugin("org.wartremover" %% "wartremover" % "2.4.13" cross CrossVersion.full)
 bobbyRulesURL := Some(new URL("https://webstore.tax.service.gov.uk/bobby-config/deprecated-dependencies.json"))
 scalafmtOnCompile := true
 PlayKeys.playDefaultPort := 9052
@@ -121,7 +116,6 @@ dependencyUpdatesFilter -= moduleFilter(organization = "org.scala-lang")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.github.ghik")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.typesafe.play")
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatestplus.play")
-dependencyUpdatesFilter -= moduleFilter(organization = "org.wartremover")
 
 sources in (Compile, doc) := Seq.empty
 

@@ -28,7 +28,6 @@ import uk.gov.hmrc.channelpreferences.model._
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-@SuppressWarnings(Array("org.wartremover.warts.All"))
 @Singleton
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
@@ -67,6 +66,14 @@ class PreferenceController @Inject()(
         .recoverWith {
           case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
         }
+    }
+  }
+
+  def processBounce(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[Event] { event =>
+      Future.successful(
+        Created(s"Bounce sucessfully processed: '${event.eventId}', subject :'${event.subject}'" +
+          s", groupId: '${event.groupId}', timeStamp: '${event.timeStamp}', event: '${event.event}'"))
     }
   }
 }

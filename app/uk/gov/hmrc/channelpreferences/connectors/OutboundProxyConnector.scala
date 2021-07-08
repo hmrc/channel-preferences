@@ -34,7 +34,6 @@ import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-@SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
 @Singleton
 class OutboundProxyConnector @Inject()(config: Configuration)(
   implicit system: ActorSystem,

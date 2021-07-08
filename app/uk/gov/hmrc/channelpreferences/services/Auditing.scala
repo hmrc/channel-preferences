@@ -22,7 +22,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.EventTypes
 import scala.concurrent.ExecutionContext
 
-@SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
 trait Auditing {
   def auditConnector: AuditConnector
   protected val txnName = "transactionName"
