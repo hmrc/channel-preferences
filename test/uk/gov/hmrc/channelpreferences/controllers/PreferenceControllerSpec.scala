@@ -23,7 +23,7 @@ import play.api.mvc.Headers
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{ any, anyString }
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
@@ -35,6 +35,8 @@ import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CONFLICT, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
+import uk.gov.hmrc.channelpreferences.model.Entity
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
@@ -47,6 +49,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
 
   "Calling preference" should {
     "return a BAD GATEWAY (502) for unexpected error status" in {
@@ -58,6 +61,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             Future.successful(Left(SERVICE_UNAVAILABLE))
         },
         mockAuthConnector,
+        mockEntityResolverConnector,
         Helpers.stubControllerComponents()
       )
 
@@ -74,6 +78,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             Future.successful(Right(emailVerification))
         },
         mockAuthConnector,
+        mockEntityResolverConnector,
         Helpers.stubControllerComponents()
       )
 
@@ -86,15 +91,23 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   "Calling itsa activation stub endpoint " should {
 
     """return OK (200) for any "non-magic" entityId""" in new TestSetup {
-      val postData: JsValue = Json.parse(s"""{"entityId": "00000","itsaId": "itsa-id"}""")
+      val id = "00000"
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Entity(id, saUtr = None, nino = None, itsa = None)))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$id","itsaId": "itsa-id"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe OK
     }
 
     """return CONFLICT (409) for a "magic" entityId""" in new TestSetup {
+      val id = "450262a0-1842-4885-8fa1-6fbc2aeb867d"
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Entity(id, saUtr = None, nino = None, itsa = None)))
+
       val postData: JsValue =
-        Json.parse(s"""{"entityId": "450262a0-1842-4885-8fa1-6fbc2aeb867d","itsaId": "itsa-id"}""")
+        Json.parse(s"""{"entityId": "$id","itsaId": "itsa-id"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe CONFLICT
@@ -360,6 +373,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
           Future.successful(Left(SERVICE_UNAVAILABLE))
       },
       mockAuthConnector,
+      mockEntityResolverConnector,
       Helpers.stubControllerComponents()
     )
 

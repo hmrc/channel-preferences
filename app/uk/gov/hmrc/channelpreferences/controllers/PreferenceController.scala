@@ -21,6 +21,7 @@ import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
@@ -32,6 +33,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
   val authConnector: AuthConnector,
+  val entityResolverConnector: EntityResolverConnector,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions {
 
@@ -48,11 +50,20 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
-      if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
-        Future.successful(Ok(s"$enrolment"))
-      } else {
-        Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}"))
-      }
+      // (1) Ask the entity-resolver service to lookup the given ITSA enrolled entityId
+      entityResolverConnector
+        .resolveBy(enrolment.entityId)
+        .map { entity =>
+          assert(enrolment.entityId == entity.id)
+          (entity.saUtr, entity.nino /*, entity.itsa */ )
+
+          // TODO Implement the business logic designed by Micheal in place of the following example provided by Satya
+          if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
+            Ok(s"$enrolment")
+          } else {
+            Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}")
+          }
+        }
     }
   }
 
