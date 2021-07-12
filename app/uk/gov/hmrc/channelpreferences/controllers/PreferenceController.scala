@@ -51,7 +51,7 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
-      authorised(/* TODO Do we need to pass any affinity group here? */)
+      authorised( /* TODO Do we need to pass any affinity group here? */ )
         .retrieve(Retrievals.saUtr) {
           case authToken_saUtr =>
             doConfirmItsa(enrolment.entityId, enrolment.itsaId, authToken_saUtr)
@@ -83,21 +83,17 @@ class PreferenceController @Inject()(
     }
   }
 
-
   // ----------------------
 
-  private def doConfirmItsa(
-    passedBack_entityId: String, passedBack_itsaId: String, authToken_saUtr: Option[String])(implicit hc: HeaderCarrier
-  ): Future[Result] = {
-
+  private def doConfirmItsa(passedBack_entityId: String, passedBack_itsaId: String, authToken_saUtr: Option[String])(
+    implicit hc: HeaderCarrier): Future[Result] =
     entityResolverConnector
       .resolveBy(passedBack_entityId)
       .flatMap { resolvedEntity =>
         if (resolvedEntity.itsa.isDefined) {
           if (resolvedEntity.itsa.get == passedBack_itsaId) {
             Future.successful(Ok("itsaId successfully linked  to entityId"))
-          }
-          else {
+          } else {
             /*
              | Case 1.5 - entityId already has a different itsaId linked to it in entity resolver
              |
@@ -106,11 +102,11 @@ class PreferenceController @Inject()(
              |   Then my itsaId will not be added (i.e linked to) any entityId
              |   And an error will be generated
              */
-            Future.successful(Conflict(s"entityId already has a different itsaId linked to it in entity resolver: ${resolvedEntity.itsa.get} != ${passedBack_itsaId}"))
+            Future.successful(Conflict(
+              s"entityId already has a different itsaId linked to it in entity resolver: ${resolvedEntity.itsa.get} != $passedBack_itsaId"))
           }
-        }
-        else {
-          // entity.itsa.nonDefined means no link created yet
+        } else {
+          // entity.itsa.nonDefined, which means no link has been created yet
           if (!authToken_saUtr.isDefined) {
             /*
              | Case 1.4 - SAUTR does not exist in the  Auth token
@@ -124,8 +120,7 @@ class PreferenceController @Inject()(
               .map { _ =>
                 Ok("itsaId successfully linked  to entityid")
               }
-          }
-          else {
+          } else {
             // authToken_saUtr.isDefined
             if (resolvedEntity.saUtr.isDefined && (resolvedEntity.saUtr.get == authToken_saUtr.get)) {
               /*
@@ -140,8 +135,7 @@ class PreferenceController @Inject()(
                 .map { _ =>
                   Ok("itsaId successfully linked  to entityid")
                 }
-            }
-            else {
+            } else {
               /*
                | Case 1.2 - SAUTR in Auth token is different from  SAUTR in entity resolver
                |
@@ -175,5 +169,4 @@ class PreferenceController @Inject()(
            */
           Future.successful(NotFound("Entity ID not found"))
       }
-  }
 }
