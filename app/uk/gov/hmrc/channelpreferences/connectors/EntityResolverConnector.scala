@@ -32,14 +32,12 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
   import uk.gov.hmrc.http.HttpReads.Implicits._
   private val serviceUrl = baseUrl("entity-resolver")
 
-  def resolveBy(id: String)(implicit hc: HeaderCarrier): Future[Entity] = {
+  def resolveBy(id: String)(implicit hc: HeaderCarrier): Future[Entity] =
     httpClient.GET[Entity](s"$serviceUrl/entity-resolver/$id")
-  }
 
-  def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] = {
+  def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] =
     httpClient.PUT[Entity, Entity](
       url = s"$serviceUrl/entity-resolver/${entity.id}",
       body = entity
     )
-  }
 }

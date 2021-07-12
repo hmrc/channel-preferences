@@ -57,7 +57,8 @@ class PreferenceController @Inject()(
             doConfirmItsa(enrolment.entityId, enrolment.itsaId, authToken_saUtr)
         }
         .recoverWith {
-          case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
+          case e: AuthorisationException =>
+            Future.successful(Unauthorized(e.getMessage))
         }
     }
   }
@@ -92,7 +93,7 @@ class PreferenceController @Inject()(
       .flatMap { resolvedEntity =>
         if (resolvedEntity.itsa.isDefined) {
           if (resolvedEntity.itsa.get == passedBack_itsaId) {
-            Future.successful(Ok("itsaId successfully linked  to entityId"))
+            Future.successful(Ok("itsaId successfully linked to entityId"))
           } else {
             /*
              | Case 1.5 - entityId already has a different itsaId linked to it in entity resolver
@@ -102,8 +103,17 @@ class PreferenceController @Inject()(
              |   Then my itsaId will not be added (i.e linked to) any entityId
              |   And an error will be generated
              */
-            Future.successful(Conflict(
-              s"entityId already has a different itsaId linked to it in entity resolver: ${resolvedEntity.itsa.get} != $passedBack_itsaId"))
+            Future.successful(Unauthorized(s"entityId already has a different itsaId linked to it in entity resolver"))
+
+            // TODO Isn't the following acceptance criteria already included in Case 1.5 ???
+            /*
+             | Case 1.6 - itsaId is already linked to a different entityId in entity resolver.
+             |
+             |   Given I am a customer who has successfully enrolled in ITSA
+             |   When my itsaId is already linked to a different entityId in entity resolver
+             |   Then my itsaId will not be added (i.e linked to) any entityId
+             |   And an error will be generated
+           */
           }
         } else {
           // entity.itsa.nonDefined, which means no link has been created yet
@@ -118,7 +128,7 @@ class PreferenceController @Inject()(
             entityResolverConnector
               .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
               .map { _ =>
-                Ok("itsaId successfully linked  to entityid")
+                Ok("itsaId successfully linked to entityId")
               }
           } else {
             // authToken_saUtr.isDefined
@@ -133,7 +143,7 @@ class PreferenceController @Inject()(
               entityResolverConnector
                 .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
                 .map { _ =>
-                  Ok("itsaId successfully linked  to entityid")
+                  Ok("itsaId successfully linked to entityId")
                 }
             } else {
               /*

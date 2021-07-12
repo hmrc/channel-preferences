@@ -33,7 +33,7 @@ import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
-import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CONFLICT, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.model.Entity
@@ -88,29 +88,176 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
     }
   }
 
-  "Calling itsa activation stub endpoint " should {
+  "Calling /confirm endpoint at the end of ITSA flow" should {
 
-    """return OK (200) for any "non-magic" entityId""" in new TestSetup {
-      val id = "00000"
-      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(Entity(id, saUtr = None, nino = None, itsa = None)))
+    // Case 1.1
+    """return OK (200) upon linking the given itsaId when the SAUTR in authToken is the same as SAUTR in entity-resolver""" in new TestSetup {
+      reset(mockEntityResolverConnector)
+      reset(mockAuthConnector)
 
-      val postData: JsValue = Json.parse(s"""{"entityId": "$id","itsaId": "itsa-id"}""")
+      val authToken_saUtr = "authToken_saUtr"
+      when(
+        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some(authToken_saUtr)))
+
+      val passedBack_entityId = "passedBack_entityId"
+      val passedBack_itsaId = "passedBack_itsaId"
+
+      val resolvedEntity_saUtr = authToken_saUtr
+      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(
+          Future.successful(Entity(passedBack_entityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
+
+      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(
+          Entity(passedBack_entityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBack_itsaId))))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$passedBack_entityId", "itsaId": "$passedBack_itsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe OK
+      contentAsString(response) mustBe "itsaId successfully linked to entityId"
     }
 
-    """return CONFLICT (409) for a "magic" entityId""" in new TestSetup {
-      val id = "450262a0-1842-4885-8fa1-6fbc2aeb867d"
-      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(Entity(id, saUtr = None, nino = None, itsa = None)))
+    // Case 1.2
+    """return UNAUTHORIZED (401) when SAUTR in authToken is different from SAUTR in entity-resolver""" in new TestSetup {
+      reset(mockEntityResolverConnector)
+      reset(mockAuthConnector)
 
-      val postData: JsValue =
-        Json.parse(s"""{"entityId": "$id","itsaId": "itsa-id"}""")
+      val authToken_saUtr = "authToken_saUtr"
+      when(
+        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some(authToken_saUtr)))
+
+      val passedBack_entityId = "passedBack_entityId"
+      val passedBack_itsaId = "passedBack_itsaId"
+
+      val resolvedEntity_saUtr = "different_than_authToken_saUtr"
+      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(
+          Future.successful(Entity(passedBack_entityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$passedBack_entityId", "itsaId": "$passedBack_itsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
-      status(response) mustBe CONFLICT
+      status(response) mustBe UNAUTHORIZED
+      contentAsString(response) mustBe "SAUTR in Auth token is different from SAUTR in entity resolver"
+      verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
+    }
+
+    // Case 1.3
+    """return UNAUTHORIZED (401) when SAUTR in authToken is linked to a different entityId in entity-resolver""" in new TestSetup {
+      pending
+      // WARNING: this scenario seems already included in the previous one
+    }
+
+    // Case 1.4
+    """return OK (200) upon linking the given itsaId when SAUTR does not exist in the Auth token""" in new TestSetup {
+      reset(mockEntityResolverConnector)
+      reset(mockAuthConnector)
+
+      when(
+        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(None)) // Couldn't retrieve SAUTR from the authToken!
+
+      val passedBack_entityId = "passedBack_entityId"
+      val passedBack_itsaId = "passedBack_itsaId"
+
+      val resolvedEntity_saUtr = "resolvedEntity_saUtr"
+      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(
+          Future.successful(Entity(passedBack_entityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
+
+      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(
+          Entity(passedBack_entityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBack_itsaId))))
+
+      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(
+          Entity(passedBack_entityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBack_itsaId))))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$passedBack_entityId", "itsaId": "$passedBack_itsaId"}""")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.confirm().apply(fakePostRequest)
+      status(response) mustBe OK
+      contentAsString(response) mustBe "itsaId successfully linked to entityId"
+    }
+
+    // Case 1.5
+    """return UNAUTHORIZED (401) when entityId already has a different itsaId linked to it in entity resolver""" in new TestSetup {
+      reset(mockEntityResolverConnector)
+      reset(mockAuthConnector)
+
+      when(
+        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some("authToken_saUtr")))
+
+      val passedBack_entityId = "passedBack_entityId"
+      val passedBack_itsaId = "passedBack_itsaId"
+
+      val resolvedEntity_saUtr = "resolvedEntity_saUtr"
+      val resolvedEntity_itsaId = "different_than_passedBack_itsaId"
+      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(
+          Future.successful(
+            Entity(
+              passedBack_entityId,
+              saUtr = Some(resolvedEntity_saUtr),
+              nino = None,
+              itsa = Some(resolvedEntity_itsaId))))
+
+      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(
+          Entity(passedBack_entityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBack_itsaId))))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$passedBack_entityId", "itsaId": "$passedBack_itsaId"}""")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.confirm().apply(fakePostRequest)
+      status(response) mustBe UNAUTHORIZED
+      contentAsString(response) mustBe "entityId already has a different itsaId linked to it in entity resolver"
+      verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
+    }
+
+    // Case 1.6
+    """return UNAUTHORIZED (401) when itsaId is already linked to a different entityId in entity resolver""" in new TestSetup {
+      pending
+      // WARNING: this scenario seems already included in the previous one
+    }
+
+    // Case 2.1
+    // It seems not relevant to this channel-preferences service
+
+    // Case 3.1
+    """return NOT_FOUND (404) when the entityId passed back does not exist in entity resolver""" in new TestSetup {
+      reset(mockEntityResolverConnector)
+      reset(mockAuthConnector)
+
+      when(
+        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Some("authToken_saUtr")))
+
+      val passedBack_entityId = "passedBack_entityId"
+      val passedBack_itsaId = "passedBack_itsaId"
+
+      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(Future.failed(new Exception("Couldn't find any entity with the given identifier")))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$passedBack_entityId", "itsaId": "$passedBack_itsaId"}""")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.confirm().apply(fakePostRequest)
+      status(response) mustBe NOT_FOUND
+      contentAsString(response) mustBe "Entity ID not found"
+      verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
   }
 
