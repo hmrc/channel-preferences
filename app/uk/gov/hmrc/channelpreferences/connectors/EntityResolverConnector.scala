@@ -29,12 +29,17 @@ import scala.concurrent.{ ExecutionContext, Future }
 class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
 
+  import uk.gov.hmrc.http.HttpReads.Implicits._
   private val serviceUrl = baseUrl("entity-resolver")
 
   def resolveBy(id: String)(implicit hc: HeaderCarrier): Future[Entity] = {
-    import uk.gov.hmrc.http.HttpReads.Implicits._
     httpClient.GET[Entity](s"$serviceUrl/entity-resolver/$id")
   }
 
-  // TODO def update(entity: Entity): Future[Entity]
+  def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] = {
+    httpClient.PUT[Entity, Entity](
+      url = s"$serviceUrl/entity-resolver/${entity.id}",
+      body = entity
+    )
+  }
 }
