@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -25,6 +25,7 @@ import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -50,19 +51,13 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
-      // (1) Ask the entity-resolver service to lookup the given ITSA enrolled entityId
-      entityResolverConnector
-        .resolveBy(enrolment.entityId)
-        .map { entity =>
-          assert(enrolment.entityId == entity.id)
-          (entity.saUtr, entity.nino /*, entity.itsa */ )
-
-          // TODO Implement the business logic designed by Micheal in place of the following example provided by Satya
-          if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
-            Ok(s"$enrolment")
-          } else {
-            Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}")
-          }
+      authorised(/* TODO Do we need to pass any affinity group here? */)
+        .retrieve(Retrievals.saUtr) {
+          case authToken_saUtr =>
+            doConfirmItsa(enrolment.entityId, enrolment.itsaId, authToken_saUtr)
+        }
+        .recoverWith {
+          case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
         }
     }
   }
@@ -86,5 +81,99 @@ class PreferenceController @Inject()(
         Created(s"Bounce sucessfully processed: '${event.eventId}', subject :'${event.subject}'" +
           s", groupId: '${event.groupId}', timeStamp: '${event.timeStamp}', event: '${event.event}'"))
     }
+  }
+
+
+  // ----------------------
+
+  private def doConfirmItsa(
+    passedBack_entityId: String, passedBack_itsaId: String, authToken_saUtr: Option[String])(implicit hc: HeaderCarrier
+  ): Future[Result] = {
+
+    entityResolverConnector
+      .resolveBy(passedBack_entityId)
+      .flatMap { resolvedEntity =>
+        if (resolvedEntity.itsa.isDefined) {
+          if (resolvedEntity.itsa.get == passedBack_itsaId) {
+            Future.successful(Ok("itsaId successfully linked  to entityId"))
+          }
+          else {
+            /*
+             | Case 1.5 - entityId already has a different itsaId linked to it in entity resolver
+             |
+             |   Given I am a customer who has successfully enrolled in ITSA
+             |   When the entityId already has a different itsaId linked to it in entity resolver
+             |   Then my itsaId will not be added (i.e linked to) any entityId
+             |   And an error will be generated
+             */
+            Future.successful(Conflict(s"entityId already has a different itsaId linked to it in entity resolver: ${resolvedEntity.itsa.get} != ${passedBack_itsaId}"))
+          }
+        }
+        else {
+          // entity.itsa.nonDefined means no link created yet
+          if (!authToken_saUtr.isDefined) {
+            /*
+             | Case 1.4 - SAUTR does not exist in the  Auth token
+             |
+             |   Given I am a customer who has successfully enrolled in ITSA
+             |   When SAUTR does not exist in the Auth token
+             |   Then my itsaId will be added (i.e linked to) the entityId
+             */
+            entityResolverConnector
+              .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
+              .map { _ =>
+                Ok("itsaId successfully linked  to entityid")
+              }
+          }
+          else {
+            // authToken_saUtr.isDefined
+            if (resolvedEntity.saUtr.isDefined && (resolvedEntity.saUtr.get == authToken_saUtr.get)) {
+              /*
+               | Case 1.1 - SAUTR in Auth token is the same as SAUTR in entity resolver
+               |
+               |   Given I am a customer who has successfully enrolled in ITSA
+               |   When SAUTR in Auth token is the same as SAUTR in entity resolver
+               |   Then my itsaId will be added (i.e linked to) the entityId
+               */
+              entityResolverConnector
+                .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
+                .map { _ =>
+                  Ok("itsaId successfully linked  to entityid")
+                }
+            }
+            else {
+              /*
+               | Case 1.2 - SAUTR in Auth token is different from  SAUTR in entity resolver
+               |
+               |   Given I am a customer who has successfully enrolled in ITSA
+               |   When SAUTR in Auth token is different from  SAUTR in entity resolver
+               |   Then my itsaId will not be added (i.e linked to) any entityId
+               |   And an error will be generated
+               */
+              Future.successful(Unauthorized("SAUTR in Auth token is different from SAUTR in entity resolver"))
+
+              // TODO Isn't the following acceptance criteria already included in Case 1.2 ???
+              // Case 1.3 - SAUTR in Auth token is linked to a different entityId  in entity resolver
+              //
+              //   Given I am a customer who has successfully enrolled in ITSA
+              //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
+              //   Then my itsaId will not be added (i.e linked to) any entityId
+              //   And an error will be generated
+            }
+          }
+        }
+      }
+      .recoverWith {
+        case _: Throwable =>
+          /*
+           | Case 3.1 - entityId passed back by ITSA does not exist in entity resolver
+           |
+           |   Given I am a customer who has successfully enrolled in ITSA
+           |   When the entityId passed back does not exist in entity resolver
+           |   Then  my itsaId will not be added to any entityid
+           |   And an error will be generated
+           */
+          Future.successful(NotFound("Entity ID not found"))
+      }
   }
 }
