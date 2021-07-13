@@ -90,23 +90,16 @@ class PreferenceController @Inject()(
     implicit hc: HeaderCarrier): Future[Result] =
     entityResolverConnector
       .resolveBy(passedBackEntityId)
-      .flatMap { resolvedEntity =>
-        if (resolvedEntity.itsa.isDefined) {
-          if (resolvedEntity.itsa.get == passedBackItsaId) {
-            reply(OK, "itsaId successfully linked to entityId")
-          } else {
-            /*
-             | Case 1.5 - entityId already has a different itsaId linked to it in entity resolver
-             |
-             |   Given I am a customer who has successfully enrolled in ITSA
-             |   When the entityId already has a different itsaId linked to it in entity resolver
-             |   Then my itsaId will not be added (i.e linked to) any entityId
-             |   And an error will be generated
-             */
-            reply(UNAUTHORIZED, s"entityId already has a different itsaId linked to it in entity resolver")
+      .flatMap { entity =>
+        (entity.itsa, entity.saUtr, authTokenSaUtr) match {
 
-            // TODO Isn't the following acceptance criteria already included in Case 1.5 ???
-            /*
+          case (Some(entityItsaId), _, _) if entityItsaId == passedBackItsaId =>
+            reply(OK, "itsaId successfully linked to entityId")
+
+          case ( /* entity.itsa */ Some(_), _, _) =>
+            reply(UNAUTHORIZED, s"entityId already has a different itsaId linked to it in entity resolver")
+          // TODO Isn't the following acceptance criteria already included in this case ???
+          /*
              | Case 1.6 - itsaId is already linked to a different entityId in entity resolver.
              |
              |   Given I am a customer who has successfully enrolled in ITSA
@@ -114,57 +107,30 @@ class PreferenceController @Inject()(
              |   Then my itsaId will not be added (i.e linked to) any entityId
              |   And an error will be generated
            */
-          }
-        } else {
-          // entity.itsa.nonDefined, which means no link has been created yet
-          if (!authTokenSaUtr.isDefined) {
-            /*
-             | Case 1.4 - SAUTR does not exist in the  Auth token
-             |
-             |   Given I am a customer who has successfully enrolled in ITSA
-             |   When SAUTR does not exist in the Auth token
-             |   Then my itsaId will be added (i.e linked to) the entityId
-             */
+
+          case ( /* entity.itsa */ None, _, /* authTokenSaUtr */ None) =>
             entityResolverConnector
-              .update(resolvedEntity.copy(itsa = Some(passedBackItsaId)))
+              .update(entity.copy(itsa = Some(passedBackItsaId)))
               .flatMap { _ =>
                 reply(OK, "itsaId successfully linked to entityId")
               }
-          } else {
-            // authTokenSaUtr.isDefined
-            if (resolvedEntity.saUtr.isDefined && (resolvedEntity.saUtr.get == authTokenSaUtr.get)) {
-              /*
-               | Case 1.1 - SAUTR in Auth token is the same as SAUTR in entity resolver
-               |
-               |   Given I am a customer who has successfully enrolled in ITSA
-               |   When SAUTR in Auth token is the same as SAUTR in entity resolver
-               |   Then my itsaId will be added (i.e linked to) the entityId
-               */
-              entityResolverConnector
-                .update(resolvedEntity.copy(itsa = Some(passedBackItsaId)))
-                .flatMap { _ =>
-                  reply(OK, "itsaId successfully linked to entityId")
-                }
-            } else {
-              /*
-               | Case 1.2 - SAUTR in Auth token is different from  SAUTR in entity resolver
-               |
-               |   Given I am a customer who has successfully enrolled in ITSA
-               |   When SAUTR in Auth token is different from  SAUTR in entity resolver
-               |   Then my itsaId will not be added (i.e linked to) any entityId
-               |   And an error will be generated
-               */
-              reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
 
-              // TODO Isn't the following acceptance criteria already included in Case 1.2 ???
-              // Case 1.3 - SAUTR in Auth token is linked to a different entityId  in entity resolver
-              //
-              //   Given I am a customer who has successfully enrolled in ITSA
-              //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
-              //   Then my itsaId will not be added (i.e linked to) any entityId
-              //   And an error will be generated
-            }
-          }
+          case (None, Some(entitySaUtr), Some(authSaUtr)) if entitySaUtr == authSaUtr =>
+            entityResolverConnector
+              .update(entity.copy(itsa = Some(passedBackItsaId)))
+              .flatMap { _ =>
+                reply(OK, "itsaId successfully linked to entityId")
+              }
+
+          case ( /* entity.itsa */ None, /* entity.saUtr */ Some(_), /* authTokenSaUtr */ Some(_)) =>
+            reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
+          // TODO Isn't the following acceptance criteria already included in this case ???
+          // Case 1.3 - SAUTR in Auth token is linked to a different entityId in entity resolver
+          //
+          //   Given I am a customer who has successfully enrolled in ITSA
+          //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
+          //   Then my itsaId will not be added (i.e linked to) any entityId
+          //   And an error will be generated
         }
       }
       .recoverWith {
