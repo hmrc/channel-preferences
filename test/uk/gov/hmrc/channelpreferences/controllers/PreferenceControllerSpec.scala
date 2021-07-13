@@ -118,7 +118,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe OK
-      contentAsString(response) mustBe "itsaId successfully linked to entityId"
+      contentAsString(response) mustBe """{"reason":"itsaId successfully linked to entityId"}"""
     }
 
     // Case 1.2
@@ -145,7 +145,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe UNAUTHORIZED
-      contentAsString(response) mustBe "SAUTR in Auth token is different from SAUTR in entity resolver"
+      contentAsString(response) mustBe """{"reason":"SAUTR in Auth token is different from SAUTR in entity resolver"}"""
       verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
@@ -186,7 +186,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe OK
-      contentAsString(response) mustBe "itsaId successfully linked to entityId"
+      contentAsString(response) mustBe """{"reason":"itsaId successfully linked to entityId"}"""
     }
 
     // Case 1.5
@@ -222,7 +222,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe UNAUTHORIZED
-      contentAsString(response) mustBe "entityId already has a different itsaId linked to it in entity resolver"
+      contentAsString(response) mustBe """{"reason":"entityId already has a different itsaId linked to it in entity resolver"}"""
       verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
@@ -256,7 +256,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe NOT_FOUND
-      contentAsString(response) mustBe "Entity ID not found"
+      contentAsString(response) mustBe """{"reason":"Invalid entity id or entity id has expired"}"""
       verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
   }

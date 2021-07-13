@@ -58,7 +58,7 @@ class PreferenceController @Inject()(
         }
         .recoverWith {
           case e: AuthorisationException =>
-            Future.successful(Unauthorized(e.getMessage))
+            reply(UNAUTHORIZED, e.getMessage)
         }
     }
   }
@@ -93,7 +93,7 @@ class PreferenceController @Inject()(
       .flatMap { resolvedEntity =>
         if (resolvedEntity.itsa.isDefined) {
           if (resolvedEntity.itsa.get == passedBack_itsaId) {
-            Future.successful(Ok("itsaId successfully linked to entityId"))
+            reply(OK, "itsaId successfully linked to entityId")
           } else {
             /*
              | Case 1.5 - entityId already has a different itsaId linked to it in entity resolver
@@ -103,7 +103,7 @@ class PreferenceController @Inject()(
              |   Then my itsaId will not be added (i.e linked to) any entityId
              |   And an error will be generated
              */
-            Future.successful(Unauthorized(s"entityId already has a different itsaId linked to it in entity resolver"))
+            reply(UNAUTHORIZED, s"entityId already has a different itsaId linked to it in entity resolver")
 
             // TODO Isn't the following acceptance criteria already included in Case 1.5 ???
             /*
@@ -127,8 +127,8 @@ class PreferenceController @Inject()(
              */
             entityResolverConnector
               .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
-              .map { _ =>
-                Ok("itsaId successfully linked to entityId")
+              .flatMap { _ =>
+                reply(OK, "itsaId successfully linked to entityId")
               }
           } else {
             // authToken_saUtr.isDefined
@@ -142,8 +142,8 @@ class PreferenceController @Inject()(
                */
               entityResolverConnector
                 .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
-                .map { _ =>
-                  Ok("itsaId successfully linked to entityId")
+                .flatMap { _ =>
+                  reply(OK, "itsaId successfully linked to entityId")
                 }
             } else {
               /*
@@ -154,7 +154,7 @@ class PreferenceController @Inject()(
                |   Then my itsaId will not be added (i.e linked to) any entityId
                |   And an error will be generated
                */
-              Future.successful(Unauthorized("SAUTR in Auth token is different from SAUTR in entity resolver"))
+              reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
 
               // TODO Isn't the following acceptance criteria already included in Case 1.2 ???
               // Case 1.3 - SAUTR in Auth token is linked to a different entityId  in entity resolver
@@ -177,6 +177,9 @@ class PreferenceController @Inject()(
            |   Then  my itsaId will not be added to any entityid
            |   And an error will be generated
            */
-          Future.successful(NotFound("Entity ID not found"))
+          reply(NOT_FOUND, "Invalid entity id or entity id has expired")
       }
+
+  private def reply(code: Int, reason: String) =
+    Future.successful(Status(code).apply(Json.obj("reason" -> reason)))
 }
