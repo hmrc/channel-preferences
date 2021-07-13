@@ -98,15 +98,13 @@ class PreferenceController @Inject()(
 
           case ( /* entity.itsa */ Some(_), _, _) =>
             reply(UNAUTHORIZED, s"entityId already has a different itsaId linked to it in entity resolver")
-          // TODO Isn't the following acceptance criteria already included in this case ???
-          /*
-             | Case 1.6 - itsaId is already linked to a different entityId in entity resolver.
-             |
-             |   Given I am a customer who has successfully enrolled in ITSA
-             |   When my itsaId is already linked to a different entityId in entity resolver
-             |   Then my itsaId will not be added (i.e linked to) any entityId
-             |   And an error will be generated
-           */
+            // TODO Need to clarify with Chucks Adichie: isn't the following acceptance criteria already included in this case ???
+            // Case 1.6 - itsaId is already linked to a different entityId in entity resolver.
+            //   Given I am a customer who has successfully enrolled in ITSA
+            //   When my itsaId is already linked to a different entityId in entity resolver
+            //   Then my itsaId will not be added (i.e linked to) any entityId
+            //   And an error will be generated
+            //
 
           case ( /* entity.itsa */ None, _, /* authTokenSaUtr */ None) =>
             entityResolverConnector
@@ -124,25 +122,17 @@ class PreferenceController @Inject()(
 
           case ( /* entity.itsa */ None, /* entity.saUtr */ Some(_), /* authTokenSaUtr */ Some(_)) =>
             reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
-          // TODO Isn't the following acceptance criteria already included in this case ???
-          // Case 1.3 - SAUTR in Auth token is linked to a different entityId in entity resolver
-          //
-          //   Given I am a customer who has successfully enrolled in ITSA
-          //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
-          //   Then my itsaId will not be added (i.e linked to) any entityId
-          //   And an error will be generated
+            // TODO Need to clarify with Chucks Adichie: isn't the following acceptance criteria already included in this case ???
+            // Case 1.3 - SAUTR in Auth token is linked to a different entityId in entity resolver
+            //
+            //   Given I am a customer who has successfully enrolled in ITSA
+            //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
+            //   Then my itsaId will not be added (i.e linked to) any entityId
+            //   And an error will be generated
         }
       }
       .recoverWith {
         case ex: UpstreamErrorResponse if (ex.statusCode == NOT_FOUND) =>
-          /*
-           | Case 3.1 - entityId passed back by ITSA does not exist in entity resolver
-           |
-           |   Given I am a customer who has successfully enrolled in ITSA
-           |   When the entityId passed back does not exist in entity resolver
-           |   Then  my itsaId will not be added to any entityid
-           |   And an error will be generated
-           */
           reply(NOT_FOUND, "Invalid entity id or entity id has expired")
 
         case ex: Throwable =>
