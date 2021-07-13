@@ -49,35 +49,23 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
   "Calling preference" should {
-    "return a BAD GATEWAY (502) for unexpected error status" in {
-      val controller = new PreferenceController(
-        new CdsPreference {
-          override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
-            implicit hc: HeaderCarrier,
-            ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
-            Future.successful(Left(SERVICE_UNAVAILABLE))
-        },
-        mock[AuthConnector],
-        mock[EntityResolverConnector],
-        Helpers.stubControllerComponents()
-      )
+    "return a BAD GATEWAY (502) for unexpected error status" in new TestSetup {
+      when(
+        controller.cdsPreference.getPreference(any[Channel](), anyString(), anyString(), anyString())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Left(SERVICE_UNAVAILABLE)))
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
       status(response) mustBe BAD_GATEWAY
     }
 
-    "return OK (200) with the email verification if found" in {
-      val controller = new PreferenceController(
-        new CdsPreference {
-          override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
-            implicit hc: HeaderCarrier,
-            ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
-            Future.successful(Right(emailVerification))
-        },
-        mock[AuthConnector],
-        mock[EntityResolverConnector],
-        Helpers.stubControllerComponents()
-      )
+    "return OK (200) with the email verification if found" in new TestSetup {
+      when(
+        controller.cdsPreference.getPreference(any[Channel](), anyString(), anyString(), anyString())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Right(emailVerification)))
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
       status(response) mustBe OK
@@ -495,12 +483,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
   trait TestSetup {
     val controller = new PreferenceController(
-      new CdsPreference {
-        override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
-          implicit hc: HeaderCarrier,
-          ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
-          Future.successful(Left(SERVICE_UNAVAILABLE))
-      },
+      mock[CdsPreference],
       mock[AuthConnector],
       mock[EntityResolverConnector],
       Helpers.stubControllerComponents()
