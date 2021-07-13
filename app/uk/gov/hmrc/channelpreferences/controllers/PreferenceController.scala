@@ -53,8 +53,8 @@ class PreferenceController @Inject()(
     withJsonBody[Enrolment] { enrolment =>
       authorised( /* TODO Do we need to pass any affinity group here? */ )
         .retrieve(Retrievals.saUtr) {
-          case authToken_saUtr =>
-            doConfirmItsa(enrolment.entityId, enrolment.itsaId, authToken_saUtr)
+          case authTokenSaUtr =>
+            doConfirmItsa(enrolment.entityId, enrolment.itsaId, authTokenSaUtr)
         }
         .recoverWith {
           case e: AuthorisationException =>
@@ -86,13 +86,13 @@ class PreferenceController @Inject()(
 
   // ----------------------
 
-  private def doConfirmItsa(passedBack_entityId: String, passedBack_itsaId: String, authToken_saUtr: Option[String])(
+  private def doConfirmItsa(passedBackEntityId: String, passedBackItsaId: String, authTokenSaUtr: Option[String])(
     implicit hc: HeaderCarrier): Future[Result] =
     entityResolverConnector
-      .resolveBy(passedBack_entityId)
+      .resolveBy(passedBackEntityId)
       .flatMap { resolvedEntity =>
         if (resolvedEntity.itsa.isDefined) {
-          if (resolvedEntity.itsa.get == passedBack_itsaId) {
+          if (resolvedEntity.itsa.get == passedBackItsaId) {
             reply(OK, "itsaId successfully linked to entityId")
           } else {
             /*
@@ -117,7 +117,7 @@ class PreferenceController @Inject()(
           }
         } else {
           // entity.itsa.nonDefined, which means no link has been created yet
-          if (!authToken_saUtr.isDefined) {
+          if (!authTokenSaUtr.isDefined) {
             /*
              | Case 1.4 - SAUTR does not exist in the  Auth token
              |
@@ -126,13 +126,13 @@ class PreferenceController @Inject()(
              |   Then my itsaId will be added (i.e linked to) the entityId
              */
             entityResolverConnector
-              .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
+              .update(resolvedEntity.copy(itsa = Some(passedBackItsaId)))
               .flatMap { _ =>
                 reply(OK, "itsaId successfully linked to entityId")
               }
           } else {
-            // authToken_saUtr.isDefined
-            if (resolvedEntity.saUtr.isDefined && (resolvedEntity.saUtr.get == authToken_saUtr.get)) {
+            // authTokenSaUtr.isDefined
+            if (resolvedEntity.saUtr.isDefined && (resolvedEntity.saUtr.get == authTokenSaUtr.get)) {
               /*
                | Case 1.1 - SAUTR in Auth token is the same as SAUTR in entity resolver
                |
@@ -141,7 +141,7 @@ class PreferenceController @Inject()(
                |   Then my itsaId will be added (i.e linked to) the entityId
                */
               entityResolverConnector
-                .update(resolvedEntity.copy(itsa = Some(passedBack_itsaId)))
+                .update(resolvedEntity.copy(itsa = Some(passedBackItsaId)))
                 .flatMap { _ =>
                   reply(OK, "itsaId successfully linked to entityId")
                 }
