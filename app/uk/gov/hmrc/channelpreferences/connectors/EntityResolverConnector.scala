@@ -37,7 +37,7 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
 
   def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] =
     httpClient.PUT[Entity, Entity](
-      url = s"$serviceUrl/entity-resolver/${entity.id}",
+      url = s"$serviceUrl/entity-resolver/${entity._id}",
       body = entity
     )
 }

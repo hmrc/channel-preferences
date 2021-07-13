@@ -21,12 +21,12 @@ import play.api.libs.json.{ Json, OFormat }
 /**
   * It represents a taxable entity whose tax identifiers are retrievable from the entity-resolver service
   *
-  * @param id is the unique identifier, normally used as lookup key
+  * @param _id is the unique identifier, normally used as lookup key
   * @param nino is the (maybe) National Insurance Number
   * @param saUtr is the (maybe) Self Assessment Unique Tax Reference
   * @param itsa is the (maybe) Income Tax Self Assessment identifier
   */
-final case class Entity(id: String, saUtr: Option[String], nino: Option[String], itsa: Option[String])
+final case class Entity(_id: String, saUtr: Option[String], nino: Option[String], itsa: Option[String])
 
 object Entity {
   implicit val format: OFormat[Entity] = Json.format[Entity]
