@@ -48,9 +48,6 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
   private val emailVerification = EmailVerification(EmailAddress("some@email.com"), new DateTime(1987, 3, 20, 1, 2, 3))
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
-  val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
-
   "Calling preference" should {
     "return a BAD GATEWAY (502) for unexpected error status" in {
       val controller = new PreferenceController(
@@ -60,8 +57,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Left(SERVICE_UNAVAILABLE))
         },
-        mockAuthConnector,
-        mockEntityResolverConnector,
+        mock[AuthConnector],
+        mock[EntityResolverConnector],
         Helpers.stubControllerComponents()
       )
 
@@ -77,8 +74,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Right(emailVerification))
         },
-        mockAuthConnector,
-        mockEntityResolverConnector,
+        mock[AuthConnector],
+        mock[EntityResolverConnector],
         Helpers.stubControllerComponents()
       )
 
@@ -92,12 +89,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     // Case 1.1
     """return OK (200) upon linking the given itsaId when the SAUTR in authToken is the same as SAUTR in entity-resolver""" in new TestSetup {
-      reset(mockEntityResolverConnector)
-      reset(mockAuthConnector)
-
       val authTokenSaUtr = "authTokenSaUtr"
       when(
-        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(authTokenSaUtr)))
@@ -106,11 +100,11 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val passedBackItsaId = "passedBackItsaId"
 
       val resolvedEntity_saUtr = authTokenSaUtr
-      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
           Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
 
-      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
         .thenReturn(Future.successful(
           Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
 
@@ -123,12 +117,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     // Case 1.2
     """return UNAUTHORIZED (401) when SAUTR in authToken is different from SAUTR in entity-resolver""" in new TestSetup {
-      reset(mockEntityResolverConnector)
-      reset(mockAuthConnector)
-
       val authTokenSaUtr = "authTokenSaUtr"
       when(
-        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(authTokenSaUtr)))
@@ -137,7 +128,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val passedBackItsaId = "passedBackItsaId"
 
       val resolvedEntity_saUtr = "different_than_authTokenSaUtr"
-      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
           Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
 
@@ -146,7 +137,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe UNAUTHORIZED
       contentAsString(response) mustBe """{"reason":"SAUTR in Auth token is different from SAUTR in entity resolver"}"""
-      verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
+      verify(controller.entityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
     // Case 1.3
@@ -157,11 +148,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     // Case 1.4
     """return OK (200) upon linking the given itsaId when SAUTR does not exist in the Auth token""" in new TestSetup {
-      reset(mockEntityResolverConnector)
-      reset(mockAuthConnector)
-
       when(
-        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(None)) // Couldn't retrieve SAUTR from the authToken!
@@ -170,15 +158,15 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val passedBackItsaId = "passedBackItsaId"
 
       val resolvedEntity_saUtr = "resolvedEntity_saUtr"
-      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
           Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
 
-      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
         .thenReturn(Future.successful(
           Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
 
-      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
         .thenReturn(Future.successful(
           Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
 
@@ -191,11 +179,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     // Case 1.5
     """return UNAUTHORIZED (401) when entityId already has a different itsaId linked to it in entity resolver""" in new TestSetup {
-      reset(mockEntityResolverConnector)
-      reset(mockAuthConnector)
-
       when(
-        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(Some("authTokenSaUtr")))
@@ -205,7 +190,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
       val resolvedEntity_saUtr = "resolvedEntity_saUtr"
       val resolvedEntity_itsaId = "different_than_passedBackItsaId"
-      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
           Future.successful(
             Entity(
@@ -214,7 +199,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
               nino = None,
               itsa = Some(resolvedEntity_itsaId))))
 
-      when(mockEntityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
         .thenReturn(Future.successful(
           Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
 
@@ -223,7 +208,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe UNAUTHORIZED
       contentAsString(response) mustBe """{"reason":"entityId already has a different itsaId linked to it in entity resolver"}"""
-      verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
+      verify(controller.entityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
     // Case 1.6
@@ -237,11 +222,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     // Case 3.1
     """return NOT_FOUND (404) when the entityId passed back does not exist in entity resolver""" in new TestSetup {
-      reset(mockEntityResolverConnector)
-      reset(mockAuthConnector)
-
       when(
-        mockAuthConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(Some("authTokenSaUtr")))
@@ -249,7 +231,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val passedBackEntityId = "passedBackEntityId"
       val passedBackItsaId = "passedBackItsaId"
 
-      when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(Future.failed(UpstreamErrorResponse("passedBackEntityId not found", NOT_FOUND)))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
@@ -257,7 +239,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val response = controller.confirm().apply(fakePostRequest)
       status(response) mustBe NOT_FOUND
       contentAsString(response) mustBe """{"reason":"Invalid entity id or entity id has expired"}"""
-      verify(mockEntityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
+      verify(controller.entityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
   }
 
@@ -265,9 +247,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     """return OK (200) for any AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
       when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
+        controller.authConnector.authorise[Option[AffinityGroup]](
+          any[Predicate](),
+          any[Retrieval[Option[AffinityGroup]]]())(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
       val postData: JsValue = Json.parse(s"""
@@ -286,9 +268,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     """return BAD REQUEST (400) for missing AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
       when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
+        controller.authConnector.authorise[Option[AffinityGroup]](
+          any[Predicate](),
+          any[Retrieval[Option[AffinityGroup]]]())(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
       val postData: JsValue = Json.obj()
@@ -300,9 +282,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     """return BAD REQUEST (400) for missing sautr""" in new TestSetup {
       when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
+        controller.authConnector.authorise[Option[AffinityGroup]](
+          any[Predicate](),
+          any[Retrieval[Option[AffinityGroup]]]())(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
       val postData: JsValue = Json.parse(s"""
@@ -320,9 +302,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     """return BAD REQUEST (400) for missing nino""" in new TestSetup {
       when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
+        controller.authConnector.authorise[Option[AffinityGroup]](
+          any[Predicate](),
+          any[Retrieval[Option[AffinityGroup]]]())(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
 
       val postData: JsValue = Json.parse(s"""
@@ -340,9 +322,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     """Check for UNAUTHORIZED (401) when the AffinityGroup does not match the Agent""" in new TestSetup {
       when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
+        controller.authConnector.authorise[Option[AffinityGroup]](
+          any[Predicate](),
+          any[Retrieval[Option[AffinityGroup]]]())(any[HeaderCarrier](), any[ExecutionContext]()))
         .thenReturn(Future.failed(AuthorisationException.fromString("UnsupportedAffinityGroup")))
 
       val postData: JsValue = Json.parse(s"""
@@ -519,8 +501,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
           ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
           Future.successful(Left(SERVICE_UNAVAILABLE))
       },
-      mockAuthConnector,
-      mockEntityResolverConnector,
+      mock[AuthConnector],
+      mock[EntityResolverConnector],
       Helpers.stubControllerComponents()
     )
 
