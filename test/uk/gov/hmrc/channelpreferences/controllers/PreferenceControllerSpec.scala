@@ -30,7 +30,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{ HeaderCarrier, UpstreamErrorResponse }
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
@@ -250,7 +250,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       val passedBackItsaId = "passedBackItsaId"
 
       when(mockEntityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(Future.failed(new Exception("Couldn't find any entity with the given identifier")))
+        .thenReturn(Future.failed(UpstreamErrorResponse("passedBackEntityId not found", NOT_FOUND)))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)

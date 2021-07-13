@@ -25,7 +25,7 @@ import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{ HeaderCarrier, UpstreamErrorResponse }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -168,7 +168,7 @@ class PreferenceController @Inject()(
         }
       }
       .recoverWith {
-        case _: Throwable =>
+        case ex: UpstreamErrorResponse if (ex.statusCode == NOT_FOUND) =>
           /*
            | Case 3.1 - entityId passed back by ITSA does not exist in entity resolver
            |
@@ -178,6 +178,9 @@ class PreferenceController @Inject()(
            |   And an error will be generated
            */
           reply(NOT_FOUND, "Invalid entity id or entity id has expired")
+
+        case ex: Throwable =>
+          reply(INTERNAL_SERVER_ERROR, ex.getMessage)
       }
 
   private def reply(code: Int, reason: String) =
