@@ -17,21 +17,24 @@
 package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
+import uk.gov.hmrc.http.{ HeaderCarrier, UpstreamErrorResponse }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 @Singleton
 class PreferenceController @Inject()(
-  cdsPreference: CdsPreference,
+  val cdsPreference: CdsPreference,
   val authConnector: AuthConnector,
+  val entityResolverConnector: EntityResolverConnector,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions {
 
@@ -48,11 +51,15 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
-      if (enrolment.entityId != "450262a0-1842-4885-8fa1-6fbc2aeb867d") {
-        Future.successful(Ok(s"$enrolment"))
-      } else {
-        Future.successful(Conflict(s"450262a0-1842-4885-8fa1-6fbc2aeb867d ${enrolment.itsaId}"))
-      }
+      authorised( /* TODO Do we need to pass any affinity group here? */ )
+        .retrieve(Retrievals.saUtr) {
+          case authTokenSaUtr =>
+            doConfirmItsa(enrolment.entityId, enrolment.itsaId, authTokenSaUtr)
+        }
+        .recoverWith {
+          case e: AuthorisationException =>
+            reply(UNAUTHORIZED, e.getMessage)
+        }
     }
   }
 
@@ -76,4 +83,62 @@ class PreferenceController @Inject()(
           s", groupId: '${event.groupId}', timeStamp: '${event.timeStamp}', event: '${event.event}'"))
     }
   }
+
+  // ----------------------
+
+  private def doConfirmItsa(passedBackEntityId: String, passedBackItsaId: String, authTokenSaUtr: Option[String])(
+    implicit hc: HeaderCarrier): Future[Result] =
+    entityResolverConnector
+      .resolveBy(passedBackEntityId)
+      .flatMap { entity =>
+        (entity.itsa, entity.saUtr, authTokenSaUtr) match {
+
+          case (Some(entityItsaId), _, _) if entityItsaId == passedBackItsaId =>
+            reply(OK, "itsaId successfully linked to entityId")
+
+          case ( /* entity.itsa */ Some(_), _, _) =>
+            reply(UNAUTHORIZED, s"entityId already has a different itsaId linked to it in entity resolver")
+          // TODO Need to clarify with Chucks Adichie: isn't the following acceptance criteria already included in this case ???
+          // Case 1.6 - itsaId is already linked to a different entityId in entity resolver.
+          //   Given I am a customer who has successfully enrolled in ITSA
+          //   When my itsaId is already linked to a different entityId in entity resolver
+          //   Then my itsaId will not be added (i.e linked to) any entityId
+          //   And an error will be generated
+          //
+
+          case ( /* entity.itsa */ None, _, /* authTokenSaUtr */ None) =>
+            entityResolverConnector
+              .update(entity.copy(itsa = Some(passedBackItsaId)))
+              .flatMap { _ =>
+                reply(OK, "itsaId successfully linked to entityId")
+              }
+
+          case (None, Some(entitySaUtr), Some(authSaUtr)) if entitySaUtr == authSaUtr =>
+            entityResolverConnector
+              .update(entity.copy(itsa = Some(passedBackItsaId)))
+              .flatMap { _ =>
+                reply(OK, "itsaId successfully linked to entityId")
+              }
+
+          case ( /* entity.itsa */ None, /* entity.saUtr */ Some(_), /* authTokenSaUtr */ Some(_)) =>
+            reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
+          // TODO Need to clarify with Chucks Adichie: isn't the following acceptance criteria already included in this case ???
+          // Case 1.3 - SAUTR in Auth token is linked to a different entityId in entity resolver
+          //
+          //   Given I am a customer who has successfully enrolled in ITSA
+          //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
+          //   Then my itsaId will not be added (i.e linked to) any entityId
+          //   And an error will be generated
+        }
+      }
+      .recoverWith {
+        case ex: UpstreamErrorResponse if (ex.statusCode == NOT_FOUND) =>
+          reply(NOT_FOUND, "Invalid entity id or entity id has expired")
+
+        case ex: Throwable =>
+          reply(INTERNAL_SERVER_ERROR, ex.getMessage)
+      }
+
+  private def reply(code: Int, reason: String) =
+    Future.successful(Status(code).apply(Json.obj("reason" -> reason)))
 }
