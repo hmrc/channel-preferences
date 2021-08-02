@@ -17,23 +17,50 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import javax.inject.{ Inject, Singleton }
-import play.api.Configuration
+import play.api.{ Configuration, Logger, LoggerLike }
+import play.api.http.Status.OK
+import play.api.libs.json.{ JsSuccess, Json }
 import uk.gov.hmrc.channelpreferences.model.Entity
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 @Singleton
 class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
 
   import uk.gov.hmrc.http.HttpReads.Implicits._
+  private val log: LoggerLike = Logger(this.getClass)
   private val serviceUrl = baseUrl("entity-resolver")
 
-  def resolveBy(id: String)(implicit hc: HeaderCarrier): Future[Entity] =
-    httpClient.GET[Entity](s"$serviceUrl/entity-resolver/$id")
+  def resolveBy(entityId: String)(implicit hc: HeaderCarrier): Future[Entity] =
+    httpClient.GET[Entity](s"$serviceUrl/entity-resolver/$entityId")
+
+  private def parseEntityResp(body: String): Option[Entity] =
+    Try(Json.parse(body)) match {
+      case Success(v) =>
+        v.validate[Entity] match {
+          case JsSuccess(ev, _) => Some(ev)
+          case _ =>
+            log.warn(s"unable to parse $body")
+            None
+        }
+
+      case Failure(e) =>
+        log.error(s"entity resolver response was invalid Json", e)
+        None
+    }
+
+  def resolveByItsa(itsaId: String)(implicit hc: HeaderCarrier): Future[Option[Entity]] =
+    httpClient.doGet(s"$serviceUrl/entity-resolver/itsa/$itsaId").map { resp =>
+      resp.status match {
+        case OK => parseEntityResp(resp.body)
+        case _  => None
+      }
+    }
 
   def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] =
     httpClient.PUT[Entity, Entity](
