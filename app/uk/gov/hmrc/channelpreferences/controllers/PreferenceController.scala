@@ -25,7 +25,7 @@ import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
-import uk.gov.hmrc.http.{ HeaderCarrier, UpstreamErrorResponse }
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -90,37 +90,30 @@ class PreferenceController @Inject()(
     implicit hc: HeaderCarrier): Future[Result] =
     entityResolverConnector
       .resolveBy(passedBackEntityId)
-      .flatMap { entityById =>
-        (entityById.itsa, entityById.saUtr, authTokenSaUtr) match {
-          // case 1.5
-          case (Some(entityItsa), _, _) if entityItsa != passedBackItsaId =>
-            reply(UNAUTHORIZED, "entityId already has a different itsaId linked to it in entity resolver")
-          // case 1.2
-          case (_, Some(entitySaUtr), Some(authSaUtr)) if entitySaUtr != authSaUtr =>
-            reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
+      .flatMap { maybeEntityById =>
+        maybeEntityById.fold(reply(NOT_FOUND, "Invalid entity id or entity id has expired")) { entityById =>
+          (entityById.itsa, entityById.saUtr, authTokenSaUtr) match {
+            // case 1.5
+            case (Some(entityItsa), _, _) if entityItsa != passedBackItsaId =>
+              reply(UNAUTHORIZED, "entityId already has a different itsaId linked to it in entity resolver")
+            // case 1.2
+            case (_, Some(entitySaUtr), Some(authSaUtr)) if entitySaUtr != authSaUtr =>
+              reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
 
-          case (_, _, Some(authSaUtr)) =>
-            entityResolverConnector.resolveBySaUtr(authSaUtr).flatMap {
+            case (_, _, Some(authSaUtr)) =>
+              entityResolverConnector.resolveBySaUtr(authSaUtr).flatMap {
 
-              // case 1.3
-              case Some(entityBySaUtr) if entityBySaUtr._id != passedBackEntityId =>
-                reply(UNAUTHORIZED, "itsaId is already linked to a different entityid in entity resolver")
+                // case 1.3
+                case Some(entityBySaUtr) if entityBySaUtr._id != passedBackEntityId =>
+                  reply(UNAUTHORIZED, "itsaId is already linked to a different entityid in entity resolver")
 
-              case _ =>
-                finalCheck(authTokenSaUtr, entityById, passedBackEntityId, passedBackItsaId)
-            }
-          case _ =>
-            finalCheck(authTokenSaUtr, entityById, passedBackEntityId, passedBackItsaId)
+                case _ =>
+                  finalCheck(authTokenSaUtr, entityById, passedBackEntityId, passedBackItsaId)
+              }
+            case _ =>
+              finalCheck(authTokenSaUtr, entityById, passedBackEntityId, passedBackItsaId)
+          }
         }
-
-      }
-      .recoverWith {
-        // case 3.1
-        case ex: UpstreamErrorResponse if ex.statusCode == NOT_FOUND =>
-          reply(NOT_FOUND, "Invalid entity id or entity id has expired")
-
-        case ex: Throwable =>
-          reply(INTERNAL_SERVER_ERROR, ex.getMessage)
       }
 
   private def finalCheck(

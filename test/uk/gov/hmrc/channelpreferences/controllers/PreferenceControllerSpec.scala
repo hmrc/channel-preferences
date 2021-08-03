@@ -30,7 +30,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers.{ contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.http.{ HeaderCarrier, UpstreamErrorResponse }
+import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
@@ -79,8 +79,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
     """Case 1.1: return OK (200) upon linking the given itsaId when the SAUTR in authToken is the same as SAUTR in entity-resolver""" in new TestSetup {
       val resolvedEntitySaUtr = authTokenSaUtr
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None)))
+        .thenReturn(Future.successful(
+          Some(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -93,8 +93,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
       val resolvedEntitySaUtr = "different_than_authTokenSaUtr"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None)))
+        .thenReturn(Future.successful(
+          Some(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -108,8 +108,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
       val resolvedEntitySaUtr = "different_than_authTokenSaUtr"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None)))
+        .thenReturn(Future.successful(
+          Some(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -128,8 +128,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
       val resolvedEntity_saUtr = "resolvedEntity_saUtr"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
+        .thenReturn(Future.successful(
+          Some(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -142,8 +142,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
 
       val resolvedEntityItsaId = "different_than_passedBackItsaId"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = None, nino = None, itsa = Some(resolvedEntityItsaId))))
+        .thenReturn(Future.successful(
+          Some(Entity(passedBackEntityId, saUtr = None, nino = None, itsa = Some(resolvedEntityItsaId)))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -158,7 +158,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
          | when resolvedEntitySaUtr is $resolvedEntitySaUtr""".stripMargin in new TestSetup {
         when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
           .thenReturn(
-            Future.successful(Entity(passedBackEntityId, saUtr = resolvedEntitySaUtr, nino = None, itsa = None)))
+            Future.successful(Some(Entity(passedBackEntityId, saUtr = resolvedEntitySaUtr, nino = None, itsa = None))))
 
         val differentEntityId = "differentEntityId"
         when(controller.entityResolverConnector.resolveByItsa(anyString())(any[HeaderCarrier]()))
@@ -187,7 +187,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
         .thenReturn(Future.successful(Some("authTokenSaUtr")))
 
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
-        .thenReturn(Future.failed(UpstreamErrorResponse("passedBackEntityId not found", NOT_FOUND)))
+        .thenReturn(Future.successful(None))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -475,7 +475,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       )
 
     when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
-      .thenReturn(Future.successful(Entity(passedBackEntityId, None, nino = None, itsa = None)))
+      .thenReturn(Future.successful(()))
 
   }
 

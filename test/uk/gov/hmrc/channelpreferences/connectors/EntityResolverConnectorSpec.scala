@@ -21,9 +21,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-import play.api.http.Status.{ NOT_FOUND, OK }
+import play.api.http.Status.{ INTERNAL_SERVER_ERROR, NOT_FOUND, OK }
 import uk.gov.hmrc.channelpreferences.model.Entity
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -32,8 +32,8 @@ import scala.concurrent.{ Await, Future }
 class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val entityResolver = Entity("entityId", None, Some("blabla"), Some("yoyo"))
-  private val validEntityResolver = """{"_id":"entityId","nino":"blabla", "itsa": "yoyo"}"""
+  private val entityResolver = Entity("entityId", None, Some("nino"), Some("itsa"))
+  private val validEntityResolver = """{"_id":"entityId", "nino":"nino", "itsa": "itsa"}"""
   private val invalidEntityResolver = "{}"
 
   "resolveByItsa" should {
@@ -58,6 +58,59 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with Mockit
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(invalidEntityResolver)
       connector.resolveByItsa("itsaId").futureValue mustBe None
+    }
+
+    "return exception if Entity resolver returns an INTERNAL_SERVER_ERROR" in new TestCase {
+      when(mockHttpClient.doGet("http://localhost:8015/entity-resolver/itsa/itsaId")(hc, global))
+        .thenReturn(Future.successful(mockHttpResponse))
+      when(mockHttpResponse.status).thenReturn(INTERNAL_SERVER_ERROR)
+      when(mockHttpResponse.body).thenReturn(invalidEntityResolver)
+      val caught =
+        intercept[UpstreamErrorResponse] {
+          Await.result(connector.resolveByItsa("itsaId"), Duration.Inf)
+        }
+
+      caught.statusCode mustBe INTERNAL_SERVER_ERROR
+      caught.message must startWith("Got unexpected error: ")
+    }
+  }
+
+  "resolveBySaUtr" should {
+    "return the entity resolver when it exists" in new TestCase {
+      when(mockHttpClient.doGet("http://localhost:8015/entity-resolver/sa/utr")(hc, global))
+        .thenReturn(Future.successful(mockHttpResponse))
+      when(mockHttpResponse.status).thenReturn(OK)
+      when(mockHttpResponse.body).thenReturn(validEntityResolver)
+      Await.result(connector.resolveBySaUtr("utr"), Duration.Inf) mustBe Some(entityResolver)
+    }
+
+    "return None if the entity resolver is not found" in new TestCase {
+      when(mockHttpClient.doGet("http://localhost:8015/entity-resolver/sa/utr")(hc, global))
+        .thenReturn(Future.successful(mockHttpResponse))
+      when(mockHttpResponse.status).thenReturn(NOT_FOUND)
+      connector.resolveBySaUtr("utr").futureValue mustBe None
+    }
+
+    "return None if Entity resolver returns invalid Json response" in new TestCase {
+      when(mockHttpClient.doGet("http://localhost:8015/entity-resolver/sa/utr")(hc, global))
+        .thenReturn(Future.successful(mockHttpResponse))
+      when(mockHttpResponse.status).thenReturn(OK)
+      when(mockHttpResponse.body).thenReturn(invalidEntityResolver)
+      connector.resolveBySaUtr("utr").futureValue mustBe None
+    }
+
+    "return exception if Entity resolver returns an INTERNAL_SERVER_ERROR" in new TestCase {
+      when(mockHttpClient.doGet("http://localhost:8015/entity-resolver/sa/utr")(hc, global))
+        .thenReturn(Future.successful(mockHttpResponse))
+      when(mockHttpResponse.status).thenReturn(INTERNAL_SERVER_ERROR)
+      when(mockHttpResponse.body).thenReturn(invalidEntityResolver)
+      val caught =
+        intercept[UpstreamErrorResponse] {
+          Await.result(connector.resolveBySaUtr("utr"), Duration.Inf)
+        }
+
+      caught.statusCode mustBe INTERNAL_SERVER_ERROR
+      caught.message must startWith("Got unexpected error: ")
     }
 
   }

@@ -18,12 +18,11 @@ package uk.gov.hmrc.channelpreferences.connectors
 
 import javax.inject.{ Inject, Singleton }
 import play.api.{ Configuration, Logger, LoggerLike }
-import play.api.http.Status.OK
+import play.api.http.Status.{ NOT_FOUND, OK }
 import play.api.libs.json.{ JsSuccess, Json }
 import uk.gov.hmrc.channelpreferences.model.Entity
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, UpstreamErrorResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
@@ -36,8 +35,15 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
   private val log: LoggerLike = Logger(this.getClass)
   private val serviceUrl = baseUrl("entity-resolver")
 
-  def resolveBy(entityId: String)(implicit hc: HeaderCarrier): Future[Entity] =
-    httpClient.GET[Entity](s"$serviceUrl/entity-resolver/$entityId")
+  private def resolveByHelper(url: String)(implicit hc: HeaderCarrier): Future[Option[Entity]] =
+    httpClient.doGet(url).flatMap { resp =>
+      resp.status match {
+        case OK        => Future.successful(parseEntityResp(resp.body))
+        case NOT_FOUND => Future.successful(None)
+        case unexpectedStatus =>
+          Future.failed(UpstreamErrorResponse(s"Got unexpected error: ${resp.body}", unexpectedStatus))
+      }
+    }
 
   private def parseEntityResp(body: String): Option[Entity] =
     Try(Json.parse(body)) match {
@@ -54,24 +60,17 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
         None
     }
 
+  def resolveBy(entityId: String)(implicit hc: HeaderCarrier): Future[Option[Entity]] =
+    resolveByHelper(s"$serviceUrl/entity-resolver/$entityId")
+
   def resolveByItsa(itsaId: String)(implicit hc: HeaderCarrier): Future[Option[Entity]] =
-    httpClient.doGet(s"$serviceUrl/entity-resolver/itsa/$itsaId").map { resp =>
-      resp.status match {
-        case OK => parseEntityResp(resp.body)
-        case _  => None
-      }
-    }
+    resolveByHelper(s"$serviceUrl/entity-resolver/itsa/$itsaId")
 
   def resolveBySaUtr(saUtr: String)(implicit hc: HeaderCarrier): Future[Option[Entity]] =
-    httpClient.doGet(s"$serviceUrl/entity-resolver/sa/$saUtr").map { resp =>
-      resp.status match {
-        case OK => parseEntityResp(resp.body)
-        case _  => None
-      }
-    }
+    resolveByHelper(s"$serviceUrl/entity-resolver/sa/$saUtr")
 
-  def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] =
-    httpClient.PUT[Entity, Entity](
+  def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Unit] =
+    httpClient.PUT[Entity, Unit](
       url = s"$serviceUrl/entity-resolver/${entity._id}",
       body = entity
     )
