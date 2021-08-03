@@ -85,60 +85,78 @@ class PreferenceController @Inject()(
   }
 
   // ----------------------
-
+  // See the case definition on https://jira.tools.tax.service.gov.uk/browse/DC-3504
   private def doConfirmItsa(passedBackEntityId: String, passedBackItsaId: String, authTokenSaUtr: Option[String])(
     implicit hc: HeaderCarrier): Future[Result] =
     entityResolverConnector
       .resolveBy(passedBackEntityId)
-      .flatMap { entity =>
-        (entity.itsa, entity.saUtr, authTokenSaUtr) match {
-
-          case (Some(entityItsaId), _, _) if entityItsaId == passedBackItsaId =>
-            reply(OK, "itsaId successfully linked to entityId")
-
-          case ( /* entity.itsa */ Some(_), _, _) =>
-            reply(UNAUTHORIZED, s"entityId already has a different itsaId linked to it in entity resolver")
-          // TODO Need to clarify with Chucks Adichie: isn't the following acceptance criteria already included in this case ???
-          // Case 1.6 - itsaId is already linked to a different entityId in entity resolver.
-          //   Given I am a customer who has successfully enrolled in ITSA
-          //   When my itsaId is already linked to a different entityId in entity resolver
-          //   Then my itsaId will not be added (i.e linked to) any entityId
-          //   And an error will be generated
-          //
-
-          case ( /* entity.itsa */ None, _, /* authTokenSaUtr */ None) =>
-            entityResolverConnector
-              .update(entity.copy(itsa = Some(passedBackItsaId)))
-              .flatMap { _ =>
-                reply(OK, "itsaId successfully linked to entityId")
-              }
-
-          case (None, Some(entitySaUtr), Some(authSaUtr)) if entitySaUtr == authSaUtr =>
-            entityResolverConnector
-              .update(entity.copy(itsa = Some(passedBackItsaId)))
-              .flatMap { _ =>
-                reply(OK, "itsaId successfully linked to entityId")
-              }
-
-          case ( /* entity.itsa */ None, /* entity.saUtr */ Some(_), /* authTokenSaUtr */ Some(_)) =>
+      .flatMap { entityById =>
+        (entityById.itsa, entityById.saUtr, authTokenSaUtr) match {
+          // case 1.5
+          case (Some(entityItsa), _, _) if entityItsa != passedBackItsaId =>
+            reply(UNAUTHORIZED, "entityId already has a different itsaId linked to it in entity resolver")
+          // case 1.2
+          case (_, Some(entitySaUtr), Some(authSaUtr)) if entitySaUtr != authSaUtr =>
             reply(UNAUTHORIZED, "SAUTR in Auth token is different from SAUTR in entity resolver")
-          // TODO Need to clarify with Chucks Adichie: isn't the following acceptance criteria already included in this case ???
-          // Case 1.3 - SAUTR in Auth token is linked to a different entityId in entity resolver
-          //
-          //   Given I am a customer who has successfully enrolled in ITSA
-          //   When SAUTR in Auth token is linked to a different entityId  in entity resolver
-          //   Then my itsaId will not be added (i.e linked to) any entityId
-          //   And an error will be generated
+
+          case (_, _, Some(authSaUtr)) =>
+            entityResolverConnector.resolveBySaUtr(authSaUtr).flatMap {
+
+              // case 1.3
+              case Some(entityBySaUtr) if entityBySaUtr._id != passedBackEntityId =>
+                reply(UNAUTHORIZED, "itsaId is already linked to a different entityid in entity resolver")
+
+              case _ =>
+                finalCheck(authTokenSaUtr, entityById, passedBackEntityId, passedBackItsaId)
+            }
+          case _ =>
+            finalCheck(authTokenSaUtr, entityById, passedBackEntityId, passedBackItsaId)
         }
+
       }
       .recoverWith {
-        case ex: UpstreamErrorResponse if (ex.statusCode == NOT_FOUND) =>
+        // case 3.1
+        case ex: UpstreamErrorResponse if ex.statusCode == NOT_FOUND =>
           reply(NOT_FOUND, "Invalid entity id or entity id has expired")
 
         case ex: Throwable =>
           reply(INTERNAL_SERVER_ERROR, ex.getMessage)
       }
 
-  private def reply(code: Int, reason: String) =
+  private def finalCheck(
+    maybeAuthSaUtr: Option[String],
+    entityById: Entity,
+    passedBackEntityId: String,
+    passedBackItsaId: String)(implicit hc: HeaderCarrier): Future[Result] =
+    entityResolverConnector.resolveByItsa(passedBackItsaId).flatMap { maybeEntityByItsa =>
+      (maybeEntityByItsa.map(_._id), maybeAuthSaUtr, entityById.saUtr) match {
+
+        case (Some(entityId), _, _) if entityId != passedBackEntityId =>
+          // case 1.6
+          reply(UNAUTHORIZED, "itsaId is already linked to a different entityid in entity resolver")
+
+        // case 1.4
+        case (_, None, _) =>
+          entityResolverConnector
+            .update(entityById.copy(itsa = Some(passedBackItsaId)))
+            .flatMap { _ =>
+              reply(OK, "itsaId successfully linked to entityId")
+            }
+
+        // case 1.1
+        case (_, Some(authSaUtr), Some(entitySaUtr)) if authSaUtr == entitySaUtr =>
+          entityResolverConnector
+            .update(entityById)
+            .flatMap { _ =>
+              reply(OK, "itsaId successfully linked to entityId")
+            }
+
+        case _ =>
+          // shouldn't happen
+          reply(INTERNAL_SERVER_ERROR, "Unexpected setting")
+      }
+    }
+
+  private def reply(code: Int, reason: String): Future[Result] =
     Future.successful(Status(code).apply(Json.obj("reason" -> reason)))
 }

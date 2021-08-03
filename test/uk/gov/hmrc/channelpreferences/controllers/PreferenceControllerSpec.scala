@@ -73,28 +73,14 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
     }
   }
 
+  // See the cases definition on https://jira.tools.tax.service.gov.uk/browse/DC-3504
   "Calling /confirm endpoint at the end of ITSA flow" should {
 
-    // Case 1.1
-    """return OK (200) upon linking the given itsaId when the SAUTR in authToken is the same as SAUTR in entity-resolver""" in new TestSetup {
-      val authTokenSaUtr = "authTokenSaUtr"
-      when(
-        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(authTokenSaUtr)))
-
-      val passedBackEntityId = "passedBackEntityId"
-      val passedBackItsaId = "passedBackItsaId"
-
-      val resolvedEntity_saUtr = authTokenSaUtr
+    """Case 1.1: return OK (200) upon linking the given itsaId when the SAUTR in authToken is the same as SAUTR in entity-resolver""" in new TestSetup {
+      val resolvedEntitySaUtr = authTokenSaUtr
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
-
-      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(
-          Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
+          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None)))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -103,22 +89,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       contentAsString(response) mustBe """{"reason":"itsaId successfully linked to entityId"}"""
     }
 
-    // Case 1.2
-    """return UNAUTHORIZED (401) when SAUTR in authToken is different from SAUTR in entity-resolver""" in new TestSetup {
-      val authTokenSaUtr = "authTokenSaUtr"
-      when(
-        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(authTokenSaUtr)))
+    """Case 1.2: return UNAUTHORIZED (401) when SAUTR in authToken is different from SAUTR in entity-resolver""" in new TestSetup {
 
-      val passedBackEntityId = "passedBackEntityId"
-      val passedBackItsaId = "passedBackItsaId"
-
-      val resolvedEntity_saUtr = "different_than_authTokenSaUtr"
+      val resolvedEntitySaUtr = "different_than_authTokenSaUtr"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
-          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
+          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None)))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -128,35 +104,32 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       verify(controller.entityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
-    // Case 1.3
-    """return UNAUTHORIZED (401) when SAUTR in authToken is linked to a different entityId in entity-resolver""" in new TestSetup {
-      pending
-      // WARNING: this scenario seems already included in the previous one
+    """Case 1.3: return UNAUTHORIZED (401) when SAUTR in authToken is linked to a different entityId in entity-resolver""" in new TestSetup {
+
+      val resolvedEntitySaUtr = "different_than_authTokenSaUtr"
+      when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+        .thenReturn(
+          Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntitySaUtr), nino = None, itsa = None)))
+
+      val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.confirm().apply(fakePostRequest)
+      status(response) mustBe UNAUTHORIZED
+      contentAsString(response) mustBe """{"reason":"SAUTR in Auth token is different from SAUTR in entity resolver"}"""
+      verify(controller.entityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
-    // Case 1.4
-    """return OK (200) upon linking the given itsaId when SAUTR does not exist in the Auth token""" in new TestSetup {
+    """Case 1.4: return OK (200) upon linking the given itsaId when SAUTR does not exist in the Auth token""" in new TestSetup {
       when(
         controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(None)) // Couldn't retrieve SAUTR from the authToken!
 
-      val passedBackEntityId = "passedBackEntityId"
-      val passedBackItsaId = "passedBackItsaId"
-
       val resolvedEntity_saUtr = "resolvedEntity_saUtr"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
           Future.successful(Entity(passedBackEntityId, saUtr = Some(resolvedEntity_saUtr), nino = None, itsa = None)))
-
-      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(
-          Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
-
-      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(
-          Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -165,31 +138,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       contentAsString(response) mustBe """{"reason":"itsaId successfully linked to entityId"}"""
     }
 
-    // Case 1.5
-    """return UNAUTHORIZED (401) when entityId already has a different itsaId linked to it in entity resolver""" in new TestSetup {
-      when(
-        controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some("authTokenSaUtr")))
+    """Case 1.5: return UNAUTHORIZED (401) when entityId already has a different itsaId linked to it in entity resolver""" in new TestSetup {
 
-      val passedBackEntityId = "passedBackEntityId"
-      val passedBackItsaId = "passedBackItsaId"
-
-      val resolvedEntity_saUtr = "resolvedEntity_saUtr"
-      val resolvedEntity_itsaId = "different_than_passedBackItsaId"
+      val resolvedEntityItsaId = "different_than_passedBackItsaId"
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(
-          Future.successful(
-            Entity(
-              passedBackEntityId,
-              saUtr = Some(resolvedEntity_saUtr),
-              nino = None,
-              itsa = Some(resolvedEntity_itsaId))))
-
-      when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(
-          Entity(passedBackEntityId, Some(resolvedEntity_saUtr), nino = None, itsa = Some(passedBackItsaId))))
+          Future.successful(Entity(passedBackEntityId, saUtr = None, nino = None, itsa = Some(resolvedEntityItsaId))))
 
       val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -199,25 +153,38 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       verify(controller.entityResolverConnector, never()).update(any[Entity]())(any[HeaderCarrier]())
     }
 
-    // Case 1.6
-    """return UNAUTHORIZED (401) when itsaId is already linked to a different entityId in entity resolver""" in new TestSetup {
-      pending
-      // WARNING: this scenario seems already included in the previous one
+    List(Some("authTokenSaUtr"), None).foreach { resolvedEntitySaUtr =>
+      s"""Case 1.6: return UNAUTHORIZED (401) when itsaId is already linked to a different entityId in entity resolver
+         | when resolvedEntitySaUtr is $resolvedEntitySaUtr""".stripMargin in new TestSetup {
+        when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
+          .thenReturn(
+            Future.successful(Entity(passedBackEntityId, saUtr = resolvedEntitySaUtr, nino = None, itsa = None)))
+
+        val differentEntityId = "differentEntityId"
+        when(controller.entityResolverConnector.resolveByItsa(anyString())(any[HeaderCarrier]()))
+          .thenReturn(
+            Future.successful(Some(Entity(differentEntityId, None, None, None)))
+          )
+
+        val postData: JsValue = Json.parse(s"""{"entityId": "$passedBackEntityId", "itsaId": "$passedBackItsaId"}""")
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe UNAUTHORIZED
+        contentAsString(response) mustBe """{"reason":"itsaId is already linked to a different entityid in entity resolver"}"""
+      }
+
     }
 
     // Case 2.1
     // It seems not relevant to this channel-preferences service
 
-    // Case 3.1
-    """return NOT_FOUND (404) when the entityId passed back does not exist in entity resolver""" in new TestSetup {
+    //
+    """Case 3.1: return NOT_FOUND (404) when the entityId passed back does not exist in entity resolver""" in new TestSetup {
       when(
         controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
           any[HeaderCarrier](),
           any[ExecutionContext]()))
         .thenReturn(Future.successful(Some("authTokenSaUtr")))
-
-      val passedBackEntityId = "passedBackEntityId"
-      val passedBackItsaId = "passedBackItsaId"
 
       when(controller.entityResolverConnector.resolveBy(anyString())(any[HeaderCarrier]()))
         .thenReturn(Future.failed(UpstreamErrorResponse("passedBackEntityId not found", NOT_FOUND)))
@@ -488,6 +455,27 @@ class PreferenceControllerSpec extends PlaySpec with ScalaFutures with MockitoSu
       mock[EntityResolverConnector],
       Helpers.stubControllerComponents()
     )
+    val passedBackItsaId = "passedBackItsaId"
+    val authTokenSaUtr = "authTokenSaUtr"
+    when(
+      controller.authConnector.authorise[Option[String]](any[Predicate](), any[Retrieval[Option[String]]]())(
+        any[HeaderCarrier](),
+        any[ExecutionContext]()))
+      .thenReturn(Future.successful(Some(authTokenSaUtr)))
+
+    val passedBackEntityId = "passedBackEntityId"
+    when(controller.entityResolverConnector.resolveByItsa(anyString())(any[HeaderCarrier]()))
+      .thenReturn(
+        Future.successful(Some(Entity(passedBackEntityId, None, None, None)))
+      )
+
+    when(controller.entityResolverConnector.resolveBySaUtr(anyString())(any[HeaderCarrier]()))
+      .thenReturn(
+        Future.successful(Some(Entity(passedBackEntityId, None, None, None)))
+      )
+
+    when(controller.entityResolverConnector.update(any[Entity]())(any[HeaderCarrier]()))
+      .thenReturn(Future.successful(Entity(passedBackEntityId, None, nino = None, itsa = None)))
 
   }
 

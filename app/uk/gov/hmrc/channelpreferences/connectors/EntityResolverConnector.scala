@@ -62,6 +62,14 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
       }
     }
 
+  def resolveBySaUtr(saUtr: String)(implicit hc: HeaderCarrier): Future[Option[Entity]] =
+    httpClient.doGet(s"$serviceUrl/entity-resolver/sa/$saUtr").map { resp =>
+      resp.status match {
+        case OK => parseEntityResp(resp.body)
+        case _  => None
+      }
+    }
+
   def update(entity: Entity)(implicit hc: HeaderCarrier): Future[Entity] =
     httpClient.PUT[Entity, Entity](
       url = s"$serviceUrl/entity-resolver/${entity._id}",
