@@ -28,6 +28,7 @@ object AppDependencies {
     "org.pegdown"            % "pegdown"                   % "1.6.0"          % "test, it",
     "org.mockito"            % "mockito-core"              % "3.12.4"         % "test",
     "com.github.tomakehurst" % "wiremock-jre8"             % "2.30.1"         % "test,it",
-    "org.mock-server"        % "mockserver-netty"          % "5.11.2"         % "it"
+    "org.mock-server"        % "mockserver-netty"          % "5.11.2"         % "it",
+    "com.vladsch.flexmark"   % "flexmark-all"              % "0.36.8"         % "test, it"
   )
 }
