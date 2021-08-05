@@ -16,7 +16,7 @@ object AppDependencies {
   // The fork of swagger-play requires a version of jackson-databind version >= 2.9.0 and < 2.10.0
   // Other libraries pulling in later jackson-databind include http-verbs and logback-json-logger
   val dependencyOverrides: Seq[ModuleID] = Seq(
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.9"
+    "com.fasterxml.jackson.core"     % "jackson-databind"        % "2.10.0"
   )
 
   val test = Seq(
@@ -30,5 +30,6 @@ object AppDependencies {
     "com.github.tomakehurst" % "wiremock-jre8"             % "2.30.1"         % "test,it",
     "org.mock-server"        % "mockserver-netty"          % "5.11.2"         % "it",
     "com.vladsch.flexmark"   % "flexmark-all"              % "0.36.8"         % "test, it"
+
   )
 }

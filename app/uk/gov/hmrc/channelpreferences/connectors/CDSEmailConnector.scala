@@ -17,7 +17,6 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification
-// import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpClient
 import play.api.http.Status.{ BAD_GATEWAY, OK }
 import play.api.libs.json.{ JsSuccess, Json }
