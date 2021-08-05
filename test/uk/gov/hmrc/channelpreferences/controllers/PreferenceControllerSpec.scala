@@ -375,7 +375,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     val randomWordGen: Gen[String] = Gen.oneOf("foo", "bar", "baz", "fizz", "buzz", "toto", "tata")
     val httpResponseGen: Gen[HttpResponse] =
       for {
-        status <- Gen.oneOf(200, 401, 400, 404)
+        status <- Gen.oneOf(BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED)
         key    <- randomWordGen
         value  <- randomWordGen
         body = Json.obj(key -> value)
