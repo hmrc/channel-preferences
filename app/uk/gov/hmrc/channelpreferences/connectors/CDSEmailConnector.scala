@@ -49,10 +49,14 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
     }
 
   def getVerifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[Int, EmailVerification]] =
-    httpClient.doGet(s"$serviceUrl/customs-data-store/eori/$taxId/verified-email").map { resp =>
-      resp.status match {
-        case OK => parseCDSVerifiedEmailResp(resp.body)
-        case s  => Left(s)
+    httpClient
+      .doGet(
+        s"$serviceUrl/customs-data-store/eori/$taxId/verified-email",
+        hc.headers(Seq("Authorization", "X-Request-Id")))
+      .map { resp =>
+        resp.status match {
+          case OK => parseCDSVerifiedEmailResp(resp.body)
+          case s  => Left(s)
+        }
       }
-    }
 }
