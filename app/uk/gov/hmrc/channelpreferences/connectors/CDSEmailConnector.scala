@@ -61,9 +61,4 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
 
       }
 }
-// def getVerifiedEmail(taxId: String)(): Future[Either[Int, EmailVerification]] =
-//   httpClient.doGet(s"$serviceUrl/customs-data-store/eori/$taxId/verified-email").map { resp =>
-//     resp.status match {
-//       case OK => parseCDSVerifiedEmailResp(resp.body)
-//       case s  => Left(s)
-//     }
+
