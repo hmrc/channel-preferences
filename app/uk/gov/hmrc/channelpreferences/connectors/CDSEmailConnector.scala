@@ -61,4 +61,3 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
 
       }
 }
-
