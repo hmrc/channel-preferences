@@ -23,10 +23,11 @@ object AppDependencies {
     "uk.gov.hmrc"            %% "bootstrap-test-play-27"   % "5.10.0"         % Test,
     "com.typesafe.play"      %% "play-test"                % current          % Test,
     "org.scalatestplus.play" %% "scalatestplus-play"       % "4.0.3"          % "test, it",
+    "org.scalacheck"         %% "scalacheck"               % "1.15.4"         % "test, it",
     "uk.gov.hmrc"            %% "service-integration-test" % "0.13.0-play-27" % "test, it",
     "org.pegdown"            % "pegdown"                   % "1.6.0"          % "test, it",
-    "org.mockito"            % "mockito-core"              % "3.11.2"         % "test",
-    "com.github.tomakehurst" % "wiremock-jre8"             % "2.30.0"         % "test,it",
+    "org.mockito"            % "mockito-core"              % "3.12.1"         % "test",
+    "com.github.tomakehurst" % "wiremock-jre8"             % "2.30.1"         % "test,it",
     "org.mock-server"        % "mockserver-netty"          % "5.11.2"         % "it"
   )
 }
