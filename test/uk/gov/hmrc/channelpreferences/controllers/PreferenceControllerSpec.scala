@@ -93,7 +93,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
     "Forward the result form the entity-resolver" in new TestSetup with ConfirmGenerator {
       forAll(entityIgGen, itsaIdGen, httpResponseGen) { (entityId, itsaId, httpResponse) =>
-        when(mockEntityResolverConnector.confirm(anyString(), anyString()))
+        when(mockEntityResolverConnector.confirm(anyString(), anyString())(any[HeaderCarrier]))
           .thenReturn(Future.successful(httpResponse))
         val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
         val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
