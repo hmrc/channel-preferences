@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
-import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HeaderNames, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{ Inject, Singleton }
@@ -28,6 +28,9 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
     extends ServicesConfig(config) {
   val serviceUrl: String = baseUrl("entity-resolver")
 
-  def confirm(entityId: String, itsaId: String): Future[HttpResponse] =
-    httpClient.doEmptyPost(s"$serviceUrl/preferences/confirm/$entityId/$itsaId")
+  def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    httpClient.doEmptyPost(
+      s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
+      hc.headers(Seq(HeaderNames.authorisation))
+    )
 }
