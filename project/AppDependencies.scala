@@ -21,15 +21,16 @@ object AppDependencies {
 
   val test = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % "5.7.0"         % Test,
-    "com.typesafe.play"      %% "play-test"                % current          % Test,
+    "com.typesafe.play"      %% "play-test"                % current         % Test,
     "org.scalatestplus.play" %% "scalatestplus-play"       % "5.1.0"         % "test, it",
+    "org.scalatestplus"      %% "scalacheck-1-15"           % "3.2.9.0"      %"test, it",
     "org.scalatestplus"      %% "mockito-3-4"              % "3.2.9.0"       % "test, it",
     "uk.gov.hmrc"            %% "service-integration-test" % "1.1.0-play-28" % "test, it",
-    "org.pegdown"            % "pegdown"                   % "1.6.0"          % "test, it",
-    "org.mockito"            % "mockito-core"              % "3.12.4"         % "test",
-    "com.github.tomakehurst" % "wiremock-jre8"             % "2.30.1"         % "test,it",
-    "org.mock-server"        % "mockserver-netty"          % "5.11.2"         % "it",
-    "com.vladsch.flexmark"   % "flexmark-all"              % "0.36.8"         % "test, it"
+    "org.pegdown"            % "pegdown"                   % "1.6.0"         % "test, it",
+    "org.mockito"            % "mockito-core"              % "3.12.4"        % "test",
+    "com.github.tomakehurst" % "wiremock-jre8"             % "2.30.1"        % "test,it",
+    "org.mock-server"        % "mockserver-netty"          % "5.11.2"        % "it",
+    "com.vladsch.flexmark"   % "flexmark-all"              % "0.36.8"        % "test, it"
 
   )
 }

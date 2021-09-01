@@ -39,10 +39,8 @@ import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
 
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
-import play.api.test.{ FakeRequest, Helpers}
-
+import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 
