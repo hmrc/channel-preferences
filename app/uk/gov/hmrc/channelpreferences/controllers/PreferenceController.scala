@@ -73,7 +73,7 @@ class PreferenceController @Inject()(
     withJsonBody[Event] { event =>
       Future.successful(
         Created(s"Bounce sucessfully processed: '${event.eventId}', subject :'${event.subject}'" +
-          s", groupId: '${event.groupId}', timeStamp: '${event.timeStamp}', event: '${event.event}'"))
+          s", groupId: '${event.groupId}', timestamp: '${event.timestamp}', event: '${event.event}'"))
     }
   }
 }
