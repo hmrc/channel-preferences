@@ -27,7 +27,7 @@ class ProcessBounceISpec extends ISpec {
                         |    "subject": "bounced-email",
                         |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                         |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                        |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                        |    "timestamp" : "2021-04-07T09:46:29+00:00",
                         |    "event" : {
                         |        "event": "failed",
                         |        "emailAddress": "hmrc-customer@some-domain.org",
@@ -54,7 +54,7 @@ class ProcessBounceISpec extends ISpec {
                         |    "subject": "bounced-email",
                         |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                         |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                        |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                        |    "timestamp" : "2021-04-07T09:46:29+00:00",
                         |    "event" : {
                         |        "event": "failed",
                         |        "emailAddress": "hmrc-customer@some-domain.org",

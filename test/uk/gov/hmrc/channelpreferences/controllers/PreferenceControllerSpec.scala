@@ -212,7 +212,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    "subject": "bounced-email",
                                             |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                                             |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                                            |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                                            |    "timestamp" : "2021-04-07T09:46:29+00:00",
                                             |    "event" : {
                                             |        "event": "failed",
                                             |        "emailAddress": "hmrc-customer@some-domain.org",
@@ -235,7 +235,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    "subject": "bounced-email",
                                             |    "eventId" : "invalid",
                                             |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                                            |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                                            |    "timestamp" : "2021-04-07T09:46:29+00:00",
                                             |    "event" : {
                                             |        "event": "failed",
                                             |        "emailAddress": "hmrc-customer@some-domain.org",
@@ -252,13 +252,13 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       status(response) mustBe BAD_REQUEST
     }
 
-    """return BAD REQUEST (400) when the payload has an invalid date format as a [timeStamp] value""" in new TestSetup {
+    """return BAD REQUEST (400) when the payload has an invalid date format as a [timestamp] value""" in new TestSetup {
       val postData: JsValue = Json.parse(s"""
                                             |{
                                             |    "subject": "bounced-email",
                                             |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                                             |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                                            |    "timeStamp" : "invalid",
+                                            |    "timestamp" : "invalid",
                                             |    "event" : {
                                             |        "event": "failed",
                                             |        "emailAddress": "hmrc-customer@some-domain.org",
@@ -281,7 +281,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    "subject": "bounced-email",
                                             |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                                             |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                                            |    "timeStamp" : "invalid",
+                                            |    "timestamp" : "invalid",
                                             |    "event" : ""
                                             |}
     """.stripMargin)
@@ -295,7 +295,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       "subject",
       "eventId",
       "groupId",
-      "timeStamp",
+      "timestamp",
       "event"
     ).foreach((fieldName: String) =>
       s"""return BAD REQUEST (400) when the [$fieldName] field is missing""" in new TestSetup {
@@ -304,7 +304,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                               |    "subject": "bounced-email",
                                               |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                                               |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                                              |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                                              |    "timestamp" : "2021-04-07T09:46:29+00:00",
                                               |    "event" : {
                                               |        "event": "failed",
                                               |        "emailAddress": "hmrc-customer@some-domain.org",
@@ -327,7 +327,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       "subject",
       "eventId",
       "groupId",
-      "timeStamp"
+      "timestamp"
     ).foreach((fieldName: String) =>
       s"""return BAD REQUEST (400) when the [$fieldName] field is empty""" in new TestSetup {
         val postData: JsValue = Json.parse(s"""
@@ -335,7 +335,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                               |    "subject": "bounced-email",
                                               |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
                                               |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
-                                              |    "timeStamp" : "2021-04-07T09:46:29+00:00",
+                                              |    "timestamp" : "2021-04-07T09:46:29+00:00",
                                               |    "event" : {
                                               |        "event": "failed",
                                               |        "emailAddress": "hmrc-customer@some-domain.org",
