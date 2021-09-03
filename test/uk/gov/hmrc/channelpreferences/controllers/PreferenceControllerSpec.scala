@@ -20,9 +20,7 @@ import akka.stream.Materializer
 import org.joda.time.DateTime
 import play.api.libs.json.{ JsObject, JsValue, Json }
 import play.api.mvc.Headers
-import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.auth.core.AuthConnector
 import org.mockito.ArgumentMatchers.{ any, anyString }
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
@@ -101,107 +99,24 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         status(response) mustBe httpResponse.status
         contentAsJson(response) mustBe Json.parse(httpResponse.body)
       }
-
     }
   }
 
   "Calling Agent Enrolment Stub endpoint " should {
 
-    """return OK (200) for any AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
-
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "nino": "SB000003A",
-                                            |  "sautr": "1234567890"
-                                            |}
-      """.stripMargin)
-
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe OK
+    "Forward the result form the entity-resolver enrolment endpoint" in new TestSetup with EnrolmentGenerator {
+      forAll(agentArnGen, ninoGen, sautrGen, itsaIdGen, httpResponseGen) {
+        (agentArn, nino, sautr, itsaId, httpResponse) =>
+          when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+            .thenReturn(Future.successful(httpResponse))
+          val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+          val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+          val response = controller.enrolment().apply(fakePostRequest)
+          status(response) mustBe httpResponse.status
+          contentAsJson(response) mustBe Json.parse(httpResponse.body)
+      }
     }
 
-    """return BAD REQUEST (400) for missing AgentReferenceNumber(ARN) and itsaId""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
-
-      val postData: JsValue = Json.obj()
-
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe BAD_REQUEST
-    }
-
-    """return BAD REQUEST (400) for missing sautr""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
-
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "nino": "SB000003A"
-                                            |}
-      """.stripMargin)
-
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe BAD_REQUEST
-    }
-
-    """return BAD REQUEST (400) for missing nino""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.successful(Some(AffinityGroup.Agent)))
-
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "sautr": "1234567890"
-                                            |}
-      """.stripMargin)
-
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe BAD_REQUEST
-    }
-
-    """Check for UNAUTHORIZED (401) when the AffinityGroup does not match the Agent""" in new TestSetup {
-      when(
-        mockAuthConnector.authorise[Option[AffinityGroup]](any[Predicate](), any[Retrieval[Option[AffinityGroup]]]())(
-          any[HeaderCarrier](),
-          any[ExecutionContext]()))
-        .thenReturn(Future.failed(AuthorisationException.fromString("UnsupportedAffinityGroup")))
-
-      val postData: JsValue = Json.parse(s"""
-                                            |{
-                                            |  "arn": "testARN",
-                                            |  "itsaId": "testItsaId",
-                                            |  "nino": "SB000003A",
-                                            |  "sautr": "1234567890"
-                                            |}
-      """.stripMargin)
-
-      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-      val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe UNAUTHORIZED
-    }
   }
 
   "Calling processBounce endpoint to process an email bounce event" should {
@@ -371,6 +286,21 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   }
   trait ConfirmGenerator {
     val entityIgGen: Gen[String] = Gen.uuid.map(_.toString)
+    val itsaIdGen: Gen[String] = Gen.choose(0, 9999999).map(_.toString)
+    val randomWordGen: Gen[String] = Gen.oneOf("foo", "bar", "baz", "fizz", "buzz", "toto", "tata")
+    val httpResponseGen: Gen[HttpResponse] =
+      for {
+        status <- Gen.oneOf(BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED)
+        key    <- randomWordGen
+        value  <- randomWordGen
+        body = Json.obj(key -> value)
+      } yield HttpResponse(status, body, Map.empty[String, Seq[String]])
+  }
+
+  trait EnrolmentGenerator {
+    val agentArnGen: Gen[String] = Gen.choose(0, 9999999).map(number => s"ARN$number")
+    val ninoGen: Gen[String] = Gen.choose(0, 100000).map(num => f"CE$num%06dD")
+    val sautrGen: Gen[String] = Gen.choose(0, 100000).map(num => f"$num%09d")
     val itsaIdGen: Gen[String] = Gen.choose(0, 9999999).map(_.toString)
     val randomWordGen: Gen[String] = Gen.oneOf("foo", "bar", "baz", "fizz", "buzz", "toto", "tata")
     val httpResponseGen: Gen[HttpResponse] =

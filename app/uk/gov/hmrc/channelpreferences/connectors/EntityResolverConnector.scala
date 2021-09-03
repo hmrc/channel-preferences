@@ -17,6 +17,7 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{ HeaderCarrier, HeaderNames, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -31,6 +32,13 @@ class EntityResolverConnector @Inject()(config: Configuration, httpClient: HttpC
   def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     httpClient.doEmptyPost(
       s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
+      hc.headers(Seq(HeaderNames.authorisation))
+    )
+
+  def enrolment(requestBody: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    httpClient.doPost(
+      s"$serviceUrl/preferences/enrolment",
+      requestBody,
       hc.headers(Seq(HeaderNames.authorisation))
     )
 }
