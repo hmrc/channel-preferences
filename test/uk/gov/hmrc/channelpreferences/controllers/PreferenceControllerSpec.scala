@@ -34,6 +34,7 @@ import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
+import uk.gov.hmrc.auth.otac.UnexpectedError
 import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
