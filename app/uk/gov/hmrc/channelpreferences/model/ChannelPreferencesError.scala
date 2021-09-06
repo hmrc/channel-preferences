@@ -19,4 +19,4 @@ package uk.gov.hmrc.channelpreferences.model
 sealed trait ChannelPreferencesError
 
 final case class PreferencesConnectorError(message: String) extends ChannelPreferencesError
-final case class UnExpectedError() extends Throwable
+final case class UnexpectedError() extends Throwable
