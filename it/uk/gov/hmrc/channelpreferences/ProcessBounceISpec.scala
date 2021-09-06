@@ -71,7 +71,7 @@ class ProcessBounceISpec extends ISpec {
 
   "A POST request to /channel-preferences/process/bounce to process incoming bounce messages from the event-hub" should {
 
-    "return a CREATED (201) success status" in {
+    "return an OK(200) success status" in {
       val postData = s"""
                         |{
                         |    "subject": "bounced-email",
