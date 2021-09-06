@@ -4,10 +4,16 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.SbtBobbyPlugin.BobbyKeys.bobbyRulesURL
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import play.sbt.routes.RoutesKeys
+import uk.gov.hmrc.ExternalService
+import uk.gov.hmrc.ServiceManagerPlugin.Keys.itDependenciesList
 
 val appName = "channel-preferences"
 
 val silencerVersion = "1.7.0"
+
+lazy val externalServices = List(
+  ExternalService("PREFERENCES")
+)
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SwaggerPlugin)
@@ -80,6 +86,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
+  .settings(itDependenciesList := externalServices)
   .settings(
     resolvers += Resolver.jcenterRepo,
     inConfig(IntegrationTest)(
