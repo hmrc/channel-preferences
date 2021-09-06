@@ -28,7 +28,7 @@ import play.api.http.Status.{ ACCEPTED, NOT_IMPLEMENTED }
 import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Email, EmailVerification, Sms }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreferenceService
-import uk.gov.hmrc.channelpreferences.services.Auditing
+import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector

@@ -59,24 +59,15 @@
         "tags" : [ "app" ]
       }
     },
-    "/channel-preferences/confirm/{entityId}/itsa/{itsaId}" : {
-      "get" : {
-        "operationId" : "activate",
-        "parameters" : [ {
-          "schema" : {
-            "type" : "string"
-          },
-          "in" : "path",
-          "name" : "entityId",
-          "required" : true
-        }, {
-          "schema" : {
-            "type" : "string"
-          },
-          "in" : "path",
-          "name" : "itsaId",
-          "required" : true
-        } ],
+    "/channel-preferences/process/bounce" : {
+      "post" : {
+        "operationId" : "processBounce",
+        "tags" : [ "app" ]
+      }
+    },
+    "/channel-preferences/confirm" : {
+      "post" : {
+        "operationId" : "confirm",
         "tags" : [ "app" ]
       }
     },
@@ -146,7 +137,7 @@
   "produces" : [ "application/json" ],
   "info" : {
     "title" : "Channel Preferences API",
-    "version" : "0.21.0-SNAPSHOT"
+    "version" : "0.31.0-SNAPSHOT"
   },
   "consumes" : [ "application/json" ],
   "tags" : [ {

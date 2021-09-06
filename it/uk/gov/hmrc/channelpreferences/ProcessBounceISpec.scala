@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.channelpreferences
 
-import play.api.http.Status.{ CREATED, UNSUPPORTED_MEDIA_TYPE }
+import play.api.http.Status
+import play.api.http.Status.UNSUPPORTED_MEDIA_TYPE
 
 class ProcessBounceISpec extends ISpec {
+
   "A POST request to /channel-preferences/process/bounce to process incoming bounce messages from the event-hub" should {
 
-    "return a CREATED (201) success status" in {
+    "return an OK(200) success status" in {
       val postData = s"""
                         |{
                         |    "subject": "bounced-email",
@@ -45,7 +47,8 @@ class ProcessBounceISpec extends ISpec {
           .post(postData)
           .futureValue
 
-      response.status mustBe (CREATED)
+      response.status mustBe Status.OK
+      response.body mustBe "Bounce processed successfully for 77ed39b7-d5d8-46ed-abab-a5a8ff416dae"
     }
 
     "return UNSUPPORTED MEDIA TYPE (415) when request does not meet the correct media type (application/json)" in {
