@@ -22,7 +22,7 @@ import play.api.http.Status.NOT_IMPLEMENTED
 import play.api.{ Logger, LoggerLike }
 import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
-import uk.gov.hmrc.channelpreferences.services.Auditing
+import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import javax.inject._

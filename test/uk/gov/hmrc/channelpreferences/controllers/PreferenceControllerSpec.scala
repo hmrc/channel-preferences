@@ -18,26 +18,30 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import akka.stream.Materializer
 import org.joda.time.DateTime
-import play.api.libs.json.{ JsObject, JsValue, Json }
-import play.api.mvc.Headers
-import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import org.mockito.ArgumentMatchers.{ any, anyString }
 import org.mockito.Mockito._
+import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import org.scalacheck.Gen
+import play.api.http.Status
+import play.api.http.Status._
+import play.api.libs.json.{ JsObject, JsValue, Json }
+import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
-import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import play.api.test.{ FakeRequest, Helpers, NoMaterializer }
-import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
-import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
 import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
+import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
+import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
+import uk.gov.hmrc.channelpreferences.model.{ PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.preferences.model.Event
+import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
@@ -51,6 +55,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
+  val mockProcessEmail: ProcessEmail = mock[ProcessEmail]
 
   "Calling preference" should {
     "return a BAD GATEWAY (502) for unexpected error status" in {
@@ -63,6 +68,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         },
         mockAuthConnector,
         mockEntityResolverConnector,
+        mockProcessEmail,
         Helpers.stubControllerComponents()
       )
 
@@ -80,6 +86,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         },
         mockAuthConnector,
         mockEntityResolverConnector,
+        mockProcessEmail,
         Helpers.stubControllerComponents()
       )
 
@@ -206,7 +213,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
   "Calling processBounce endpoint to process an email bounce event" should {
 
-    """return CREATED (201) if valid Json event valid""" in new TestSetup {
+    """return OK (200) if valid Json event valid""" in new TestSetup {
       val postData: JsValue = Json.parse(s"""
                                             |{
                                             |    "subject": "bounced-email",
@@ -223,10 +230,11 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    }
                                             |}
     """.stripMargin)
+      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
 
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
-      status(response) mustBe CREATED
+      status(response) mustBe OK
     }
 
     """return BAD REQUEST (400) when the payload has an invalid UUID as an [eventId] value""" in new TestSetup {
@@ -246,7 +254,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    }
                                             |}
     """.stripMargin)
-
+      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
@@ -269,7 +277,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    }
                                             |}
     """.stripMargin)
-
+      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
@@ -285,7 +293,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    "event" : ""
                                             |}
     """.stripMargin)
-
+      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
@@ -353,9 +361,55 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         val responseWithEmptyField = controller.processBounce().apply(fakePostRequestWithEmptyField)
         status(responseWithEmptyField) mustBe BAD_REQUEST
     })
+
+    "return OK(200) when processEmail returns success" in new TestSetup {
+      when(mockProcessEmail.process(any[Event]))
+        .thenReturn(Future.successful(Right("Email bounce processed successfully")))
+      val preferenceController =
+        new PreferenceController(
+          mockCdsPreference,
+          mockAuthConnector,
+          mockEntityResolverConnector,
+          mockProcessEmail,
+          Helpers.stubControllerComponents())
+
+      val result = preferenceController.processBounce().apply(fakeProcessBounce)
+      contentAsString(result) mustBe "Email bounce processed successfully"
+    }
+
+    "return NotModified when processEmail returns error" in new TestSetup {
+      when(mockProcessEmail.process(any[Event]))
+        .thenReturn(Future.successful(Left(PreferencesConnectorError("error from preferences"))))
+      val preferenceController =
+        new PreferenceController(
+          mockCdsPreference,
+          mockAuthConnector,
+          mockEntityResolverConnector,
+          mockProcessEmail,
+          Helpers.stubControllerComponents())
+
+      val result = preferenceController.processBounce().apply(fakeProcessBounce)
+      status(result) mustBe Status.NOT_MODIFIED
+    }
+
+    "return InternalServerError when processEmail returns unexpected error" in new TestSetup {
+      when(mockProcessEmail.process(any[Event])).thenReturn(Future.failed(UnExpectedError()))
+      val preferenceController =
+        new PreferenceController(
+          mockCdsPreference,
+          mockAuthConnector,
+          mockEntityResolverConnector,
+          mockProcessEmail,
+          Helpers.stubControllerComponents())
+
+      val result = preferenceController.processBounce().apply(fakeProcessBounce)
+      status(result) mustBe Status.INTERNAL_SERVER_ERROR
+    }
+
   }
 
   trait TestSetup {
+
     val controller = new PreferenceController(
       new CdsPreference {
         override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
@@ -365,8 +419,32 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       },
       mockAuthConnector,
       mockEntityResolverConnector,
+      mockProcessEmail,
       Helpers.stubControllerComponents()
     )
+
+    val mockCdsPreference = mock[CdsPreference]
+
+    val processBouncePayload: JsValue = Json.parse(s"""
+                                                      |{
+                                                      |    "subject": "bounced-email",
+                                                      |    "eventId" : "77ed39b7-d5d8-46ed-abab-a5a8ff416dae",
+                                                      |    "groupId": "20180622211249.1.2A6098970A380E12@example.org",
+                                                      |    "timestamp" : "2021-04-07T09:46:29+00:00",
+                                                      |    "event" : {
+                                                      |        "event": "failed",
+                                                      |        "emailAddress": "hmrc-customer@some-domain.org",
+                                                      |        "detected": "2021-04-07T09:46:29+00:00",
+                                                      |        "code": 605,
+                                                      |        "reason": "Not delivering to previously bounced address",
+                                                      |        "enrolment": "HMRC-MTD-VAT~VRN~GB123456789"
+                                                      |    }
+                                                      |}
+          """.stripMargin)
+    when(mockProcessEmail.process(any[Event]))
+      .thenReturn(Future.successful(Right("Email bounce processed successfully")))
+
+    val fakeProcessBounce = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), processBouncePayload)
 
   }
   trait ConfirmGenerator {
