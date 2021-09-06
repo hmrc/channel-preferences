@@ -11,10 +11,6 @@ val appName = "channel-preferences"
 
 val silencerVersion = "1.7.0"
 
-lazy val externalServices = List(
-  ExternalService("PREFERENCES")
-)
-
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SwaggerPlugin)
   .settings(
@@ -86,7 +82,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
-  .settings(itDependenciesList := externalServices)
   .settings(
     resolvers += Resolver.jcenterRepo,
     inConfig(IntegrationTest)(
@@ -98,6 +93,10 @@ lazy val microservice = Project(appName, file("."))
         }.value)
     )
   )
+  .settings(ServiceManagerPlugin.serviceManagerSettings)
+  .settings(itDependenciesList := List(
+    ExternalService("PREFERENCES")
+  ))
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 compileScalastyle := scalastyle.in(Compile).toTask("").value
