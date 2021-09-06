@@ -95,8 +95,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(ServiceManagerPlugin.serviceManagerSettings)
   .settings(itDependenciesList := List(
-    ExternalService("PREFERENCES"),
-    ExternalService("CHANNEL_PREFERENCES")
+    ExternalService("PREFERENCES")
   ))
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
