@@ -32,8 +32,6 @@ import play.api.libs.json.{ JsObject, JsValue, Json }
 import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
 
-
-
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
@@ -43,7 +41,6 @@ import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
-
 
 import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }

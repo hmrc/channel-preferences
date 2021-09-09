@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import play.api.Logger.logger
+import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -40,6 +40,8 @@ class PreferenceController @Inject()(
   processEmail: ProcessEmail,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions {
+
+  val logger: Logger = Logger(this.getClass())
 
   implicit val emailWrites = uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification.emailVerificationFormat
   def preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String): Action[AnyContent] =
