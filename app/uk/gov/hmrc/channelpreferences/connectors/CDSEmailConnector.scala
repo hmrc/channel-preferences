@@ -17,8 +17,8 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.HeaderCarrier
 import play.api.http.Status.{ BAD_GATEWAY, OK }
 import play.api.libs.json.{ JsSuccess, Json }
 import play.api.{ Configuration, Logger, LoggerLike }
@@ -58,5 +58,6 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
           case OK => parseCDSVerifiedEmailResp(resp.body)
           case s  => Left(s)
         }
+
       }
 }

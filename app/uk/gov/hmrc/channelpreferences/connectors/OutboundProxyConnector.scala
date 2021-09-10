@@ -22,7 +22,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import controllers.Assets.CONTENT_TYPE
+import play.api.http.HeaderNames.CONTENT_TYPE
 
 import javax.inject.{ Inject, Singleton }
 import play.api.http.HeaderNames._
