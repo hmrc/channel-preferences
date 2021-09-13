@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -28,6 +28,7 @@ import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
+
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -93,4 +94,23 @@ class PreferenceController @Inject()(
         }
     }
   }
+
+  def update(key: String, status: String): Action[AnyContent] =
+    Action.async { _ =>
+      key match {
+        case "itsa"        => validateItsaStatus(status)(handleItsa)
+        case unexpectedKey => Future.successful(BadRequest(s"The key $unexpectedKey is not supported"))
+      }
+    }
+
+  private def handleItsa(status: Boolean): Future[Result] =
+    Future.successful(Ok(status.toString)) // TODO use EIS connector
+
+  private def validateItsaStatus(status: String)(fun: Boolean => Future[Result]): Future[Result] =
+    status.toLowerCase match {
+      case "true"           => fun(true)
+      case "false"          => fun(false)
+      case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa $unexpectedStatus"))
+    }
+
 }

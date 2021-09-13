@@ -12,13 +12,14 @@
 #   502:
 #     description: map all upstream error codes to 502
 ###
-GET        /channel-preferences/preference/:channel     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)
-POST       /channel-preferences/enrolment               @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
-POST       /channel-preferences/process/bounce          @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
+GET        /channel-preferences/preference/:channel         uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)
+POST       /channel-preferences/enrolment                   @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
+POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
+POST       /channel-preferences/preference/:key/:status     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.update(key: String, status: String)
 
-POST       /channel-preferences/confirm                 uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
-GET        /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-POST       /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-PUT        /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-PATCH      /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-DELETE     /*path                                       @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
+POST       /channel-preferences/confirm                     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
+GET        /*path                                           @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
+POST       /*path                                           @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
+PUT        /*path                                           @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
+PATCH      /*path                                           @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
+DELETE     /*path                                           @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
