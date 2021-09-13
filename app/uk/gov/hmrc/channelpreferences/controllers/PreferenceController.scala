@@ -98,7 +98,7 @@ class PreferenceController @Inject()(
   def update(key: String, status: String): Action[AnyContent] =
     Action.async { _ =>
       key match {
-        case "itsa"        => validateItsaStatus(status)(handleItsa)
+        case "itsa"        => validateItsaStatus(status)
         case unexpectedKey => Future.successful(BadRequest(s"The key $unexpectedKey is not supported"))
       }
     }
@@ -106,10 +106,10 @@ class PreferenceController @Inject()(
   private def handleItsa(status: Boolean): Future[Result] =
     Future.successful(Ok(status.toString)) // TODO use EIS connector
 
-  private def validateItsaStatus(status: String)(fun: Boolean => Future[Result]): Future[Result] =
+  private def validateItsaStatus(status: String): Future[Result] =
     status.toLowerCase match {
-      case "true"           => fun(true)
-      case "false"          => fun(false)
+      case "true"           => handleItsa(true)
+      case "false"          => handleItsa(false)
       case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa $unexpectedStatus"))
     }
 
