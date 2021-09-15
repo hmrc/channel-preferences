@@ -115,7 +115,7 @@ class PreferenceController @Inject()(
     eisConnector.updateContactPreference(ITSA_REGIME.toLowerCase, status, correlationId).map {
       case Right(_) => Ok
       case Left(EisUpdateContactError(message)) =>
-        logger.warn(message)
+        logger.error(message)
         InternalServerError
     }
 
