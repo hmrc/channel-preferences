@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model
+package uk.gov.hmrc.channelpreferences.preferences.model
+
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.Reads.verifying
+import play.api.libs.json._
 
 import java.time.LocalDateTime
 import java.util.UUID
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.Reads.verifying
-import play.api.libs.json.{ JsPath, JsValue, Reads }
-
-final case class Event(eventId: UUID, subject: String, groupId: String, timeStamp: LocalDateTime, event: JsValue)
+final case class Event(eventId: UUID, subject: String, groupId: String, timestamp: LocalDateTime, event: JsValue)
 
 object Event {
 
@@ -31,7 +31,10 @@ object Event {
     (JsPath \ "eventId").read[UUID] and
       (JsPath \ "subject").read[String](verifying[String](a => a.trim.nonEmpty)) and
       (JsPath \ "groupId").read[String](verifying[String](a => a.trim.nonEmpty)) and
-      (JsPath \ "timeStamp").read[LocalDateTime] and
+      (JsPath \ "timestamp").read[LocalDateTime] and
       (JsPath \ "event").read[JsValue]
   )(Event.apply _)
+
+  implicit val eventWrites: Writes[Event] = Json.writes[Event]
+
 }

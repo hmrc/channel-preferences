@@ -4,6 +4,8 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.SbtBobbyPlugin.BobbyKeys.bobbyRulesURL
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import play.sbt.routes.RoutesKeys
+import uk.gov.hmrc.ExternalService
+import uk.gov.hmrc.ServiceManagerPlugin.Keys.itDependenciesList
 
 val appName = "channel-preferences"
 
@@ -91,6 +93,10 @@ lazy val microservice = Project(appName, file("."))
         }.value)
     )
   )
+  .settings(ServiceManagerPlugin.serviceManagerSettings)
+  .settings(itDependenciesList := List(
+    ExternalService("PREFERENCES")
+  ))
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 compileScalastyle := scalastyle.in(Compile).toTask("").value
@@ -116,6 +122,7 @@ dependencyUpdatesFilter -= moduleFilter(organization = "org.scala-lang")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.github.ghik")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.typesafe.play")
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatestplus.play")
+dependencyUpdatesFilter -= moduleFilter(name = "flexmark-all")
 
 sources in (Compile, doc) := Seq.empty
 
