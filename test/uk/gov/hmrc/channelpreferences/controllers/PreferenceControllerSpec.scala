@@ -30,16 +30,13 @@ import play.api.http.Status
 import play.api.libs.json.{ JsObject, JsValue, Json }
 import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
-
 import uk.gov.hmrc.auth.core.AuthConnector
-
 import play.api.test.{ FakeRequest, Helpers }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
-import play.api.mvc.Results.{ InternalServerError, Ok }
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.channelpreferences.model.{ PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.{ EisUpdateContactError, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
@@ -337,7 +334,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   "Calling update contact" should {
     "return OK when the call to EIS succeed" in new TestSetup {
       when(mockEISConnector.updateContactPreference(anyString(), anyBoolean(), anyString()))
-        .thenReturn(Future.successful(Ok))
+        .thenReturn(Future.successful(Right(())))
 
       val fakeRequest = FakeRequest("POST", "/path")
       val result = controller.update("itsa", "true").apply(fakeRequest)
@@ -346,7 +343,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
     "return INTERNAL_SERVER_ERROR (500) when the call to EIS fails" in new TestSetup {
       when(mockEISConnector.updateContactPreference(anyString(), anyBoolean(), anyString()))
-        .thenReturn(Future.successful(InternalServerError))
+        .thenReturn(Future.successful(Left(EisUpdateContactError("errorMessage"))))
 
       val fakeRequest = FakeRequest("POST", "/path")
       val result = controller.update("itsa", "true").apply(fakeRequest)
@@ -359,6 +356,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       private val unsupportedKey = "unsupportedKey"
       val result = controller.update(unsupportedKey, "true").apply(fakeRequest)
       status(result) mustBe Status.BAD_REQUEST
+      contentAsString(result) mustBe "The key unsupportedKey is not supported"
     }
 
     "return BAD_REQUEST when the status is not supported" in new TestSetup {
@@ -367,6 +365,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       private val unsupportedStatus = "unsupportedStatus"
       val result = controller.update("itsa", unsupportedStatus).apply(fakeRequest)
       status(result) mustBe Status.BAD_REQUEST
+      contentAsString(result) mustBe "Unexpected status for itsa key unsupportedstatus"
     }
   }
 

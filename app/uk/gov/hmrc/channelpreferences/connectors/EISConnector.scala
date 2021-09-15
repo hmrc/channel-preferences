@@ -17,16 +17,16 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
-import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE }
+import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE }
 import play.api.http.MimeTypes
-import uk.gov.hmrc.channelpreferences.model.UpdateContactPreferenceRequest
+import uk.gov.hmrc.channelpreferences.model.{ EisUpdateContactError, UpdateContactPreferenceRequest }
 import uk.gov.hmrc.http.HttpClient
 import play.api.http.Status._
-import play.api.mvc.Result
-import play.api.mvc.Results.{ InternalServerError, Ok }
 import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.{ ZoneOffset, ZonedDateTime }
+import java.time.format.DateTimeFormatter
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
@@ -39,21 +39,30 @@ class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(impl
 
   private def endpointUrl(regime: String): String = s"$serviceUrl/income-tax/customer/$regime/contact-preference"
 
-  def updateContactPreference(regime: String, digitalChannel: Boolean, correlationId: String): Future[Result] = {
+  def updateContactPreference(
+    regime: String,
+    digitalChannel: Boolean,
+    correlationId: String): Future[Either[EisUpdateContactError, Unit]] = {
     val requestBody = UpdateContactPreferenceRequest(digitalChannel)
     val headers =
       Seq(
         CONTENT_TYPE                -> MimeTypes.JSON,
         ACCEPT                      -> MimeTypes.JSON,
         AUTHORIZATION               -> s"Bearer $eisBearerToken",
+        DATE                        -> DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneOffset.UTC)),
         CustomHeaders.CorrelationId -> correlationId,
         CustomHeaders.ForwardedHost -> "Digital",
         CustomHeaders.Environment   -> eisEnvironment
       )
     httpClient.doPut(endpointUrl(regime), requestBody, headers).map { response =>
       response.status match {
-        case OK => Ok(response.json)
-        case _  => InternalServerError(response.json)
+        case OK => Right(())
+        case code =>
+          Left(
+            EisUpdateContactError(
+              s"There was an issue with forwarding the message to EIS, response code is: $code, response body is: ${response.body}"
+            )
+          )
       }
     }
   }

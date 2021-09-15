@@ -44,7 +44,9 @@ class PreferenceController @Inject()(
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions {
 
-  val logger: Logger = Logger(this.getClass())
+  private val logger: Logger = Logger(this.getClass())
+
+  private val ITSA_REGIME = "ITSA"
 
   implicit val emailWrites = uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification.emailVerificationFormat
   def preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String): Action[AnyContent] =
@@ -93,9 +95,9 @@ class PreferenceController @Inject()(
   def update(key: String, status: String): Action[AnyContent] =
     Action.async { request =>
       val correlationId = extractCorrelationId(request)
-      key match {
-        case "itsa"        => handleItsaStatus(status, correlationId)
-        case unexpectedKey => Future.successful(BadRequest(s"The key $unexpectedKey is not supported"))
+      key.toUpperCase() match {
+        case ITSA_REGIME => handleItsaStatus(status, correlationId)
+        case _           => Future.successful(BadRequest(s"The key $key is not supported"))
       }
     }
 
@@ -110,13 +112,18 @@ class PreferenceController @Inject()(
   }
 
   private def eisUpdateContact(status: Boolean, correlationId: String): Future[Result] =
-    eisConnector.updateContactPreference("ITSA", status, correlationId)
+    eisConnector.updateContactPreference(ITSA_REGIME.toLowerCase, status, correlationId).map {
+      case Right(_) => Ok
+      case Left(EisUpdateContactError(message)) =>
+        logger.warn(message)
+        InternalServerError
+    }
 
   private def handleItsaStatus(status: String, correlationId: String): Future[Result] =
     status.toLowerCase match {
       case "true"           => eisUpdateContact(true, correlationId)
       case "false"          => eisUpdateContact(false, correlationId)
-      case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa $unexpectedStatus"))
+      case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa key $unexpectedStatus"))
     }
 
 }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.channelpreferences.connectors
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -33,23 +34,29 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
-class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
+class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with EitherValues {
 
   "EISConnector.updateContactPreference" must {
     "return forward the response of the httpCall when succeed" in new TestCase {
       val connector = new EISConnector(configuration, httpClientMock)
 
       val result = connector.updateContactPreference("itsa", true, "correlationId")
-      status(result) mustBe OK
-      contentAsJson(result) mustBe httpResponseMock.json
+      result.futureValue.right.value mustBe (())
     }
 
     "return INTERNAL_SERVER_ERROR when the call to EIS fails" in new TestCase {
+      when(
+        httpClientMock
+          .doPut[UpdateContactPreferenceRequest](
+            any[String],
+            any[UpdateContactPreferenceRequest],
+            any[Seq[(String, String)]]
+          )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpUnhappyResponseMock))
       val connector = new EISConnector(configuration, httpClientMock)
 
       val result = connector.updateContactPreference("itsa", true, "correlationId")
-      status(result) mustBe OK
-      contentAsJson(result) mustBe httpResponseMock.json
+      result.futureValue.left.value.message must include("There was an issue with forwarding the message to EIS")
     }
 
   }
