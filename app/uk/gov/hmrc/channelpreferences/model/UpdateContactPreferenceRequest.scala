@@ -30,8 +30,8 @@ object UpdateContactPreferenceRequest {
 
   def apply(digitalChannel: Boolean): UpdateContactPreferenceRequest =
     UpdateContactPreferenceRequest(
-      "SOME constant",
-      "SOME constant",
+      "MTDBSA",
+      "XMIT00000064424",
       digitalChannel
     )
 }

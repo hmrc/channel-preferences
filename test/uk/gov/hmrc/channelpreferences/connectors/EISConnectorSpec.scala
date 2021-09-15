@@ -87,7 +87,7 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
       .thenReturn(Future.successful(httpResponseMock))
     val configuration: Configuration = Configuration(
       "microservice.services.eis.host"         -> "localhost",
-      "microservice.services.eis.port"         -> 9202,
+      "microservice.services.eis.port"         -> 8088,
       "microservice.services.eis.bearer-token" -> "bearerToken",
       "microservice.services.eis.environment"  -> "dev"
     )
