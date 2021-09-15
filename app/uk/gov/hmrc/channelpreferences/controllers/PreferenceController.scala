@@ -18,11 +18,12 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
-import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
+import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
+import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
@@ -33,11 +34,14 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.util.UUID
+
 @Singleton
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
   val authConnector: AuthConnector,
   entityResolverConnector: EntityResolverConnector,
+  eisConnector: EISConnector,
   processEmail: ProcessEmail,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions {
@@ -96,20 +100,31 @@ class PreferenceController @Inject()(
   }
 
   def update(key: String, status: String): Action[AnyContent] =
-    Action.async { _ =>
+    Action.async { request =>
+      val correlationId = extractCorrelationId(request)
       key match {
-        case "itsa"        => validateItsaStatus(status)
+        case "itsa"        => validateItsaStatus(status, correlationId)
         case unexpectedKey => Future.successful(BadRequest(s"The key $unexpectedKey is not supported"))
       }
     }
 
-  private def handleItsa(status: Boolean): Future[Result] =
-    Future.successful(Ok(status.toString)) // TODO use EIS connector
+  private def extractCorrelationId(request: Request[AnyContent]): String = {
+    val ACKNOWLEDGEMENT_REFERENCE_MAX_LENGTH = 32
+    val randomId = UUID.randomUUID().toString
+    request.headers
+      .get(CustomHeaders.CorrelationId)
+      .getOrElse(randomId)
+      .replace("-", "")
+      .substring(0, ACKNOWLEDGEMENT_REFERENCE_MAX_LENGTH - 1)
+  }
 
-  private def validateItsaStatus(status: String): Future[Result] =
+  private def handleItsa(status: Boolean, correlationId: String): Future[Result] =
+    eisConnector.updateContactPreference("ITSA", status, correlationId)
+
+  private def validateItsaStatus(status: String, correlationId: String): Future[Result] =
     status.toLowerCase match {
-      case "true"           => handleItsa(true)
-      case "false"          => handleItsa(false)
+      case "true"           => handleItsa(true, correlationId)
+      case "false"          => handleItsa(false, correlationId)
       case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa $unexpectedStatus"))
     }
 

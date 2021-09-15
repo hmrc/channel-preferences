@@ -31,18 +31,15 @@ import play.api.http.Status._
 import play.api.libs.json.{ JsObject, JsValue, Json }
 import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
-
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
-
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
-
-import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
+import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model.{ PreferencesConnectorError, UnExpectedError }
@@ -50,6 +47,7 @@ import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -62,6 +60,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
+  val mockEISConnector: EISConnector = mock[EISConnector]
   val mockProcessEmail: ProcessEmail = mock[ProcessEmail]
 
   "Calling preference" should {
@@ -75,6 +74,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         },
         mockAuthConnector,
         mockEntityResolverConnector,
+        mockEISConnector,
         mockProcessEmail,
         Helpers.stubControllerComponents()
       )
@@ -93,6 +93,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         },
         mockAuthConnector,
         mockEntityResolverConnector,
+        mockEISConnector,
         mockProcessEmail,
         Helpers.stubControllerComponents()
       )
@@ -377,6 +378,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           mockCdsPreference,
           mockAuthConnector,
           mockEntityResolverConnector,
+          mockEISConnector,
           mockProcessEmail,
           Helpers.stubControllerComponents())
 
@@ -392,6 +394,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           mockCdsPreference,
           mockAuthConnector,
           mockEntityResolverConnector,
+          mockEISConnector,
           mockProcessEmail,
           Helpers.stubControllerComponents())
 
@@ -406,6 +409,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           mockCdsPreference,
           mockAuthConnector,
           mockEntityResolverConnector,
+          mockEISConnector,
           mockProcessEmail,
           Helpers.stubControllerComponents())
 
@@ -426,6 +430,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       },
       mockAuthConnector,
       mockEntityResolverConnector,
+      mockEISConnector,
       mockProcessEmail,
       Helpers.stubControllerComponents()
     )
