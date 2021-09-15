@@ -103,7 +103,7 @@ class PreferenceController @Inject()(
     Action.async { request =>
       val correlationId = extractCorrelationId(request)
       key match {
-        case "itsa"        => validateItsaStatus(status, correlationId)
+        case "itsa"        => handleItsaStatus(status, correlationId)
         case unexpectedKey => Future.successful(BadRequest(s"The key $unexpectedKey is not supported"))
       }
     }
@@ -118,13 +118,13 @@ class PreferenceController @Inject()(
       .substring(0, ACKNOWLEDGEMENT_REFERENCE_MAX_LENGTH - 1)
   }
 
-  private def handleItsa(status: Boolean, correlationId: String): Future[Result] =
+  private def eisUpdateContact(status: Boolean, correlationId: String): Future[Result] =
     eisConnector.updateContactPreference("ITSA", status, correlationId)
 
-  private def validateItsaStatus(status: String, correlationId: String): Future[Result] =
+  private def handleItsaStatus(status: String, correlationId: String): Future[Result] =
     status.toLowerCase match {
-      case "true"           => handleItsa(true, correlationId)
-      case "false"          => handleItsa(false, correlationId)
+      case "true"           => eisUpdateContact(true, correlationId)
+      case "false"          => eisUpdateContact(false, correlationId)
       case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa $unexpectedStatus"))
     }
 

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-//import controllers.Assets.{ACCEPT, CONTENT_TYPE}
 import play.api.Configuration
 import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE }
 import play.api.http.MimeTypes
@@ -38,7 +37,7 @@ class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(impl
   private val eisBearerToken = getString("microservice.services.eis.bearer-token")
   private val eisEnvironment = getString("microservice.services.eis.environment")
 
-  private def xxxUrl(regime: String): String = s"$serviceUrl/income-tax/customer/$regime/contact-preference"
+  private def endpointUrl(regime: String): String = s"$serviceUrl/income-tax/customer/$regime/contact-preference"
 
   def updateContactPreference(regime: String, digitalChannel: Boolean, correlationId: String): Future[Result] = {
     val requestBody = UpdateContactPreferenceRequest(digitalChannel)
@@ -51,10 +50,10 @@ class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(impl
         CustomHeaders.ForwardedHost -> "Digital",
         CustomHeaders.Environment   -> eisEnvironment
       )
-    httpClient.doPut(xxxUrl(regime), requestBody, headers).map { response =>
+    httpClient.doPut(endpointUrl(regime), requestBody, headers).map { response =>
       response.status match {
-        case OK => Ok(response.body)
-        case _  => InternalServerError(response.body)
+        case OK => Ok(response.json)
+        case _  => InternalServerError(response.json)
       }
     }
   }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.controllers
 import akka.stream.Materializer
 import akka.stream.testkit.NoMaterializer
 import org.joda.time.DateTime
-import org.mockito.ArgumentMatchers.{ any, anyString }
+import org.mockito.ArgumentMatchers.{ any, anyBoolean, anyString }
 import org.mockito.Mockito._
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
@@ -27,18 +27,15 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status
-import play.api.http.Status._
 import play.api.libs.json.{ JsObject, JsValue, Json }
 import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException }
-import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import play.api.test.{ FakeRequest, Helpers }
-import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import play.api.mvc.Results.{ InternalServerError, Ok }
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
@@ -417,6 +414,42 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       status(result) mustBe Status.INTERNAL_SERVER_ERROR
     }
 
+  }
+
+  "Calling update contact" should {
+    "return OK when the call to EIS succeed" in new TestSetup {
+      when(mockEISConnector.updateContactPreference(anyString(), anyBoolean(), anyString()))
+        .thenReturn(Future.successful(Ok))
+
+      val fakeRequest = FakeRequest("POST", "/path")
+      val result = controller.update("itsa", "true").apply(fakeRequest)
+      status(result) mustBe Status.OK
+    }
+
+    "return INTERNAL_SERVER_ERROR (500) when the call to EIS fails" in new TestSetup {
+      when(mockEISConnector.updateContactPreference(anyString(), anyBoolean(), anyString()))
+        .thenReturn(Future.successful(InternalServerError))
+
+      val fakeRequest = FakeRequest("POST", "/path")
+      val result = controller.update("itsa", "true").apply(fakeRequest)
+      status(result) mustBe Status.INTERNAL_SERVER_ERROR
+    }
+
+    "return BAD_REQUEST when the key is not supported" in new TestSetup {
+
+      val fakeRequest = FakeRequest("POST", "/path")
+      private val unsupportedKey = "unsupportedKey"
+      val result = controller.update(unsupportedKey, "true").apply(fakeRequest)
+      status(result) mustBe Status.BAD_REQUEST
+    }
+
+    "return BAD_REQUEST when the status is not supported" in new TestSetup {
+
+      val fakeRequest = FakeRequest("POST", "/path")
+      private val unsupportedStatus = "unsupportedStatus"
+      val result = controller.update("itsa", unsupportedStatus).apply(fakeRequest)
+      status(result) mustBe Status.BAD_REQUEST
+    }
   }
 
   trait TestSetup {
