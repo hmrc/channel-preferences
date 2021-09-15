@@ -18,20 +18,16 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, Result }
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisationException, AuthorisedFunctions }
-import uk.gov.hmrc.auth.core.AffinityGroup.Agent
-import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
-import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
+import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisedFunctions }
+import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
-
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.util.UUID
@@ -68,15 +64,8 @@ class PreferenceController @Inject()(
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[AgentEnrolment] { enrolment =>
-      authorised(Agent)
-        .retrieve(Retrievals.affinityGroup) { _ =>
-          Future.successful(Ok(s"Enrolment Successful for arn: '${enrolment.arn}', itsaId :'${enrolment.itsaId}'" +
-            s", nino: '${enrolment.nino}', sautr: '${enrolment.sautr}'"))
-        }
-        .recoverWith {
-          case e: AuthorisationException => Future.successful(Unauthorized(e.getMessage))
-        }
+    entityResolverConnector.enrolment(request.body).map { resp =>
+      Status(resp.status)(resp.json)
     }
   }
 
