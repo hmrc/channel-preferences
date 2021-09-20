@@ -7,6 +7,7 @@
     "/channel-preferences/preference/{channel}" : {
       "get" : {
         "operationId" : "preference",
+        "tags" : [ "app" ],
         "responses" : {
           "200" : {
             "description" : "an email was found for the taxIdValue"
@@ -22,35 +23,34 @@
           }
         },
         "parameters" : [ {
+          "in" : "path",
+          "name" : "channel",
           "schema" : {
             "type" : "channel"
           },
-          "in" : "path",
-          "name" : "channel",
           "required" : true
         }, {
-          "schema" : {
-            "type" : "string"
-          },
           "in" : "query",
           "name" : "enrolmentKey",
-          "required" : true
-        }, {
           "schema" : {
             "type" : "string"
           },
+          "required" : true
+        }, {
           "in" : "query",
           "name" : "taxIdName",
-          "required" : true
-        }, {
           "schema" : {
             "type" : "string"
           },
+          "required" : true
+        }, {
           "in" : "query",
           "name" : "taxIdValue",
+          "schema" : {
+            "type" : "string"
+          },
           "required" : true
-        } ],
-        "tags" : [ "app" ]
+        } ]
       }
     },
     "/channel-preferences/enrolment" : {
@@ -74,70 +74,70 @@
     "/{path}" : {
       "patch" : {
         "operationId" : "proxy",
+        "tags" : [ "app" ],
         "parameters" : [ {
+          "in" : "path",
+          "name" : "path",
           "schema" : {
             "type" : "string"
           },
-          "in" : "path",
-          "name" : "path",
           "required" : true
-        } ],
-        "tags" : [ "app" ]
+        } ]
       },
       "post" : {
         "operationId" : "proxy",
+        "tags" : [ "app" ],
         "parameters" : [ {
+          "in" : "path",
+          "name" : "path",
           "schema" : {
             "type" : "string"
           },
-          "in" : "path",
-          "name" : "path",
           "required" : true
-        } ],
-        "tags" : [ "app" ]
+        } ]
       },
       "get" : {
         "operationId" : "proxy",
+        "tags" : [ "app" ],
         "parameters" : [ {
+          "in" : "path",
+          "name" : "path",
           "schema" : {
             "type" : "string"
           },
-          "in" : "path",
-          "name" : "path",
           "required" : true
-        } ],
-        "tags" : [ "app" ]
+        } ]
       },
       "delete" : {
         "operationId" : "proxy",
+        "tags" : [ "app" ],
         "parameters" : [ {
+          "in" : "path",
+          "name" : "path",
           "schema" : {
             "type" : "string"
           },
-          "in" : "path",
-          "name" : "path",
           "required" : true
-        } ],
-        "tags" : [ "app" ]
+        } ]
       },
       "put" : {
         "operationId" : "proxy",
+        "tags" : [ "app" ],
         "parameters" : [ {
+          "in" : "path",
+          "name" : "path",
           "schema" : {
             "type" : "string"
           },
-          "in" : "path",
-          "name" : "path",
           "required" : true
-        } ],
-        "tags" : [ "app" ]
+        } ]
       }
     }
   },
   "produces" : [ "application/json" ],
   "info" : {
     "title" : "Channel Preferences API",
-    "version" : "0.31.0-SNAPSHOT"
+    "version" : "0.35.0-SNAPSHOT"
   },
   "consumes" : [ "application/json" ],
   "tags" : [ {
