@@ -62,7 +62,7 @@ class PreferenceController @Inject()(
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     entityResolverConnector.enrolment(request.body).map { resp =>
-      Status(resp.status)(resp.json)
+      Status(resp.status)(resp.body)
     }
   }
 
