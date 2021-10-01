@@ -111,13 +111,15 @@ class PreferenceController @Inject()(
       .substring(0, ACKNOWLEDGEMENT_REFERENCE_MAX_LENGTH - 1)
   }
 
-  private def eisUpdateContact(status: Boolean, correlationId: String): Future[Result] =
+  private def eisUpdateContact(status: Boolean, correlationId: String): Future[Result] = {
+    logger.warn("Calling EIS update endpoint")
     eisConnector.updateContactPreference(ITSA_REGIME.toLowerCase, status, correlationId).map {
       case Right(_) => Ok
       case Left(EisUpdateContactError(message)) =>
         logger.error(message)
         InternalServerError
     }
+  }
 
   private def handleItsaStatus(status: String, correlationId: String): Future[Result] =
     status.toLowerCase match {
