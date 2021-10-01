@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-import play.api.{Configuration, Logger}
-import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
+import play.api.{ Configuration, Logger }
+import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE }
 import play.api.http.MimeTypes
-import uk.gov.hmrc.channelpreferences.model.{EisUpdateContactError, UpdateContactPreferenceRequest}
+import uk.gov.hmrc.channelpreferences.model.{ EisUpdateContactError, UpdateContactPreferenceRequest }
 import uk.gov.hmrc.http.HttpClient
 import play.api.http.Status._
 import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.{ ZoneOffset, ZonedDateTime }
 import java.time.format.DateTimeFormatter
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.{ Inject, Singleton }
+import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
@@ -57,7 +57,7 @@ class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(impl
         CustomHeaders.Environment   -> eisEnvironment
       )
     logger.warn(s"Actually Calling EIS update endpoint ${endpointUrl(regime)}")
-    logger.warn(s"and body ${requestBody}")
+    logger.warn(s"and body $requestBody")
     httpClient.doPut(endpointUrl(regime), requestBody, headers).map { response =>
       logger.warn(s"Got status ${response.status}")
       response.status match {
