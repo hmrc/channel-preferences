@@ -113,7 +113,7 @@ class PreferenceController @Inject()(
 
   private def eisUpdateContact(status: Boolean, correlationId: String): Future[Result] = {
     logger.warn("Calling EIS update endpoint")
-    eisConnector.updateContactPreference(ITSA_REGIME.toLowerCase, status, correlationId).map {
+    eisConnector.updateContactPreference(ITSA_REGIME, status, correlationId).map {
       case Right(_) => Ok
       case Left(EisUpdateContactError(message)) =>
         logger.error(message)
