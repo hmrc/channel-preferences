@@ -15,7 +15,7 @@
 GET        /channel-preferences/preference/:channel         uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)
 POST       /channel-preferences/enrolment                   @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
-POST       /channel-preferences/preference/:key/:status     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.update(key: String, status: String)
+POST       /channel-preferences/preference/:key/status      uk.gov.hmrc.channelpreferences.controllers.PreferenceController.update(key: String)
 
 POST       /channel-preferences/confirm                     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
 GET        /*path                                           @uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)

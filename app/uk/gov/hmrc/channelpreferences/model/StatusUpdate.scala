@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.connectors.utils
+package uk.gov.hmrc.channelpreferences.model
 
-object CustomHeaders {
-  val CorrelationId = "X-Correlation-ID"
-  val RequestId = "X-Request-ID"
-  val ForwardedHost = "X-Forwarded-Host"
-  val Environment = "environment"
+import play.api.libs.json.Json
+
+final case class StatusUpdate(enrolment: String, status: Boolean) {
+  def getIdentifierValue: Either[String, ItsaEnrolment] =
+    enrolment.split("~") match {
+      case Array(_, identifierType, identifier) =>
+        Right(ItsaEnrolment(identifierType, identifier, status))
+      case _ => Left("Invalid enrolment")
+    }
+}
+
+case class ItsaEnrolment(identifierType: String, identifier: String, status: Boolean)
+
+object StatusUpdate {
+  implicit val reads = Json.reads[StatusUpdate]
 }

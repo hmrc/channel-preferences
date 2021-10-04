@@ -19,15 +19,15 @@ package uk.gov.hmrc.channelpreferences.controllers
 import akka.stream.Materializer
 import akka.stream.testkit.NoMaterializer
 import org.joda.time.DateTime
-import org.mockito.ArgumentMatchers.{ any, anyBoolean, anyString }
+import org.mockito.ArgumentMatchers.{ any, anyString }
 import org.mockito.Mockito._
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status
-import play.api.libs.json.{ JsObject, JsValue, Json }
+import play.api.http.{ HeaderNames, Status }
+import play.api.libs.json.{ JsObject, JsTrue, JsValue, Json }
 import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -36,7 +36,7 @@ import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNA
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.channelpreferences.model.{ EisUpdateContactError, PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.{ ItsaEnrolment, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
@@ -333,40 +333,57 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
   "Calling update contact" should {
     "return OK when the call to EIS succeed" in new TestSetup {
-      when(mockEISConnector.updateContactPreference(anyString(), anyBoolean(), anyString()))
-        .thenReturn(Future.successful(Right(())))
+      private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+        .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
-      val fakeRequest = FakeRequest("POST", "/path")
-      val result = controller.update("itsa", "true").apply(fakeRequest)
-      status(result) mustBe Status.OK
+      val result = controller.update("itsa").apply(updateStatusRequest)
+      status(result) mustBe OK
+      contentAsJson(result) mustBe successBody
     }
 
     "return INTERNAL_SERVER_ERROR (500) when the call to EIS fails" in new TestSetup {
-      when(mockEISConnector.updateContactPreference(anyString(), anyBoolean(), anyString()))
-        .thenReturn(Future.successful(Left(EisUpdateContactError("errorMessage"))))
+      val failureBody = Json.parse("""{
+          "failures": [
+              {
+                "code": "INVALID_REGIME",
+                "reason": "Submission has not passed validation. Invalid regime."
+              }
+          ]
+          }""")
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())))
 
-      val fakeRequest = FakeRequest("POST", "/path")
-      val result = controller.update("itsa", "true").apply(fakeRequest)
-      status(result) mustBe Status.INTERNAL_SERVER_ERROR
+      val result = controller.update("itsa").apply(updateStatusRequest)
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe failureBody
     }
 
     "return BAD_REQUEST when the key is not supported" in new TestSetup {
 
-      val fakeRequest = FakeRequest("POST", "/path")
       private val unsupportedKey = "unsupportedKey"
-      val result = controller.update(unsupportedKey, "true").apply(fakeRequest)
+      val result = controller.update(unsupportedKey).apply(updateStatusRequest)
       status(result) mustBe Status.BAD_REQUEST
       contentAsString(result) mustBe "The key unsupportedKey is not supported"
     }
 
-    "return BAD_REQUEST when the status is not supported" in new TestSetup {
+    "return BAD_REQUEST when the enrolment is invalid" in new TestSetup {
 
-      val fakeRequest = FakeRequest("POST", "/path")
-      private val unsupportedStatus = "unsupportedStatus"
-      val result = controller.update("itsa", unsupportedStatus).apply(fakeRequest)
-      status(result) mustBe Status.BAD_REQUEST
-      contentAsString(result) mustBe "Unexpected status for itsa key unsupportedstatus"
+      val invalidEnrolmentRequest =
+        FakeRequest(
+          "POST",
+          "/channel-preferences/preference/itsa/status",
+          Headers(HeaderNames.CONTENT_TYPE -> "application/json"),
+          Json.obj(
+            "enrolment" -> "invalid-enrolment",
+            "status"    -> JsTrue
+          )
+        )
+      val result = controller.update("itsa").apply(invalidEnrolmentRequest)
+      status(result) mustBe BAD_REQUEST
+      contentAsString(result) mustBe "Invalid enrolment"
     }
+
   }
 
   trait TestSetup {
@@ -407,6 +424,17 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       .thenReturn(Future.successful(Right("Email bounce processed successfully")))
 
     val fakeProcessBounce = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), processBouncePayload)
+
+    val updateStatusRequest =
+      FakeRequest(
+        "POST",
+        "/channel-preferences/preference/itsa/status",
+        Headers(HeaderNames.CONTENT_TYPE -> "application/json"),
+        Json.obj(
+          "enrolment" -> "MTD-IT~MTDBSA~XMIT983509385093485",
+          "status"    -> JsTrue
+        )
+      )
 
   }
   trait ConfirmGenerator {

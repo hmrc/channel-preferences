@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, Result }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisedFunctions }
 import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
@@ -31,8 +31,6 @@ import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import java.util.UUID
 
 @Singleton
 class PreferenceController @Inject()(
@@ -92,40 +90,25 @@ class PreferenceController @Inject()(
     }
   }
 
-  def update(key: String, status: String): Action[AnyContent] =
-    Action.async { request =>
-      val correlationId = extractCorrelationId(request)
+  def update(key: String): Action[JsValue] =
+    Action.async(parse.json) { implicit request =>
       key.toUpperCase() match {
-        case ITSA_REGIME => handleItsaStatus(status, correlationId)
-        case _           => Future.successful(BadRequest(s"The key $key is not supported"))
+        case ITSA_REGIME =>
+          withJsonBody[StatusUpdate] { statusUpdate =>
+            statusUpdate.getIdentifierValue match {
+              case Right(enrolment) =>
+                val correlationId = request.headers
+                  .get(CustomHeaders.RequestId)
+                eisConnector.updateContactPreference(ITSA_REGIME, enrolment, correlationId).map { response =>
+                  Status(response.status)(response.json)
+                }
+              case Left(err) =>
+                Future.successful(BadRequest(err))
+            }
+
+          }
+        case _ => Future.successful(BadRequest(s"The key $key is not supported"))
       }
-    }
-
-  private def extractCorrelationId(request: Request[AnyContent]): String = {
-    val ACKNOWLEDGEMENT_REFERENCE_MAX_LENGTH = 32
-    val randomId = UUID.randomUUID().toString
-    request.headers
-      .get(CustomHeaders.CorrelationId)
-      .getOrElse(randomId)
-      .replace("-", "")
-      .substring(0, ACKNOWLEDGEMENT_REFERENCE_MAX_LENGTH - 1)
-  }
-
-  private def eisUpdateContact(status: Boolean, correlationId: String): Future[Result] = {
-    logger.warn("Calling EIS update endpoint")
-    eisConnector.updateContactPreference(ITSA_REGIME, status, correlationId).map {
-      case Right(_) => Ok
-      case Left(EisUpdateContactError(message)) =>
-        logger.error(message)
-        InternalServerError
-    }
-  }
-
-  private def handleItsaStatus(status: String, correlationId: String): Future[Result] =
-    status.toLowerCase match {
-      case "true"           => eisUpdateContact(true, correlationId)
-      case "false"          => eisUpdateContact(false, correlationId)
-      case unexpectedStatus => Future.successful(BadRequest(s"Unexpected status for itsa key $unexpectedStatus"))
     }
 
 }
