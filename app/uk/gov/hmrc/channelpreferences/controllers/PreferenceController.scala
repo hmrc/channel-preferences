@@ -100,7 +100,7 @@ class PreferenceController @Inject()(
                 val correlationId = request.headers
                   .get(CustomHeaders.RequestId)
                 eisConnector.updateContactPreference(ITSA_REGIME, enrolment, correlationId).map { response =>
-                  Status(response.status)(response.json)
+                  Status(response.status)(response.body)
                 }
               case Left(err) =>
                 Future.successful(BadRequest(err))
