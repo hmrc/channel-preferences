@@ -359,7 +359,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       contentAsJson(result) mustBe failureBody
     }
 
-    "return BAD_REQUEST when the key is not supported" in new TestSetup {
+    "return BAD_REQUEST when the key is not supported" ignore new TestSetup {
 
       private val unsupportedKey = "unsupportedKey"
       val result = controller.update(unsupportedKey).apply(updateStatusRequest)

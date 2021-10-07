@@ -44,7 +44,7 @@ class PreferenceController @Inject()(
 
   private val logger: Logger = Logger(this.getClass())
 
-  private val ITSA_REGIME = "ITSA"
+//  private val ITSA_REGIME = "ITSA"
 
   implicit val emailWrites = uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification.emailVerificationFormat
   def preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String): Action[AnyContent] =
@@ -92,23 +92,23 @@ class PreferenceController @Inject()(
 
   def update(key: String): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
-      key.toUpperCase() match {
-        case ITSA_REGIME =>
-          withJsonBody[StatusUpdate] { statusUpdate =>
-            statusUpdate.getIdentifierValue match {
-              case Right(enrolment) =>
-                val correlationId = request.headers
-                  .get(CustomHeaders.RequestId)
-                eisConnector.updateContactPreference(ITSA_REGIME, enrolment, correlationId).map { response =>
-                  Status(response.status)(response.json)
-                }
-              case Left(err) =>
-                Future.successful(BadRequest(err))
+//      key.toUpperCase() match {
+//        case ITSA_REGIME =>
+      withJsonBody[StatusUpdate] { statusUpdate =>
+        statusUpdate.getIdentifierValue match {
+          case Right(enrolment) =>
+            val correlationId = request.headers
+              .get(CustomHeaders.RequestId)
+            eisConnector.updateContactPreference(key, enrolment, correlationId).map { response =>
+              Status(response.status)(response.json)
             }
+          case Left(err) =>
+            Future.successful(BadRequest(err))
+        }
 
-          }
-        case _ => Future.successful(BadRequest(s"The key $key is not supported"))
       }
+//        case _ => Future.successful(BadRequest(s"The key $key is not supported"))
+//      }
     }
 
 }
