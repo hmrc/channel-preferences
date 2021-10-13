@@ -28,10 +28,4 @@ object UpdateContactPreferenceRequest {
 
   implicit val writes = Json.writes[UpdateContactPreferenceRequest]
 
-  def apply(digitalChannel: Boolean): UpdateContactPreferenceRequest =
-    UpdateContactPreferenceRequest(
-      "MTDBSA",
-      "XMIT00000064424",
-      digitalChannel
-    )
 }

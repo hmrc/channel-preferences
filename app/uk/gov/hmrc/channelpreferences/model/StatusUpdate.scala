@@ -16,4 +16,19 @@
 
 package uk.gov.hmrc.channelpreferences.model
 
-case class EisUpdateContactError(message: String)
+import play.api.libs.json.Json
+
+final case class StatusUpdate(enrolment: String, status: Boolean) {
+  def getIdentifierValue: Either[String, ItsaEnrolment] =
+    enrolment.split("~") match {
+      case Array(_, identifierType, identifier) =>
+        Right(ItsaEnrolment(identifierType, identifier, status))
+      case _ => Left("Invalid enrolment")
+    }
+}
+
+case class ItsaEnrolment(identifierType: String, identifier: String, status: Boolean)
+
+object StatusUpdate {
+  implicit val reads = Json.reads[StatusUpdate]
+}

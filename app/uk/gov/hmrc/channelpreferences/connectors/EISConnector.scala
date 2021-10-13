@@ -17,11 +17,10 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
-import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE }
+import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE, USER_AGENT }
 import play.api.http.MimeTypes
-import uk.gov.hmrc.channelpreferences.model.{ EisUpdateContactError, UpdateContactPreferenceRequest }
-import uk.gov.hmrc.http.HttpClient
-import play.api.http.Status._
+import uk.gov.hmrc.channelpreferences.model.{ ItsaEnrolment, UpdateContactPreferenceRequest }
+import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
 import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -41,30 +40,23 @@ class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(impl
 
   def updateContactPreference(
     regime: String,
-    digitalChannel: Boolean,
-    correlationId: String): Future[Either[EisUpdateContactError, Unit]] = {
-    val requestBody = UpdateContactPreferenceRequest(digitalChannel)
+    itsaEnrolment: ItsaEnrolment,
+    correlationId: Option[String]
+  ): Future[HttpResponse] = {
+    val requestBody =
+      UpdateContactPreferenceRequest(itsaEnrolment.identifierType, itsaEnrolment.identifier, itsaEnrolment.status)
     val headers =
       Seq(
         CONTENT_TYPE                -> MimeTypes.JSON,
         ACCEPT                      -> MimeTypes.JSON,
         AUTHORIZATION               -> s"Bearer $eisBearerToken",
         DATE                        -> DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneOffset.UTC)),
-        CustomHeaders.CorrelationId -> correlationId,
+        USER_AGENT                  -> config.get[String]("appName"),
         CustomHeaders.ForwardedHost -> "Digital",
         CustomHeaders.Environment   -> eisEnvironment
-      )
-    httpClient.doPut(endpointUrl(regime), requestBody, headers).map { response =>
-      response.status match {
-        case OK => Right(())
-        case code =>
-          Left(
-            EisUpdateContactError(
-              s"There was an issue with forwarding the message to EIS, response code is: $code, response body is: ${response.body}"
-            )
-          )
-      }
-    }
+      ) ++ correlationId.map(CustomHeaders.CorrelationId -> _).toList
+    httpClient.doPut(endpointUrl(regime), requestBody, headers)
+
   }
 
 }

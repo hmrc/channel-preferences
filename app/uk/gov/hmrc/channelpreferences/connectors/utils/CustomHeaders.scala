@@ -18,6 +18,7 @@ package uk.gov.hmrc.channelpreferences.connectors.utils
 
 object CustomHeaders {
   val CorrelationId = "X-Correlation-ID"
+  val RequestId = "X-Request-ID"
   val ForwardedHost = "X-Forwarded-Host"
   val Environment = "environment"
 }
