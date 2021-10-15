@@ -30,7 +30,7 @@ object Event {
   implicit val requestDetailReads: Reads[Event] = (
     (JsPath \ "eventId").read[UUID] and
       (JsPath \ "subject").read[String](verifying[String](a => a.trim.nonEmpty)) and
-      (JsPath \ "groupId").read[String](verifying[String](a => a.trim.nonEmpty)) and
+      (JsPath \ "groupId").read[String] and
       (JsPath \ "timestamp").read[LocalDateTime] and
       (JsPath \ "event").read[JsValue]
   )(Event.apply _)
