@@ -33,6 +33,8 @@ import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeo
 import uk.gov.hmrc.auth.core.AuthConnector
 import play.api.test.{ FakeRequest, Helpers }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
@@ -41,6 +43,7 @@ import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
@@ -56,6 +59,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
   val mockEISConnector: EISConnector = mock[EISConnector]
   val mockProcessEmail: ProcessEmail = mock[ProcessEmail]
+  val mockAuditConnector: AuditConnector = mock[AuditConnector]
 
   "Calling preference" should {
     "return a BAD GATEWAY (502) for unexpected error status" in {
@@ -70,7 +74,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         mockEntityResolverConnector,
         mockEISConnector,
         mockProcessEmail,
-        Helpers.stubControllerComponents()
+        Helpers.stubControllerComponents(),
+        mockAuditConnector
       )
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
@@ -89,7 +94,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         mockEntityResolverConnector,
         mockEISConnector,
         mockProcessEmail,
-        Helpers.stubControllerComponents()
+        Helpers.stubControllerComponents(),
+        mockAuditConnector
       )
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
@@ -104,6 +110,13 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       forAll(entityIgGen, itsaIdGen, httpResponseGen) { (entityId, itsaId, httpResponse) =>
         when(mockEntityResolverConnector.confirm(anyString(), anyString())(any[HeaderCarrier]))
           .thenReturn(Future.successful(httpResponse))
+        val retrievals = new ~(Some("somesautr"), Some("somenino"))
+        when(
+          mockAuthConnector.authorise[~[Option[String], Option[String]]](
+            any[Predicate],
+            any[Retrieval[~[Option[String], Option[String]]]])(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievals))
+
         val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
         val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
         val response = controller.confirm().apply(fakePostRequest)
@@ -479,7 +492,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           mockEntityResolverConnector,
           mockEISConnector,
           mockProcessEmail,
-          Helpers.stubControllerComponents())
+          Helpers.stubControllerComponents(),
+          mockAuditConnector
+        )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
       contentAsString(result) mustBe "Email bounce processed successfully"
@@ -495,7 +510,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           mockEntityResolverConnector,
           mockEISConnector,
           mockProcessEmail,
-          Helpers.stubControllerComponents())
+          Helpers.stubControllerComponents(),
+          mockAuditConnector
+        )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
       status(result) mustBe Status.NOT_MODIFIED
@@ -510,7 +527,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           mockEntityResolverConnector,
           mockEISConnector,
           mockProcessEmail,
-          Helpers.stubControllerComponents())
+          Helpers.stubControllerComponents(),
+          mockAuditConnector
+        )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
       status(result) mustBe Status.INTERNAL_SERVER_ERROR
@@ -586,7 +605,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       mockEntityResolverConnector,
       mockEISConnector,
       mockProcessEmail,
-      Helpers.stubControllerComponents()
+      Helpers.stubControllerComponents(),
+      mockAuditConnector
     )
 
     val mockCdsPreference = mock[CdsPreference]
