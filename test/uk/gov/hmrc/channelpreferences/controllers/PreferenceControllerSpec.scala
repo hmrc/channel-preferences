@@ -267,7 +267,6 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     List(
       "subject",
       "eventId",
-      "groupId",
       "timestamp"
     ).foreach((fieldName: String) =>
       s"""return BAD REQUEST (400) when the [$fieldName] field is empty""" in new TestSetup {
