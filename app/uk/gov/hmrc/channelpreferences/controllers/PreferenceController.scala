@@ -19,7 +19,10 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
-import uk.gov.hmrc.auth.core.{ AuthConnector, AuthorisedFunctions }
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
+import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
@@ -27,6 +30,8 @@ import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
 import uk.gov.hmrc.channelpreferences.model._
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -39,8 +44,9 @@ class PreferenceController @Inject()(
   entityResolverConnector: EntityResolverConnector,
   eisConnector: EISConnector,
   processEmail: ProcessEmail,
-  override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(controllerComponents) with AuthorisedFunctions {
+  override val controllerComponents: ControllerComponents,
+  override val auditConnector: AuditConnector)(implicit ec: ExecutionContext)
+    extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing {
 
   private val logger: Logger = Logger(this.getClass())
 
@@ -59,9 +65,13 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
-      entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId).map { resp =>
-        Status(resp.status)(resp.json)
-      }
+      for {
+        _ <- auditConfirm(
+              enrolment,
+              authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
+                .retrieve(Retrievals.saUtr and Retrievals.nino))
+        resp <- entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId)
+      } yield Status(resp.status)(resp.json)
     }
   }
 
@@ -110,5 +120,24 @@ class PreferenceController @Inject()(
         case _ => Future.successful(BadRequest(s"The key $key is not supported"))
       }
     }
+
+  def auditConfirm(e: Enrolment, auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext): Future[Unit] = {
+    def getIds: Future[Map[String, String]] =
+      auth(
+        r => Future.successful(r.a.map(("SAUTR", _)).toMap ++ r.b.map(("NINO", _)).toMap)
+      ).recover {
+        case e: AuthorisationException =>
+          logger.error("Authorisation error", e)
+          Map.empty[String, String]
+      }
+
+    getIds.map { ids =>
+      sendAuditEvent(
+        "ItsaIdConfirmed",
+        Map("regime" -> ITSA_REGIME, "itsaId" -> e.itsaId, "entityId" -> e.entityId) ++ ids)
+    }
+  }
 
 }
