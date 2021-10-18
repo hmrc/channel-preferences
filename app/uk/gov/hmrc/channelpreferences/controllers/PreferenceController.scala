@@ -66,11 +66,13 @@ class PreferenceController @Inject()(
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
       for {
+        resp <- entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId)
         _ <- auditConfirm(
+              resp.status,
               enrolment,
               authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
-                .retrieve(Retrievals.saUtr and Retrievals.nino))
-        resp <- entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId)
+                .retrieve(Retrievals.saUtr and Retrievals.nino)
+            )
       } yield Status(resp.status)(resp.json)
     }
   }
@@ -121,7 +123,7 @@ class PreferenceController @Inject()(
       }
     }
 
-  def auditConfirm(e: Enrolment, auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
+  def auditConfirm(status: Int, e: Enrolment, auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext): Future[Unit] = {
     def getIds: Future[Map[String, String]] =
@@ -135,7 +137,7 @@ class PreferenceController @Inject()(
 
     getIds.map { ids =>
       sendAuditEvent(
-        "ItsaIdConfirmed",
+        if (status == OK) "ItsaIdConfirmed" else "ItsaIdConfirmError",
         Map("regime" -> ITSA_REGIME, "itsaId" -> e.itsaId, "entityId" -> e.entityId) ++ ids)
     }
   }
