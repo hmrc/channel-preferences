@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.controllers
 import akka.stream.Materializer
 import akka.stream.testkit.NoMaterializer
 import org.joda.time.DateTime
-import org.mockito.ArgumentMatchers.{ any, anyString }
+import org.mockito.ArgumentMatchers.{ any, anyString, eq => meq }
 import org.mockito.Mockito._
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
@@ -123,7 +123,45 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         status(response) mustBe httpResponse.status
         contentAsJson(response) mustBe Json.parse(httpResponse.body)
       }
+    }
 
+    "Send audit event with ItsaIdConfirmError if there is an error confirming" in new TestSetup {
+      val postData: JsValue = Json.obj("entityId" -> "entityId", "itsaId" -> "itsaId")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      when(
+        mockAuthConnector.authorise[~[Option[String], Option[String]]](
+          any[Predicate],
+          any[Retrieval[~[Option[String], Option[String]]]])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(new ~(Some("somesautr"), Some("somenino"))))
+
+      val httpResponse = HttpResponse(BAD_REQUEST, Json.obj("key" -> "val"), Map.empty[String, Seq[String]])
+
+      when(mockEntityResolverConnector.confirm(anyString(), anyString())(any[HeaderCarrier]))
+        .thenReturn(Future.successful(httpResponse))
+      reset(mockAuditConnector)
+      controller.confirm().apply(fakePostRequest)
+      verify(mockAuditConnector)
+        .sendExplicitAudit(meq("ItsaIdConfirmError"), any[Map[String, String]])(
+          any[HeaderCarrier],
+          any[ExecutionContext])
+    }
+
+    "Send audit event with ItsaIdConfirmed if correctly confirmed" in new TestSetup {
+      val postData: JsValue = Json.obj("entityId" -> "entityId", "itsaId" -> "itsaId")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      when(
+        mockAuthConnector.authorise[~[Option[String], Option[String]]](
+          any[Predicate],
+          any[Retrieval[~[Option[String], Option[String]]]])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(new ~(Some("somesautr"), Some("somenino"))))
+      val httpResponse = HttpResponse(OK, Json.obj("key" -> "val"), Map.empty[String, Seq[String]])
+
+      when(mockEntityResolverConnector.confirm(anyString(), anyString())(any[HeaderCarrier]))
+        .thenReturn(Future.successful(httpResponse))
+      reset(mockAuditConnector)
+      controller.confirm().apply(fakePostRequest)
+      verify(mockAuditConnector)
+        .sendExplicitAudit(meq("ItsaIdConfirmed"), any[Map[String, String]])(any[HeaderCarrier], any[ExecutionContext])
     }
   }
 
@@ -141,7 +179,6 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           contentAsJson(response) mustBe Json.parse(httpResponse.body)
       }
     }
-
   }
 
   "Calling processBounce endpoint to process an email bounce event" should {
