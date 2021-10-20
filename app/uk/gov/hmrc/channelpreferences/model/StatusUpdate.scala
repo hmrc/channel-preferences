@@ -19,15 +19,22 @@ package uk.gov.hmrc.channelpreferences.model
 import play.api.libs.json.Json
 
 final case class StatusUpdate(enrolment: String, status: Boolean) {
-  def getIdentifierValue: Either[String, ItsaEnrolment] =
+  def getItsaETMPUpdate: Either[String, ItsaETMPUpdate] =
     enrolment.split("~") match {
       case Array(_, identifierType, identifier) =>
-        Right(ItsaEnrolment(identifierType, identifier, status))
+        Right(ItsaETMPUpdate(identifierType, identifier, status))
+      case _ => Left("Invalid enrolment")
+    }
+
+  def substituteMTDITIDValue: Either[String, ItsaETMPUpdate] =
+    enrolment.split("~") match {
+      case Array(_, "MTDITID", identifier) =>
+        Right(ItsaETMPUpdate("MTDBSA", identifier, status))
       case _ => Left("Invalid enrolment")
     }
 }
 
-case class ItsaEnrolment(identifierType: String, identifier: String, status: Boolean)
+case class ItsaETMPUpdate(identifierType: String, identifier: String, status: Boolean)
 
 object StatusUpdate {
   implicit val reads = Json.reads[StatusUpdate]

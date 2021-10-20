@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.connectors
 import play.api.Configuration
 import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE, USER_AGENT }
 import play.api.http.MimeTypes
-import uk.gov.hmrc.channelpreferences.model.{ ItsaEnrolment, UpdateContactPreferenceRequest }
+import uk.gov.hmrc.channelpreferences.model.{ ItsaETMPUpdate, UpdateContactPreferenceRequest }
 import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
 import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -40,7 +40,7 @@ class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(impl
 
   def updateContactPreference(
     regime: String,
-    itsaEnrolment: ItsaEnrolment,
+    itsaEnrolment: ItsaETMPUpdate,
     correlationId: Option[String]
   ): Future[HttpResponse] = {
     val requestBody =
