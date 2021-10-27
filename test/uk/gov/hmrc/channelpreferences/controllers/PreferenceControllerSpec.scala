@@ -130,7 +130,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   "Calling Agent Enrolment" should {
 
     "Not update ETMP and forward the result form the entity-resolver enrolment endpoint when the status" +
-      "is not ok or the reason is not 'no preference found'" in new TestSetup with EnrolmentGenerator {
+      "is not ok" in new TestSetup with EnrolmentGenerator {
       forAll(agentArnGen, ninoGen, sautrGen, itsaIdGen, httpResponseGen) {
         (agentArn, nino, sautr, itsaId, httpResponse) =>
           when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
@@ -280,7 +280,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
     }
 
-    "update ETMP when the entity resolver when the preferences is not found" in new TestSetup {
+    "NOT update ETMP when the entity resolver when the preferences is not found" in new TestSetup {
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
@@ -301,8 +301,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.enrolment().apply(fakePostRequest)
-      status(response) mustBe OK
-      contentAsJson(response) mustBe successBody
+      status(response) mustBe UNAUTHORIZED
+      contentAsJson(response) mustBe "No preferences found"
 
     }
 
