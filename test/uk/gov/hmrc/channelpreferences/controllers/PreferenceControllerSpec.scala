@@ -38,7 +38,7 @@ import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.channelpreferences.model.{ ItsaEnrolment, PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.{ ItsaETMPUpdate, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
@@ -147,7 +147,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
-      val itsaId = "MTD-IT~MTDBSA~XMIT983509385093485"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
       val entityResolverResponseBody =
         Json.obj(
           "reason" -> "Ok",
@@ -169,7 +169,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -184,7 +184,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
-      val itsaId = "MTD-IT~MTDBSA~XMIT983509385093485"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
       val entityResolverResponseBody =
         Json.obj(
           "reason" -> "Ok",
@@ -204,7 +204,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -219,7 +219,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
-      val itsaId = "MTD-IT~MTDBSA~XMIT983509385093485"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
       val entityResolverResponseBody =
         Json.obj(
           "reason" -> "Ok",
@@ -239,7 +239,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -254,7 +254,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
-      val itsaId = "MTD-IT~MTDBSA~XMIT983509385093485"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
       val entityResolverResponseBody =
         Json.obj(
           "reason" -> "Ok",
@@ -269,7 +269,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -284,7 +284,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
-      val itsaId = "MTD-IT~MTDBSA~XMIT983509385093485"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
       val entityResolverResponseBody =
         Json.obj(
           "reason" -> "No preferences found"
@@ -295,7 +295,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -310,7 +310,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val agentArn = "agent"
       val nino = "nino"
       val sautr = "sautr"
-      val itsaId = "MTD-IT~MTDBSA~XMIT983509385093485"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
       val entityResolverResponseBody =
         Json.obj(
           "reason" -> "random one"
@@ -540,7 +540,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   "Calling update contact" should {
     "return OK when the call to EIS succeed" in new TestSetup {
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val result = controller.update("itsa").apply(updateStatusRequest)
@@ -557,7 +557,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
               }
           ]
           }""")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaEnrolment], any[Option[String]]()))
+      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())))
 
       val result = controller.update("itsa").apply(updateStatusRequest)
@@ -638,7 +638,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         "/channel-preferences/preference/itsa/status",
         Headers(HeaderNames.CONTENT_TYPE -> "application/json"),
         Json.obj(
-          "enrolment" -> "MTD-IT~MTDBSA~XMIT983509385093485",
+          "enrolment" -> "MTD-IT~MTDITID~XMIT983509385093485",
           "status"    -> JsTrue
         )
       )

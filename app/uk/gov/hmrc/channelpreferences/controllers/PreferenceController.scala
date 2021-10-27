@@ -96,9 +96,9 @@ class PreferenceController @Inject()(
       val correlationId = request.headers
         .get(CustomHeaders.RequestId)
       val statusUpdate = StatusUpdate(agentEnrolment.itsaId, status)
-      statusUpdate.getIdentifierValue match {
-        case Right(itsaEnrolment) =>
-          eisConnector.updateContactPreference(ITSA_REGIME, itsaEnrolment, correlationId).map { response =>
+      statusUpdate.substituteMTDITIDValue match {
+        case Right(itsaETMPUpdate) =>
+          eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
             Status(response.status)(response.json)
           }
         case Left(_) =>
@@ -131,11 +131,11 @@ class PreferenceController @Inject()(
       key.toUpperCase() match {
         case ITSA_REGIME =>
           withJsonBody[StatusUpdate] { statusUpdate =>
-            statusUpdate.getIdentifierValue match {
-              case Right(enrolment) =>
+            statusUpdate.getItsaETMPUpdate match {
+              case Right(itsaETMPUpdate) =>
                 val correlationId = request.headers
                   .get(CustomHeaders.RequestId)
-                eisConnector.updateContactPreference(ITSA_REGIME, enrolment, correlationId).map { response =>
+                eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
                   Status(response.status)(response.json)
                 }
               case Left(err) =>
