@@ -83,8 +83,6 @@ class PreferenceController @Inject()(
       (resp.status, resultBody) match {
         case (OK, Some(result)) =>
           updateEtmp(result.isDigitalStatus)
-        case (UNAUTHORIZED, Some(reason)) if reason.isPreferenceNotFound =>
-          updateEtmp(false)
         case _ =>
           Future.successful(Status(resp.status)(resp.body))
       }

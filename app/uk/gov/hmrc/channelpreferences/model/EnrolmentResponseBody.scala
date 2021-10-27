@@ -37,8 +37,6 @@ object PreferenceResponse {
 }
 
 final case class EnrolmentResponseBody(reason: String, preference: Option[PreferenceResponse]) {
-  def isPreferenceNotFound: Boolean =
-    reason == "No preferences found"
 
   def isDigitalStatus: Boolean = {
     val isDigital = preference.map(_.digital).exists(identity)

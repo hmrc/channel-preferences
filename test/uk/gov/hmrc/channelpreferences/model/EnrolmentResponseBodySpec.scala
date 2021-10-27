@@ -20,50 +20,6 @@ import org.scalatestplus.play.PlaySpec
 
 class EnrolmentResponseBodySpec extends PlaySpec {
 
-  "Enrolment.isPreferenceNotFound" must {
-
-    "be false when the preference is found" in {
-      val enrolmentResponseBody =
-        EnrolmentResponseBody(
-          "Ok",
-          Some(
-            PreferenceResponse(
-              Some(
-                EmailPreference(
-                  isVerified = true,
-                  hasBounces = false
-                )
-              ),
-              digital = true
-            )
-          )
-        )
-
-      enrolmentResponseBody.isPreferenceNotFound mustBe false
-    }
-
-    "be true when the preference is not found" in {
-      val enrolmentResponseBody =
-        EnrolmentResponseBody(
-          "No preferences found",
-          None
-        )
-
-      enrolmentResponseBody.isPreferenceNotFound mustBe true
-    }
-
-    "be false for other reasons" in {
-      val enrolmentResponseBody =
-        EnrolmentResponseBody(
-          "another reason",
-          None
-        )
-
-      enrolmentResponseBody.isPreferenceNotFound mustBe false
-    }
-
-  }
-
   "Enrolment.isDigitalStatus" must {
 
     "be true when the preference is digital, has a verified email and no bounces" in {
