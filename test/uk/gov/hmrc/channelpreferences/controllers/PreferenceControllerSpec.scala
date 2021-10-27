@@ -302,7 +302,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe UNAUTHORIZED
-      contentAsJson(response) mustBe "No preferences found"
+      contentAsJson(response) mustBe entityResolverResponseBody
 
     }
 
