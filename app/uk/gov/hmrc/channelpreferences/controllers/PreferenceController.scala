@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
@@ -36,6 +36,8 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
+import scala.util.Try
 
 @Singleton
 class PreferenceController @Inject()(
@@ -78,10 +80,32 @@ class PreferenceController @Inject()(
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    entityResolverConnector.enrolment(request.body).map { resp =>
-      Status(resp.status)(resp.body)
+    entityResolverConnector.enrolment(request.body).flatMap { resp =>
+      val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
+      (resp.status, resultBody) match {
+        case (OK, Some(result)) =>
+          updateEtmp(result.isDigitalStatus)
+        case _ =>
+          Future.successful(Status(resp.status)(resp.body))
+      }
     }
   }
+
+  private def updateEtmp(status: Boolean)(implicit request: Request[JsValue]): Future[Result] =
+    withJsonBody[AgentEnrolment] { agentEnrolment =>
+      val correlationId = request.headers
+        .get(CustomHeaders.RequestId)
+      val statusUpdate = StatusUpdate(agentEnrolment.itsaId, status)
+      statusUpdate.substituteMTDITIDValue match {
+        case Right(itsaETMPUpdate) =>
+          eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
+            Status(response.status)(response.json)
+          }
+        case Left(_) =>
+          // should not happen as the entity-resolver perform the same check
+          Future.successful(Status(UNAUTHORIZED)("Invalid itsa enrolment"))
+      }
+    }
 
   def processBounce(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Event] { event =>
@@ -107,11 +131,11 @@ class PreferenceController @Inject()(
       key.toUpperCase() match {
         case ITSA_REGIME =>
           withJsonBody[StatusUpdate] { statusUpdate =>
-            statusUpdate.getIdentifierValue match {
-              case Right(enrolment) =>
+            statusUpdate.getItsaETMPUpdate match {
+              case Right(itsaETMPUpdate) =>
                 val correlationId = request.headers
                   .get(CustomHeaders.RequestId)
-                eisConnector.updateContactPreference(ITSA_REGIME, enrolment, correlationId).map { response =>
+                eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
                   Status(response.status)(response.json)
                 }
               case Left(err) =>

@@ -24,7 +24,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.libs.json.{ JsObject, Json, Writes }
-import uk.gov.hmrc.channelpreferences.model.{ ItsaEnrolment, UpdateContactPreferenceRequest }
+import uk.gov.hmrc.channelpreferences.model.{ ItsaETMPUpdate, UpdateContactPreferenceRequest }
 import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
 import play.api.test.Helpers._
@@ -39,9 +39,9 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
   "EISConnector.updateContactPreference" must {
     "return forward the response of the httpCall when succeed" in new TestCase {
       val connector = new EISConnector(configuration, httpClientMock)
-      val itsaEnrolment = ItsaEnrolment("MTDBSA", "XMIT00000064424", true)
+      val itsaETMPUpdate = ItsaETMPUpdate("MTDBSA", "XMIT00000064424", true)
       val result =
-        connector.updateContactPreference("itsa", itsaEnrolment, Some("correlationId")).futureValue
+        connector.updateContactPreference("itsa", itsaETMPUpdate, Some("correlationId")).futureValue
 
       result.status mustBe OK
       result.json mustBe successBody
@@ -58,9 +58,9 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
         .thenReturn(Future.successful(httpUnhappyResponseMock))
       val connector = new EISConnector(configuration, httpClientMock)
 
-      val itsaEnrolment = ItsaEnrolment("MTDBSA", "XMIT00000064424", true)
+      val itsaETMPUpdate = ItsaETMPUpdate("MTDBSA", "XMIT00000064424", true)
       val result =
-        connector.updateContactPreference("itsa", itsaEnrolment, Some("correlationId")).futureValue
+        connector.updateContactPreference("itsa", itsaETMPUpdate, Some("correlationId")).futureValue
 
       result.status mustBe BAD_REQUEST
       result.json mustBe failureBody
