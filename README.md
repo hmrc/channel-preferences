@@ -6,21 +6,23 @@ Micro-service responsible for providing an API to CDS services.
 - [API](#api)
     - [Description](#description)
     - [Endpoints](#endpoints)
-        - [POST /channel-preferences/enrolment](#post-preferencesupdated-print-suppressionpull-work-item)
-        - [POST /channel-preferences/confirm](#post-preferencesupdated-print-suppressionidstatus)
+        - [POST /channel-preferences/enrolment](#post-channel-preferencesenrolment)
+        - [POST /channel-preferences/confirm](#post-channel-preferencesconfirm)
 
 # API
 
 - Link to OpenApi definitions: [schema](https://github.com/hmrc/channel-preferences/blob/public/schema.json)
 
 ## Description
-| Path                                       | Supported Methods | Description                                                                                                                                                                                    |
-| -------------------------------------------| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ```/channel-preferences/enrolment```       | POST              | Allow agents to associate  ITSA id's to existing customers preferences [More...](#post-channel-preferencesenrolment)                 |
-| ```/channel-preferences/confirm```         | POST              | Confirm and add ITSA enrolments to preferences [More...](#post-channel-preferencesconfirm)                 |
+| Path                                       | Supported Methods | Description                                                                                                                          |
+| -------------------------------------------| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| ```/channel-preferences/enrolment```       | POST              | Allow agents to associate ITSA id's to existing customers preferences [More...](#post-channel-preferencesenrolment)                  |
+| ```/channel-preferences/confirm```         | POST              | Confirm and add ITSA enrolments to preferences [More...](#post-channel-preferencesconfirm)                                           |
 
 ## Endpoints
 ### POST /channel-preferences/enrolment
+
+It allows agent to link ITSA ID to existing preferences whose `nino` and `sautr` are passed as a parameters on user's behalf.
 
 | Name           | Description                                                                    |
 | -------------- | ------------------------------------------------------------------------------ |
@@ -95,10 +97,7 @@ Responds with status:
 
 ### POST /channel-preferences/confirm
 
-An AUTH token will be present for the customer and this will provide all existing customer enrolment(s) at the point they logged in with their GG account.
-The AUTH token will provide the NINO and SAUTR (if exists)
-
-Update the status of the given updated print suppression work item to the status given in the body.
+Confirm and add ITSA enrolments to preferences.
 
 | Name           | Description                                                                    |
 | -------------- | ------------------------------------------------------------------------------ |
