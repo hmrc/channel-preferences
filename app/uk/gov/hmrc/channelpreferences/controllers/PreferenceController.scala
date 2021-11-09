@@ -65,18 +65,17 @@ class PreferenceController @Inject()(
       }
     }
 
-  def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[Enrolment] { enrolment =>
-      for {
-        resp <- entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId)
-        _ <- auditConfirm(
-              resp.status,
-              enrolment,
-              authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
-                .retrieve(Retrievals.saUtr and Retrievals.nino)
-            )
-      } yield Status(resp.status)(resp.json)
-    }
+  def confirm(entityId: String, itsaId: String): Action[AnyContent] = Action.async { implicit request =>
+    for {
+      resp <- entityResolverConnector.confirm(entityId, itsaId)
+      _ <- auditConfirm(
+            resp.status,
+            entityId,
+            itsaId,
+            authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
+              .retrieve(Retrievals.saUtr and Retrievals.nino)
+          )
+    } yield Status(resp.status)(resp.json)
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
@@ -147,7 +146,11 @@ class PreferenceController @Inject()(
       }
     }
 
-  def auditConfirm(status: Int, e: Enrolment, auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
+  def auditConfirm(
+    status: Int,
+    entityId: String,
+    itsaId: String,
+    auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext): Future[Unit] = {
     def getIds: Future[Map[String, String]] =
@@ -162,7 +165,7 @@ class PreferenceController @Inject()(
     getIds.map { ids =>
       sendAuditEvent(
         if (status == OK) "ItsaIdConfirmed" else "ItsaIdConfirmError",
-        Map("regime" -> ITSA_REGIME, "itsaId" -> e.itsaId, "entityId" -> e.entityId) ++ ids)
+        Map("regime" -> ITSA_REGIME, "itsaId" -> itsaId, "entityId" -> entityId) ++ ids)
     }
   }
 

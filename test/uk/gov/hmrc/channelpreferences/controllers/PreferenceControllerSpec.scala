@@ -117,9 +117,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
             any[Retrieval[~[Option[String], Option[String]]]])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievals))
 
-        val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
-        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-        val response = controller.confirm().apply(fakePostRequest)
+        val path = s"/channel-preferences/confirm/$entityId/itsa/$itsaId"
+        val fakePostRequest = FakeRequest("POST", path)
+        val response = controller.confirm(entityId, itsaId).apply(fakePostRequest)
         status(response) mustBe httpResponse.status
         contentAsJson(response) mustBe Json.parse(httpResponse.body)
       }
