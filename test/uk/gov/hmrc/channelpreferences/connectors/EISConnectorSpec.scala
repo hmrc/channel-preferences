@@ -25,9 +25,9 @@ import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.libs.json.{ JsObject, Json, Writes }
 import uk.gov.hmrc.channelpreferences.model.{ ItsaETMPUpdate, UpdateContactPreferenceRequest }
-import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
 import play.api.test.Helpers._
+import uk.gov.hmrc.channelpreferences.model.preferences.Event
 
 import java.time.LocalDateTime
 import java.util.UUID

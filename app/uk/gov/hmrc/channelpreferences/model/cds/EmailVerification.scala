@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.hub.cds.model
+package uk.gov.hmrc.channelpreferences.model.cds
 
 import org.joda.time.DateTime
-import uk.gov.hmrc.emailaddress.EmailAddress
-import play.api.libs.json._
-import play.api.libs.json.Reads._
-
-import play.api.libs.json.JodaWrites.JodaDateTimeWrites
 import play.api.libs.json.JodaReads.DefaultJodaDateTimeReads
+import play.api.libs.json.JodaWrites.JodaDateTimeWrites
+import play.api.libs.json._
+import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.util.{ Failure, Success, Try }
 

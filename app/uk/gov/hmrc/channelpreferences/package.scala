@@ -17,7 +17,7 @@
 package uk.gov.hmrc
 
 import _root_.play.api.mvc.PathBindable
-import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
+import uk.gov.hmrc.channelpreferences.model.cds.Channel
 
 package object channelpreferences {
 

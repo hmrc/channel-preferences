@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.hub.cds.services
+package uk.gov.hmrc.channelpreferences.services.cds
 
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
 import play.api.http.Status.NOT_IMPLEMENTED
 import play.api.{ Logger, LoggerLike }
-import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
-import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
+import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
+import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+
 import javax.inject._
 import scala.concurrent.{ ExecutionContext, Future }
 

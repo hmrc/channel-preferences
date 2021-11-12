@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.hub.cds.model
+package uk.gov.hmrc.channelpreferences.model.cds
 
 import org.joda.time.DateTime
 import org.scalatestplus.play.PlaySpec

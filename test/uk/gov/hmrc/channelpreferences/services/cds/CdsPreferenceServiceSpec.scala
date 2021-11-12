@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.hub.services
+package uk.gov.hmrc.channelpreferences.services.cds
 
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{ times, verify }
-import scala.concurrent.ExecutionContext
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{ times, verify, when }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{ ACCEPTED, NOT_IMPLEMENTED }
-import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
-import uk.gov.hmrc.channelpreferences.hub.cds.model.{ Email, EmailVerification, Sms }
-import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreferenceService
 import uk.gov.hmrc.channelpreferences.audit.Auditing
+import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
+import uk.gov.hmrc.channelpreferences.model.cds.{ Email, EmailVerification, Sms }
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class CdsPreferenceServiceSpec extends PlaySpec with ScalaFutures with MockitoSugar with Auditing {
   override val auditConnector: AuditConnector = mock[AuditConnector]

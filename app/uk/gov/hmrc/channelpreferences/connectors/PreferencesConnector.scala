@@ -18,8 +18,8 @@ package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
 import play.api.http.Status
+import uk.gov.hmrc.channelpreferences.model.preferences.Event
 import uk.gov.hmrc.channelpreferences.model.{ ChannelPreferencesError, PreferencesConnectorError }
-import uk.gov.hmrc.channelpreferences.preferences.model.Event
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
