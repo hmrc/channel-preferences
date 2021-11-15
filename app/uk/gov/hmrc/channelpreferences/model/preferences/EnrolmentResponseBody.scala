@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model
+package uk.gov.hmrc.channelpreferences.model.preferences
 
 import play.api.libs.json.{ Json, Reads }
 

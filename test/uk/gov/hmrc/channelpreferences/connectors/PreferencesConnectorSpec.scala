@@ -24,8 +24,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status
 import play.api.libs.json.{ Json, Writes }
-import uk.gov.hmrc.channelpreferences.model.PreferencesConnectorError
-import uk.gov.hmrc.channelpreferences.model.preferences.Event
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, PreferencesConnectorError }
 import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
 
 import java.time.LocalDateTime

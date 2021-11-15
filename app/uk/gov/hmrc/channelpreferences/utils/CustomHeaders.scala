@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model
+package uk.gov.hmrc.channelpreferences.utils
 
-import play.api.libs.json.{ Json, OFormat }
-
-final case class Enrolment(entityId: String, itsaId: String)
-
-object Enrolment {
-  implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
+object CustomHeaders {
+  val CorrelationId = "X-Correlation-ID"
+  val RequestId = "X-Request-ID"
+  val ForwardedHost = "X-Forwarded-Host"
+  val Environment = "environment"
 }

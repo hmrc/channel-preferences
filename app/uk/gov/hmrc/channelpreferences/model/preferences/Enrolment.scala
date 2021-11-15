@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model
+package uk.gov.hmrc.channelpreferences.model.preferences
 
-sealed trait ChannelPreferencesError
+import play.api.libs.json.{ Json, OFormat }
 
-final case class PreferencesConnectorError(message: String) extends ChannelPreferencesError
-final case class UnExpectedError() extends Throwable
+final case class Enrolment(entityId: String, itsaId: String)
+
+object Enrolment {
+  implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
+}

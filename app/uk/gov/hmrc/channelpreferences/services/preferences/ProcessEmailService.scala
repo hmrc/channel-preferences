@@ -18,8 +18,7 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.channelpreferences.connectors.PreferencesConnector
-import uk.gov.hmrc.channelpreferences.model.ChannelPreferencesError
-import uk.gov.hmrc.channelpreferences.model.preferences.Event
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelPreferencesError, Event }
 
 import javax.inject.Inject
 import scala.concurrent.Future
