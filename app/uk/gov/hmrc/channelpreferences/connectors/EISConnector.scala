@@ -19,9 +19,10 @@ package uk.gov.hmrc.channelpreferences.connectors
 import play.api.Configuration
 import play.api.http.HeaderNames.{ ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE, USER_AGENT }
 import play.api.http.MimeTypes
-import uk.gov.hmrc.channelpreferences.model.{ ItsaETMPUpdate, UpdateContactPreferenceRequest }
 import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
-import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
+import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
+import uk.gov.hmrc.channelpreferences.model.eis.UpdateContactPreferenceRequest
+import uk.gov.hmrc.channelpreferences.model.preferences.ItsaETMPUpdate
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.{ ZoneOffset, ZonedDateTime }

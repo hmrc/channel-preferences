@@ -23,13 +23,12 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
-import uk.gov.hmrc.channelpreferences.connectors.utils.CustomHeaders
+import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
-import uk.gov.hmrc.channelpreferences.hub.cds.model.Channel
-import uk.gov.hmrc.channelpreferences.hub.cds.services.CdsPreference
-import uk.gov.hmrc.channelpreferences.model._
-import uk.gov.hmrc.channelpreferences.preferences.model.Event
-import uk.gov.hmrc.channelpreferences.preferences.services.ProcessEmail
+import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.model.preferences.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, Event, StatusUpdate }
+import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
+import uk.gov.hmrc.channelpreferences.services.preferences.ProcessEmail
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
@@ -50,11 +49,11 @@ class PreferenceController @Inject()(
   override val auditConnector: AuditConnector)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing {
 
-  private val logger: Logger = Logger(this.getClass())
+  private val logger: Logger = Logger(this.getClass)
 
   private val ITSA_REGIME = "ITSA"
 
-  implicit val emailWrites = uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification.emailVerificationFormat
+  implicit val emailWrites = uk.gov.hmrc.channelpreferences.model.cds.EmailVerification.emailVerificationFormat
   def preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String): Action[AnyContent] =
     Action.async { implicit request =>
       cdsPreference.getPreference(channel, enrolmentKey, taxIdName, taxIdValue).map {

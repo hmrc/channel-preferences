@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.connectors.utils
+package uk.gov.hmrc.channelpreferences.model.preferences
 
-object CustomHeaders {
-  val CorrelationId = "X-Correlation-ID"
-  val RequestId = "X-Request-ID"
-  val ForwardedHost = "X-Forwarded-Host"
-  val Environment = "environment"
-}
+sealed trait ChannelPreferencesError
+
+final case class PreferencesConnectorError(message: String) extends ChannelPreferencesError
+final case class UnExpectedError() extends Throwable

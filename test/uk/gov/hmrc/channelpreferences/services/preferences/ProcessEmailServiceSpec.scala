@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.preferences.services
+package uk.gov.hmrc.channelpreferences.services.preferences
 
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
@@ -22,7 +22,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.channelpreferences.connectors.PreferencesConnector
-import uk.gov.hmrc.channelpreferences.preferences.model.Event
+import uk.gov.hmrc.channelpreferences.model.preferences.Event
 
 import java.time.LocalDateTime
 import java.util.UUID

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-import uk.gov.hmrc.channelpreferences.hub.cds.model.EmailVerification
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.http.Status.{ BAD_GATEWAY, OK }
 import play.api.libs.json.{ JsSuccess, Json }
 import play.api.{ Configuration, Logger, LoggerLike }
+import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ ExecutionContext, Future }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.hub.cds.model
+package uk.gov.hmrc.channelpreferences.model.cds
 
 sealed abstract class Channel {
   val name: String

@@ -19,7 +19,7 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     dependencyOverrides ++= AppDependencies.dependencyOverrides,
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.ChannelBinder._",
-    RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.hub.cds.model._",
+    RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.cds._",
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions ++= Seq(

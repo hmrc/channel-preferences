@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.preferences.services
+package uk.gov.hmrc.channelpreferences.services.preferences
 
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.channelpreferences.connectors.PreferencesConnector
-import uk.gov.hmrc.channelpreferences.model.ChannelPreferencesError
-import uk.gov.hmrc.channelpreferences.preferences.model.Event
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelPreferencesError, Event }
 
 import javax.inject.Inject
 import scala.concurrent.Future
