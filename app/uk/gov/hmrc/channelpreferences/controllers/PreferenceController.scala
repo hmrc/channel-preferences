@@ -24,10 +24,11 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
-import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
+import uk.gov.hmrc.channelpreferences.connectors.EISConnector
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, Event, StatusUpdate }
 import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
+import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.ProcessEmail
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -42,7 +43,7 @@ import scala.util.Try
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
   val authConnector: AuthConnector,
-  entityResolverConnector: EntityResolverConnector,
+  entityResolver: EntityResolver,
   eisConnector: EISConnector,
   processEmail: ProcessEmail,
   override val controllerComponents: ControllerComponents,
@@ -67,7 +68,7 @@ class PreferenceController @Inject()(
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
       for {
-        resp <- entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId)
+        resp <- entityResolver.confirm(enrolment.entityId, enrolment.itsaId)
         _ <- auditConfirm(
               resp.status,
               enrolment,
@@ -79,7 +80,7 @@ class PreferenceController @Inject()(
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    entityResolverConnector.enrolment(request.body).flatMap { resp =>
+    entityResolver.enrolment(request.body).flatMap { resp =>
       val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
       (resp.status, resultBody) match {
         case (OK, Some(result)) =>
