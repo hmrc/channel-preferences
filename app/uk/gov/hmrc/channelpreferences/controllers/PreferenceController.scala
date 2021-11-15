@@ -24,10 +24,10 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
-import uk.gov.hmrc.channelpreferences.connectors.EISConnector
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, Event, StatusUpdate }
 import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
+import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.ProcessEmail
 import uk.gov.hmrc.http.HeaderCarrier
@@ -44,7 +44,7 @@ class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
   val authConnector: AuthConnector,
   entityResolver: EntityResolver,
-  eisConnector: EISConnector,
+  eisContactPreference: EISContactPreference,
   processEmail: ProcessEmail,
   override val controllerComponents: ControllerComponents,
   override val auditConnector: AuditConnector)(implicit ec: ExecutionContext)
@@ -98,7 +98,7 @@ class PreferenceController @Inject()(
       val statusUpdate = StatusUpdate(agentEnrolment.itsaId, status)
       statusUpdate.substituteMTDITIDValue match {
         case Right(itsaETMPUpdate) =>
-          eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
+          eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
             Status(response.status)(response.json)
           }
         case Left(_) =>
@@ -135,8 +135,9 @@ class PreferenceController @Inject()(
               case Right(itsaETMPUpdate) =>
                 val correlationId = request.headers
                   .get(CustomHeaders.RequestId)
-                eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
-                  Status(response.status)(response.json)
+                eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map {
+                  response =>
+                    Status(response.status)(response.json)
                 }
               case Left(err) =>
                 Future.successful(BadRequest(err))
