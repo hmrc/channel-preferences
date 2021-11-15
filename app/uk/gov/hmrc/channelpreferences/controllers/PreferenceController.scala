@@ -42,12 +42,12 @@ import scala.util.Try
 @Singleton
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
-  val authConnector: AuthConnector,
   entityResolver: EntityResolver,
   eisContactPreference: EISContactPreference,
   processEmail: ProcessEmail,
-  override val controllerComponents: ControllerComponents,
-  override val auditConnector: AuditConnector)(implicit ec: ExecutionContext)
+  override val authConnector: AuthConnector,
+  override val auditConnector: AuditConnector,
+  override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing {
 
   private val logger: Logger = Logger(this.getClass)

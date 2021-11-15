@@ -70,12 +70,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Left(SERVICE_UNAVAILABLE))
         },
-        mockAuthConnector,
         mockEntityResolver,
         mockEISContactPreference,
         mockProcessEmail,
-        Helpers.stubControllerComponents(),
-        mockAuditConnector
+        mockAuthConnector,
+        mockAuditConnector,
+        Helpers.stubControllerComponents()
       )
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
@@ -90,12 +90,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Right(emailVerification))
         },
-        mockAuthConnector,
         mockEntityResolver,
         mockEISContactPreference,
         mockProcessEmail,
-        Helpers.stubControllerComponents(),
-        mockAuditConnector
+        mockAuthConnector,
+        mockAuditConnector,
+        Helpers.stubControllerComponents()
       )
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
@@ -487,12 +487,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val preferenceController =
         new PreferenceController(
           mockCdsPreference,
-          mockAuthConnector,
           mockEntityResolver,
           mockEISContactPreference,
           mockProcessEmail,
-          Helpers.stubControllerComponents(),
-          mockAuditConnector
+          mockAuthConnector,
+          mockAuditConnector,
+          Helpers.stubControllerComponents()
         )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
@@ -505,12 +505,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val preferenceController =
         new PreferenceController(
           mockCdsPreference,
-          mockAuthConnector,
           mockEntityResolver,
           mockEISContactPreference,
           mockProcessEmail,
-          Helpers.stubControllerComponents(),
-          mockAuditConnector
+          mockAuthConnector,
+          mockAuditConnector,
+          Helpers.stubControllerComponents()
         )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
@@ -522,12 +522,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val preferenceController =
         new PreferenceController(
           mockCdsPreference,
-          mockAuthConnector,
           mockEntityResolver,
           mockEISContactPreference,
           mockProcessEmail,
-          Helpers.stubControllerComponents(),
-          mockAuditConnector
+          mockAuthConnector,
+          mockAuditConnector,
+          Helpers.stubControllerComponents()
         )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
@@ -600,12 +600,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
           Future.successful(Left(SERVICE_UNAVAILABLE))
       },
-      mockAuthConnector,
       mockEntityResolver,
       mockEISContactPreference,
       mockProcessEmail,
-      Helpers.stubControllerComponents(),
-      mockAuditConnector
+      mockAuthConnector,
+      mockAuditConnector,
+      Helpers.stubControllerComponents()
     )
 
     val mockCdsPreference = mock[CdsPreference]
