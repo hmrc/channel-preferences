@@ -36,7 +36,8 @@ import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNA
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, ItsaETMPUpdate, PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver

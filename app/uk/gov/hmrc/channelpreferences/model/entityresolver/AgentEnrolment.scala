@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model.preferences
+package uk.gov.hmrc.channelpreferences.model.entityresolver
 
 import play.api.libs.json.{ Json, OFormat }
 
-final case class Enrolment(entityId: String, itsaId: String)
+final case class AgentEnrolment(itsaId: String)
 
-object Enrolment {
-  implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
+object AgentEnrolment {
+  implicit val format: OFormat[AgentEnrolment] = Json.format[AgentEnrolment]
 }

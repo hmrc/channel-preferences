@@ -25,7 +25,9 @@ import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationExcept
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, Event, StatusUpdate }
+import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
+import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
+import uk.gov.hmrc.channelpreferences.model.preferences.Event
 import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver

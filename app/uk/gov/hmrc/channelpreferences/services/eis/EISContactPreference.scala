@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.services.eis
 
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.channelpreferences.connectors.EISConnector
-import uk.gov.hmrc.channelpreferences.model.preferences.ItsaETMPUpdate
+import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
 import uk.gov.hmrc.http.HttpResponse
 
 import javax.inject.Inject
