@@ -24,10 +24,13 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
-import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, Event, StatusUpdate }
+import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
+import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
+import uk.gov.hmrc.channelpreferences.model.preferences.Event
 import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
+import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
+import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.ProcessEmail
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -41,12 +44,12 @@ import scala.util.Try
 @Singleton
 class PreferenceController @Inject()(
   cdsPreference: CdsPreference,
-  val authConnector: AuthConnector,
-  entityResolverConnector: EntityResolverConnector,
-  eisConnector: EISConnector,
+  entityResolver: EntityResolver,
+  eisContactPreference: EISContactPreference,
   processEmail: ProcessEmail,
-  override val controllerComponents: ControllerComponents,
-  override val auditConnector: AuditConnector)(implicit ec: ExecutionContext)
+  override val authConnector: AuthConnector,
+  override val auditConnector: AuditConnector,
+  override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing {
 
   private val logger: Logger = Logger(this.getClass)
@@ -67,7 +70,7 @@ class PreferenceController @Inject()(
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
       for {
-        resp <- entityResolverConnector.confirm(enrolment.entityId, enrolment.itsaId)
+        resp <- entityResolver.confirm(enrolment.entityId, enrolment.itsaId)
         _ <- auditConfirm(
               resp.status,
               enrolment,
@@ -79,7 +82,7 @@ class PreferenceController @Inject()(
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    entityResolverConnector.enrolment(request.body).flatMap { resp =>
+    entityResolver.enrolment(request.body).flatMap { resp =>
       val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
       (resp.status, resultBody) match {
         case (OK, Some(result)) =>
@@ -97,7 +100,7 @@ class PreferenceController @Inject()(
       val statusUpdate = StatusUpdate(agentEnrolment.itsaId, status)
       statusUpdate.substituteMTDITIDValue match {
         case Right(itsaETMPUpdate) =>
-          eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
+          eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
             Status(response.status)(response.json)
           }
         case Left(_) =>
@@ -134,8 +137,9 @@ class PreferenceController @Inject()(
               case Right(itsaETMPUpdate) =>
                 val correlationId = request.headers
                   .get(CustomHeaders.RequestId)
-                eisConnector.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
-                  Status(response.status)(response.json)
+                eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map {
+                  response =>
+                    Status(response.status)(response.json)
                 }
               case Left(err) =>
                 Future.successful(BadRequest(err))

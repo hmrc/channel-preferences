@@ -35,10 +35,12 @@ import play.api.test.{ FakeRequest, Helpers }
 import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
-import uk.gov.hmrc.channelpreferences.connectors.{ EISConnector, EntityResolverConnector }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, ItsaETMPUpdate, PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
+import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
+import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.ProcessEmail
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
@@ -55,8 +57,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  val mockEntityResolverConnector: EntityResolverConnector = mock[EntityResolverConnector]
-  val mockEISConnector: EISConnector = mock[EISConnector]
+  val mockEntityResolver: EntityResolver = mock[EntityResolver]
+  val mockEISContactPreference: EISContactPreference = mock[EISContactPreference]
   val mockProcessEmail: ProcessEmail = mock[ProcessEmail]
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
 
@@ -69,12 +71,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Left(SERVICE_UNAVAILABLE))
         },
-        mockAuthConnector,
-        mockEntityResolverConnector,
-        mockEISConnector,
+        mockEntityResolver,
+        mockEISContactPreference,
         mockProcessEmail,
-        Helpers.stubControllerComponents(),
-        mockAuditConnector
+        mockAuthConnector,
+        mockAuditConnector,
+        Helpers.stubControllerComponents()
       )
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
@@ -89,12 +91,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
             ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
             Future.successful(Right(emailVerification))
         },
-        mockAuthConnector,
-        mockEntityResolverConnector,
-        mockEISConnector,
+        mockEntityResolver,
+        mockEISContactPreference,
         mockProcessEmail,
-        Helpers.stubControllerComponents(),
-        mockAuditConnector
+        mockAuthConnector,
+        mockAuditConnector,
+        Helpers.stubControllerComponents()
       )
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
@@ -107,7 +109,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
     "Forward the result form the entity-resolver" in new TestSetup with ConfirmGenerator {
       forAll(entityIgGen, itsaIdGen, httpResponseGen) { (entityId, itsaId, httpResponse) =>
-        when(mockEntityResolverConnector.confirm(anyString(), anyString())(any[HeaderCarrier]))
+        when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(httpResponse))
         val retrievals = new ~(Some("somesautr"), Some("somenino"))
         when(
@@ -132,7 +134,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       "is not ok" in new TestSetup with EnrolmentGenerator {
       forAll(agentArnGen, ninoGen, sautrGen, itsaIdGen, httpResponseGen) {
         (agentArn, nino, sautr, itsaId, httpResponse) =>
-          when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+          when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(httpResponse))
           val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
           val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
@@ -165,10 +167,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val httpResponse =
         HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
 
-      when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -200,10 +202,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val httpResponse =
         HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
 
-      when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -235,10 +237,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val httpResponse =
         HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
 
-      when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -265,10 +267,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val httpResponse =
         HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
 
-      when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -291,10 +293,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val httpResponse =
         HttpResponse(UNAUTHORIZED, entityResolverResponseBody, Map.empty[String, Seq[String]])
 
-      when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -317,7 +319,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val httpResponse =
         HttpResponse(UNAUTHORIZED, entityResolverResponseBody, Map.empty[String, Seq[String]])
 
-      when(mockEntityResolverConnector.enrolment(any[JsValue]())(any[HeaderCarrier]))
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -486,12 +488,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val preferenceController =
         new PreferenceController(
           mockCdsPreference,
-          mockAuthConnector,
-          mockEntityResolverConnector,
-          mockEISConnector,
+          mockEntityResolver,
+          mockEISContactPreference,
           mockProcessEmail,
-          Helpers.stubControllerComponents(),
-          mockAuditConnector
+          mockAuthConnector,
+          mockAuditConnector,
+          Helpers.stubControllerComponents()
         )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
@@ -504,12 +506,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val preferenceController =
         new PreferenceController(
           mockCdsPreference,
-          mockAuthConnector,
-          mockEntityResolverConnector,
-          mockEISConnector,
+          mockEntityResolver,
+          mockEISContactPreference,
           mockProcessEmail,
-          Helpers.stubControllerComponents(),
-          mockAuditConnector
+          mockAuthConnector,
+          mockAuditConnector,
+          Helpers.stubControllerComponents()
         )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
@@ -521,12 +523,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val preferenceController =
         new PreferenceController(
           mockCdsPreference,
-          mockAuthConnector,
-          mockEntityResolverConnector,
-          mockEISConnector,
+          mockEntityResolver,
+          mockEISContactPreference,
           mockProcessEmail,
-          Helpers.stubControllerComponents(),
-          mockAuditConnector
+          mockAuthConnector,
+          mockAuditConnector,
+          Helpers.stubControllerComponents()
         )
 
       val result = preferenceController.processBounce().apply(fakeProcessBounce)
@@ -538,7 +540,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   "Calling update contact" should {
     "return OK when the call to EIS succeed" in new TestSetup {
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val result = controller.update("itsa").apply(updateStatusRequest)
@@ -555,7 +557,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
               }
           ]
           }""")
-      when(mockEISConnector.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())))
 
       val result = controller.update("itsa").apply(updateStatusRequest)
@@ -599,12 +601,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
           Future.successful(Left(SERVICE_UNAVAILABLE))
       },
-      mockAuthConnector,
-      mockEntityResolverConnector,
-      mockEISConnector,
+      mockEntityResolver,
+      mockEISContactPreference,
       mockProcessEmail,
-      Helpers.stubControllerComponents(),
-      mockAuditConnector
+      mockAuthConnector,
+      mockAuditConnector,
+      Helpers.stubControllerComponents()
     )
 
     val mockCdsPreference = mock[CdsPreference]
