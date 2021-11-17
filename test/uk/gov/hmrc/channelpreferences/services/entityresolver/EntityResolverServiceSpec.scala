@@ -22,8 +22,9 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
 import play.api.libs.json.{ JsValue, Json }
+import play.api.test.Helpers._
 import uk.gov.hmrc.channelpreferences.connectors.EntityResolverConnector
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse, InternalServerException }
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,16 +33,52 @@ import scala.concurrent.Future
 class EntityResolverServiceSpec extends PlaySpec with ScalaFutures with MockitoSugar {
 
   "confirm" must {
-    "return response as returned from entity resolver" in new TestClass {
+    "return success response as returned from entity resolver" in new TestClass {
+      when(mockConnector.confirm(entityId, itsaId))
+        .thenReturn(Future.successful(successResponse))
       val service = new EntityResolverService(mockConnector)
       service.confirm(entityId, itsaId).futureValue mustBe successResponse
+    }
+
+    "return bad request response as returned from entity resolver" in new TestClass {
+      when(mockConnector.confirm(entityId, itsaId))
+        .thenReturn(Future.successful(badRequest))
+      val service = new EntityResolverService(mockConnector)
+      service.confirm(entityId, itsaId).futureValue mustBe badRequest
+    }
+
+    "return exception as returned from entity resolver" in new TestClass {
+      when(mockConnector.confirm(entityId, itsaId))
+        .thenReturn(Future.failed(new InternalServerException("Server down")))
+      val service = new EntityResolverService(mockConnector)
+      assertThrows[InternalServerException](
+        await(service.confirm(entityId, itsaId))
+      )
     }
   }
 
   "enrolment" must {
-    "return response as returned from entity resolver" in new TestClass {
+    "return success response as returned from entity resolver" in new TestClass {
+      when(mockConnector.enrolment(requestBody))
+        .thenReturn(Future.successful(successResponse))
       val service = new EntityResolverService(mockConnector)
       service.enrolment(requestBody).futureValue mustBe successResponse
+    }
+
+    "return bad request response as returned from entity resolver" in new TestClass {
+      when(mockConnector.enrolment(requestBody))
+        .thenReturn(Future.successful(badRequest))
+      val service = new EntityResolverService(mockConnector)
+      service.enrolment(requestBody).futureValue mustBe badRequest
+    }
+
+    "return exception as returned from entity resolver" in new TestClass {
+      when(mockConnector.enrolment(requestBody))
+        .thenReturn(Future.failed(new InternalServerException("Server down")))
+      val service = new EntityResolverService(mockConnector)
+      assertThrows[InternalServerException](
+        await(service.enrolment(requestBody))
+      )
     }
   }
 
@@ -51,10 +88,7 @@ class EntityResolverServiceSpec extends PlaySpec with ScalaFutures with MockitoS
     val requestBody: JsValue = Json.parse("{}")
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val successResponse: HttpResponse = HttpResponse(Status.OK, "success")
+    val badRequest: HttpResponse = HttpResponse(Status.BAD_REQUEST, "bad request")
     val mockConnector: EntityResolverConnector = mock[EntityResolverConnector]
-    when(mockConnector.confirm(entityId, itsaId))
-      .thenReturn(Future.successful(successResponse))
-    when(mockConnector.enrolment(requestBody))
-      .thenReturn(Future.successful(successResponse))
   }
 }

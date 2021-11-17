@@ -21,9 +21,10 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
+import play.api.test.Helpers._
 import uk.gov.hmrc.channelpreferences.connectors.EISConnector
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse, InternalServerException }
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -31,10 +32,29 @@ import scala.concurrent.Future
 class EISContactPreferenceServiceSpec extends PlaySpec with ScalaFutures with MockitoSugar {
 
   "updateContactPreference" must {
-    "return response as returned from EIS service" in new TestClass {
+    "return success response as returned from EIS" in new TestClass {
+      when(mockConnector.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)))
+        .thenReturn(Future.successful(successResponse))
       val service = new EISContactPreferenceService(mockConnector)
       service.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)).futureValue mustBe successResponse
     }
+
+    "return bad request response as returned from EIS" in new TestClass {
+      when(mockConnector.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)))
+        .thenReturn(Future.successful(badRequest))
+      val service = new EISContactPreferenceService(mockConnector)
+      service.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)).futureValue mustBe badRequest
+    }
+
+    "return exception as returned from EIS" in new TestClass {
+      when(mockConnector.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)))
+        .thenReturn(Future.failed(new InternalServerException("Server down")))
+      val service = new EISContactPreferenceService(mockConnector)
+      assertThrows[InternalServerException](
+        await(service.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)))
+      )
+    }
+
   }
 
   class TestClass {
@@ -43,8 +63,7 @@ class EISContactPreferenceServiceSpec extends PlaySpec with ScalaFutures with Mo
     val correlationId: String = UUID.randomUUID().toString
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val successResponse: HttpResponse = HttpResponse(Status.OK, "success")
+    val badRequest: HttpResponse = HttpResponse(Status.BAD_REQUEST, "bad request")
     val mockConnector: EISConnector = mock[EISConnector]
-    when(mockConnector.updateContactPreference(regime, itsaETMPUpdate, Some(correlationId)))
-      .thenReturn(Future.successful(successResponse))
   }
 }
