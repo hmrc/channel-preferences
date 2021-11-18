@@ -17,21 +17,21 @@
 package uk.gov.hmrc.channelpreferences.controllers
 
 import java.util.UUID.randomUUID
-
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+
 import javax.inject.Inject
 import org.slf4j.MDC
 import play.api.Logger
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
-import uk.gov.hmrc.channelpreferences.connectors.OutboundProxyConnector
+import uk.gov.hmrc.channelpreferences.services.entityresolver.OutboundProxy
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 class ProxyController @Inject()(
-  outboundConnector: OutboundProxyConnector
+  outboundProxy: OutboundProxy
 )(implicit ec: ExecutionContext, controllerComponents: ControllerComponents)
     extends BackendController(controllerComponents) {
 
@@ -46,7 +46,7 @@ class ProxyController @Inject()(
 
       log.debug(s"Inbound Request: ${request.method} ${request.uri}")
 
-      outboundConnector.proxy(request).recover {
+      outboundProxy.proxy(request).recover {
         case ex: Exception =>
           log.error(s"An error occurred proxying $path", ex)
           InternalServerError(ex.getMessage)
