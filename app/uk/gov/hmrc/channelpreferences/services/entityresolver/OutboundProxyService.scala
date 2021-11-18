@@ -25,7 +25,7 @@ import uk.gov.hmrc.channelpreferences.connectors.OutboundProxyConnector
 import javax.inject.Inject
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[EntityResolverService])
+@ImplementedBy(classOf[OutboundProxyService])
 trait OutboundProxy {
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result]
 }
