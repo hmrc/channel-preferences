@@ -97,6 +97,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(itDependenciesList := List(
     ExternalService("PREFERENCES")
   ))
+  .settings(ScoverageSettings())
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 compileScalastyle := scalastyle.in(Compile).toTask("").value
@@ -114,7 +115,6 @@ lazy val silencerSettings: Seq[Setting[_]] = {
   )
 }
 
-coverageExcludedPackages := "<empty>;Reverse.*;.*(config|views.*);.*(AuthService|BuildInfo|Routes).*"
 dependencyUpdatesFailBuild := true
 (compile in Compile) := ((compile in Compile) dependsOn dependencyUpdates).value
 dependencyUpdatesFilter -= moduleFilter(organization = "uk.gov.hmrc")
