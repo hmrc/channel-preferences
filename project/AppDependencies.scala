@@ -28,7 +28,7 @@ object AppDependencies {
     "uk.gov.hmrc"            %% "service-integration-test" % "1.1.0-play-28" % "test, it",
     "org.pegdown"            % "pegdown"                   % "1.6.0"         % "test, it",
     "org.mockito"            % "mockito-core"              % "4.1.0"         % "test",
-    "com.github.tomakehurst" % "wiremock-jre8"             % "2.31.0"        % "test,it",
+    "com.github.tomakehurst" % "wiremock-jre8"             % "2.32.0"        % "test,it",
     "org.mock-server"        % "mockserver-netty"          % "5.11.2"        % "it",
     "com.vladsch.flexmark"   % "flexmark-all"              % "0.36.8"        % "test, it"
   )
