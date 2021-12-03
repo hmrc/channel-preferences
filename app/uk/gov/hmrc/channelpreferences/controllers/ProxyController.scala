@@ -22,7 +22,7 @@ import akka.util.ByteString
 
 import javax.inject.Inject
 import org.slf4j.MDC
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import uk.gov.hmrc.channelpreferences.services.entityresolver.OutboundProxy
@@ -31,11 +31,10 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 class ProxyController @Inject()(
+  controllerComponents: ControllerComponents,
   outboundProxy: OutboundProxy
-)(implicit ec: ExecutionContext, controllerComponents: ControllerComponents)
-    extends BackendController(controllerComponents) {
-
-  val log: Logger = Logger(this.getClass)
+)(implicit ec: ExecutionContext)
+    extends BackendController(controllerComponents) with Logging {
 
   val streamedBodyParser: BodyParser[Source[ByteString, Any]] =
     BodyParser(_ => Accumulator.source[ByteString].map((x: Source[ByteString, Any]) => Right.apply(x)))
@@ -44,11 +43,11 @@ class ProxyController @Inject()(
     Action.async(streamedBodyParser) { implicit request =>
       populateMdc(request)
 
-      log.debug(s"Inbound Request: ${request.method} ${request.uri}")
+      logger.debug(s"Inbound Request: ${request.method} ${request.uri}")
 
       outboundProxy.proxy(request).recover {
         case ex: Exception =>
-          log.error(s"An error occurred proxying $path", ex)
+          logger.error(s"An error occurred proxying $path", ex)
           InternalServerError(ex.getMessage)
       }
     }
