@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,6 +79,18 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
         Left(BAD_GATEWAY)
     }
 
+    "return Bad Gateway if CDS returns non Json response" in new TestCase {
+      private val connector = new CDSEmailConnector(configuration, mockHttpClient)
+      when(
+        mockHttpClient.doGet(
+          "https://host:443/customs-data-store/eori/123/verified-email",
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+        .thenReturn(Future.successful(mockHttpResponse))
+      when(mockHttpResponse.status).thenReturn(OK)
+      when(mockHttpResponse.body).thenReturn("NonJsonResponse")
+      connector.getVerifiedEmail("123").futureValue mustBe
+        Left(BAD_GATEWAY)
+    }
   }
 
   trait TestCase {
