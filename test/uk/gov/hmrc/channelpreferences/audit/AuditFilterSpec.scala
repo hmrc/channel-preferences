@@ -97,5 +97,14 @@ class AuditFilterSpec extends PlaySpec with ScalaFutures with MockitoSugar {
       filter.filterResponseBodyTest() mustBe "response-body"
       filter.filterResponseBodyTest(Some("text/html")) mustBe "<HTML>...</HTML>"
     }
+
+    "strip the passwords from request body" in {
+      filter
+        .stripPasswords(Some("application/x-www-form-urlencoded"), "user=test, password=1234", Seq("password")) mustBe "user=test, password=#########"
+    }
+
+    "clean QueryString for Datastream" in {
+      filter.cleanQueryStringForDatastream(":") mustBe "-"
+    }
   }
 }

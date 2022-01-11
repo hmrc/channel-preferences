@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import akka.stream.testkit.NoMaterializer
 import akka.util.ByteString
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._

@@ -81,7 +81,7 @@ trait AuditFilter extends CommonAuditFilter with BackendHeaderCarrierProvider {
       case _ => requestBody
     }
 
-  private def cleanQueryStringForDatastream(queryString: String): String =
+  private[audit] def cleanQueryStringForDatastream(queryString: String): String =
     queryString.trim match {
       case ""    => "-"
       case ":"   => "-" // play 2.5 FakeRequest now parses an empty query string into a two empty string params
