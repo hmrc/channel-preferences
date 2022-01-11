@@ -21,13 +21,13 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{ JsError, JsSuccess, Json }
 import uk.gov.hmrc.emailaddress.EmailAddress
 
-class EmailVerificationTest extends PlaySpec {
+class EmailVerificationSpec extends PlaySpec {
 
   private val dateTime = new DateTime(1987, 3, 20, 1, 2, 3)
   private val emailVerificationJson =
     Json.parse("""{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}""")
 
-  private val invalidMmailVerificationJson =
+  private val invalidEmailVerificationJson =
     Json.parse("""{"address":"email.com","timestamp":"1987-03-20T01:02:03.000Z"}""")
 
   private val emailVerification = EmailVerification(EmailAddress("some@email.com"), dateTime)
@@ -43,9 +43,14 @@ class EmailVerificationTest extends PlaySpec {
     }
 
     "be unsuccessful if the email is invalid" in {
-      invalidMmailVerificationJson.validate[EmailVerification] mustBe a[JsError]
+      invalidEmailVerificationJson.validate[EmailVerification] mustBe a[JsError]
     }
 
+    "be unsuccessful if the email address json is invalid" in {
+      Json
+        .parse("""{"address": 100,"timestamp":"1987-03-20T01:02:03.000Z"}""")
+        .validate[EmailVerification] mustBe a[JsError]
+    }
   }
 
 }

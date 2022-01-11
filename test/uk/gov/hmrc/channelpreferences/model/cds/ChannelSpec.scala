@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences
+package uk.gov.hmrc.channelpreferences.model.cds
 
-import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.ws.WSClient
-import uk.gov.hmrc.integration.ServiceSpec
-import scala.concurrent.ExecutionContext
 
-trait ISpec extends PlaySpec with ServiceSpec with BeforeAndAfterEach {
+class ChannelSpec extends PlaySpec {
 
-  implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
+  "Channel.channelFromName" must {
+    "return the correct Channel type for given name" in {
+      Channel.channelFromName("email") mustBe Right(Email)
+      Channel.channelFromName("phone") mustBe Right(Phone)
+      Channel.channelFromName("sms") mustBe Right(Sms)
+      Channel.channelFromName("paper") mustBe Right(Paper)
+    }
 
-  override def externalServices: Seq[String] = Seq.empty
+    "return the error when channel name is not found" in {
+      Channel.channelFromName("xyz") mustBe Left(s"Channel xyz not found")
+    }
+  }
 
-  val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-  override def additionalConfig: Map[String, _] = Map("metrics.jvm" -> false)
 }

@@ -32,7 +32,7 @@ import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
 import uk.gov.hmrc.auth.core.AuthConnector
 import play.api.test.{ FakeRequest, Helpers }
-import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, NOT_FOUND, NOT_IMPLEMENTED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
@@ -61,16 +61,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   val mockEISContactPreference: EISContactPreference = mock[EISContactPreference]
   val mockProcessEmail: ProcessEmail = mock[ProcessEmail]
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
+  val mockCdsPreference: CdsPreference = mock[CdsPreference]
 
   "Calling preference" should {
-    "return a BAD GATEWAY (502) for unexpected error status" in {
+    "return a BAD GATEWAY (502) when get preference returns an unexpected error status" in {
       val controller = new PreferenceController(
-        new CdsPreference {
-          override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
-            implicit hc: HeaderCarrier,
-            ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
-            Future.successful(Left(SERVICE_UNAVAILABLE))
-        },
+        mockCdsPreference,
         mockEntityResolver,
         mockEISContactPreference,
         mockProcessEmail,
@@ -78,19 +74,20 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         mockAuditConnector,
         Helpers.stubControllerComponents()
       )
+
+      when(
+        mockCdsPreference.getPreference(any[Channel], anyString(), anyString(), anyString())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Left(SERVICE_UNAVAILABLE)))
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
       status(response) mustBe BAD_GATEWAY
     }
 
-    "return OK (200) with the email verification if found" in {
+    "return NotFound when get preference returns a 404 error status" in {
       val controller = new PreferenceController(
-        new CdsPreference {
-          override def getPreference(c: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)(
-            implicit hc: HeaderCarrier,
-            ec: ExecutionContext): Future[Either[Int, EmailVerification]] =
-            Future.successful(Right(emailVerification))
-        },
+        mockCdsPreference,
         mockEntityResolver,
         mockEISContactPreference,
         mockProcessEmail,
@@ -98,6 +95,54 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         mockAuditConnector,
         Helpers.stubControllerComponents()
       )
+
+      when(
+        mockCdsPreference.getPreference(any[Channel], anyString(), anyString(), anyString())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Left(NOT_FOUND)))
+
+      val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
+      status(response) mustBe NOT_FOUND
+    }
+
+    "return NotImplemented when get preference returns a 501 error status" in {
+      val controller = new PreferenceController(
+        mockCdsPreference,
+        mockEntityResolver,
+        mockEISContactPreference,
+        mockProcessEmail,
+        mockAuthConnector,
+        mockAuditConnector,
+        Helpers.stubControllerComponents()
+      )
+
+      when(
+        mockCdsPreference.getPreference(any[Channel], anyString(), anyString(), anyString())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Left(NOT_IMPLEMENTED)))
+
+      val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
+      status(response) mustBe NOT_IMPLEMENTED
+    }
+
+    "return OK (200) with the email verification if found" in {
+      val controller = new PreferenceController(
+        mockCdsPreference,
+        mockEntityResolver,
+        mockEISContactPreference,
+        mockProcessEmail,
+        mockAuthConnector,
+        mockAuditConnector,
+        Helpers.stubControllerComponents()
+      )
+
+      when(
+        mockCdsPreference.getPreference(any[Channel], anyString(), anyString(), anyString())(
+          any[HeaderCarrier](),
+          any[ExecutionContext]()))
+        .thenReturn(Future.successful(Right(emailVerification)))
 
       val response = controller.preference(Email, "", "", "").apply(FakeRequest("GET", "/"))
       status(response) mustBe OK
@@ -279,6 +324,14 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       status(response) mustBe httpResponse.status
       contentAsJson(response) mustBe successBody
 
+    }
+
+    "not update ETMP when the invalid itsa enrolment id found" in new TestSetup {
+      val postData: JsValue =
+        Json.obj("arn" -> "agent", "nino" -> "nino", "sautr" -> "sautr", "itsaId" -> "Invalid~XMIT983509385093485")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe UNAUTHORIZED
     }
 
     "NOT update ETMP when the entity resolver when the preferences is not found" in new TestSetup {
