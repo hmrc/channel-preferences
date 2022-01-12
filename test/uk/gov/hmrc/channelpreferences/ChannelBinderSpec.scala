@@ -40,13 +40,22 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
     .build()
 
   "ChannelBinder" must {
-    "define the bind" in {
+    "define the bind - success" in {
       val request = FakeRequest(
         GET,
         "/channel-preferences/preference/email?enrolmentKey=HMRC-CUS-ORG&taxIdName=EORINumber&taxIdValue=1234567890")
       val test = route(appBuilder, request).get
       status(test) mustBe OK
     }
+
+    "define the bind - failure" in {
+      val request = FakeRequest(
+        GET,
+        "/channel-preferences/preference/Email?enrolmentKey=HMRC-CUS-ORG&taxIdName=EORINumber&taxIdValue=1234567890")
+      val test = route(appBuilder, request).get
+      status(test) mustBe BAD_REQUEST
+    }
+
     "define the unbind" in {
       val test: Call = controllers.routes.PreferenceController.preference(Email, "test", "test", "123")
       test.url mustBe "/channel-preferences/preference/email?enrolmentKey=test&taxIdName=test&taxIdValue=123"

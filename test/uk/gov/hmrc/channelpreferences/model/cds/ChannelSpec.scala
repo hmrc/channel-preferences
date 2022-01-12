@@ -29,7 +29,7 @@ class ChannelSpec extends PlaySpec {
     }
 
     "return the error when channel name is not found" in {
-      Channel.channelFromName("xyz") mustBe Left(s"Channel xyz not found")
+      Channel.channelFromName("xyz") mustBe Left("Channel xyz not found")
     }
   }
 

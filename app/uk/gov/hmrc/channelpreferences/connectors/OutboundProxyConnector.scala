@@ -141,10 +141,10 @@ object OutboundProxyConnector {
   private def processResponseHeaders(headers: Seq[HttpHeader]): Map[String, String] =
     expandToMap(headers).filter(_._1 != CONTENT_TYPE)
 
-  def fullPath(request: Request[_]): String =
+  private[connectors] def fullPath(request: Request[_]): String =
     if (request.rawQueryString.nonEmpty) s"${request.path}?${request.rawQueryString}" else request.path
 
-  def loggedHeaders(headers: Seq[HttpHeader]): Map[String, String] =
+  private[connectors] def loggedHeaders(headers: Seq[HttpHeader]): Map[String, String] =
     expandToMap(headers).filter(loggedHeadersFilter)
 
   private def expandToMap(headers: Seq[HttpHeader]): Map[String, String] =
