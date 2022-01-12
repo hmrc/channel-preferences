@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.config
+package uk.gov.hmrc.channelpreferences.model.cds
 
-import javax.inject.{ Inject, Singleton }
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import org.scalatestplus.play.PlaySpec
 
-@Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class ChannelSpec extends PlaySpec {
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  "Channel.channelFromName" must {
+    "return the correct Channel type for given name" in {
+      Channel.channelFromName("email") mustBe Right(Email)
+      Channel.channelFromName("phone") mustBe Right(Phone)
+      Channel.channelFromName("sms") mustBe Right(Sms)
+      Channel.channelFromName("paper") mustBe Right(Paper)
+    }
 
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
+    "return the error when channel name is not found" in {
+      Channel.channelFromName("xyz") mustBe Left("Channel xyz not found")
+    }
+  }
+
 }
