@@ -73,6 +73,7 @@ class PreferenceController @Inject()(
         resp <- entityResolver.confirm(enrolment.entityId, enrolment.itsaId)
         _ <- auditConfirm(
               resp.status,
+              resp.body,
               enrolment,
               authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
                 .retrieve(Retrievals.saUtr and Retrievals.nino)
@@ -150,7 +151,11 @@ class PreferenceController @Inject()(
       }
     }
 
-  def auditConfirm(status: Int, e: Enrolment, auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
+  def auditConfirm(
+    responseStatus: Int,
+    responseBody: String,
+    e: Enrolment,
+    auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext): Future[Unit] = {
     def getIds: Future[Map[String, String]] =
@@ -162,10 +167,17 @@ class PreferenceController @Inject()(
           Map.empty[String, String]
       }
 
+    val details = Map("regime" -> ITSA_REGIME, "itsaId" -> e.itsaId, "entityId" -> e.entityId)
+    val (auditType, auditDetails) = responseStatus match {
+      case OK => ("ItsaIdConfirmed", details)
+      case _ =>
+        (
+          "ItsaIdConfirmError",
+          details ++ Map("errorCode" -> responseStatus.toString, "errorDescription" -> responseBody))
+    }
+
     getIds.map { ids =>
-      sendAuditEvent(
-        if (status == OK) "ItsaIdConfirmed" else "ItsaIdConfirmError",
-        Map("regime" -> ITSA_REGIME, "itsaId" -> e.itsaId, "entityId" -> e.entityId) ++ ids)
+      sendAuditEvent(auditType, auditDetails ++ ids)
     }
   }
 
