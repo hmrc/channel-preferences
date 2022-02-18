@@ -218,11 +218,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
-      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn"       -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe httpResponse.status
-      contentAsJson(response) mustBe successBody
+      contentAsJson(response) mustBe expectedResponseBody
 
     }
 
@@ -253,11 +254,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
-      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn"       -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe httpResponse.status
-      contentAsJson(response) mustBe successBody
+      contentAsJson(response) mustBe expectedResponseBody
 
     }
 
@@ -288,11 +290,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
-      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn"       -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe httpResponse.status
-      contentAsJson(response) mustBe successBody
+      contentAsJson(response) mustBe expectedResponseBody
 
     }
 
@@ -318,11 +321,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
-      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn"       -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.enrolment().apply(fakePostRequest)
       status(response) mustBe httpResponse.status
-      contentAsJson(response) mustBe successBody
+      contentAsJson(response) mustBe expectedResponseBody
 
     }
 
