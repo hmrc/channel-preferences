@@ -102,7 +102,11 @@ class PreferenceController @Inject()(
       statusUpdate.substituteMTDITIDValue match {
         case Right(itsaETMPUpdate) =>
           eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
-            Status(response.status)(response.json)
+            if (response.status == OK) {
+              Status(OK)(Json.obj("reason" -> "ITSA ID successfully added"))
+            } else {
+              Status(response.status)(response.json)
+            }
           }
         case Left(_) =>
           // should not happen as the entity-resolver perform the same check
