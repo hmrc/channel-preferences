@@ -20,10 +20,12 @@ import com.google.inject.AbstractModule
 import com.google.inject.name.Names.named
 import com.typesafe.config.ConfigException
 import play.api.{ Configuration, Environment }
+import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceResolver, PreferenceResolverImpl }
 
 class DIModule(environment: Environment, configuration: Configuration) extends AbstractModule {
 
-  override def configure(): Unit = {}
+  override def configure(): Unit =
+    bind(classOf[PreferenceResolver]).to(classOf[PreferenceResolverImpl]).asEagerSingleton()
 
   protected def bindString(path: String, name: String): Unit =
     bindConstant()

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
+import akka.http.scaladsl.model.StatusCodes
 import org.joda.time.DateTime
 import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpClient, HttpResponse, RequestId }
 import org.mockito.Mockito.when
@@ -27,8 +28,9 @@ import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import play.api.http.Status.{ BAD_GATEWAY, NOT_FOUND, OK }
+import play.api.http.Status.{ NOT_FOUND, OK }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -63,7 +65,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(NOT_FOUND)
       connector.getVerifiedEmail("123").futureValue mustBe
-        Left(NOT_FOUND)
+        Left(UpstreamError("", StatusCodes.NotFound))
     }
 
     "return Bad Gateway if CDS returns invalid Json response" in new TestCase {
@@ -76,7 +78,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(inValidEmailVerification)
       connector.getVerifiedEmail("123").futureValue mustBe
-        Left(BAD_GATEWAY)
+        Left(ParseError("""unable to parse {"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""))
     }
 
     "return Bad Gateway if CDS returns non Json response" in new TestCase {
@@ -89,7 +91,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn("NonJsonResponse")
       connector.getVerifiedEmail("123").futureValue mustBe
-        Left(BAD_GATEWAY)
+        Left(ParseError("cds response was invalid Json"))
     }
   }
 
