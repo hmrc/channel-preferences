@@ -16,21 +16,17 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import akka.stream.Materializer
-
-import java.util.UUID.randomUUID
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-
-import javax.inject.Inject
 import org.slf4j.MDC
 import play.api.Logging
-import play.api.http.HttpEntity.Streamed
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import uk.gov.hmrc.channelpreferences.services.entityresolver.OutboundProxy
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.util.UUID.randomUUID
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class ProxyController @Inject()(
