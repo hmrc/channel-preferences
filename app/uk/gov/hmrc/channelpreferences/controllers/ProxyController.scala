@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
+import akka.stream.Materializer
+
 import java.util.UUID.randomUUID
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
@@ -23,6 +25,7 @@ import akka.util.ByteString
 import javax.inject.Inject
 import org.slf4j.MDC
 import play.api.Logging
+import play.api.http.HttpEntity.Streamed
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import uk.gov.hmrc.channelpreferences.services.entityresolver.OutboundProxy
@@ -36,8 +39,9 @@ class ProxyController @Inject()(
 )(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with Logging {
 
-  val streamedBodyParser: BodyParser[Source[ByteString, Any]] =
-    BodyParser(_ => Accumulator.source[ByteString].map((x: Source[ByteString, Any]) => Right.apply(x)))
+  private[this] def streamedBodyParser: BodyParser[Source[ByteString, Any]] = BodyParser { _ =>
+    Accumulator.source[ByteString].map(Right.apply)
+  }
 
   def proxy(path: String): Action[Source[ByteString, _]] =
     Action.async(streamedBodyParser) { implicit request =>
@@ -52,7 +56,7 @@ class ProxyController @Inject()(
       }
     }
 
-  private def populateMdc(implicit request: Request[Source[ByteString, _]]): Unit = {
+  private[this] def populateMdc(implicit request: Request[Source[ByteString, _]]): Unit = {
     val extraDiagnosticContext = Map(
       "transaction_id"                                         -> randomUUID.toString
     ) ++ request.headers.get(USER_AGENT).toList.map(USER_AGENT -> _)
