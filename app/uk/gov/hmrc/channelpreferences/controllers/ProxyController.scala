@@ -47,7 +47,7 @@ class ProxyController @Inject()(
 
       outboundProxy.proxy(request).recover {
         case ex: Exception =>
-          logger.error(s"An error occurred proxying $path", ex)
+          logger.error(s"An error occurred proxying $path , error: ${ex.getMessage}")
           InternalServerError(ex.getMessage)
       }
     }
