@@ -33,7 +33,9 @@ case class ContextConsent(
 )
 
 case class Context(
-  keys: String,
+  id: String,
+  key: String,
+  subkey: String,
   expiry: LocalDateTime,
   consented: ContextConsent,
   verification: Verification

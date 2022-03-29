@@ -77,6 +77,7 @@ case class ManagementConsent(
 )
 
 case class Management(
+  id: String,
   key: List[String],
   created: LocalDateTime,
   consent: List[ManagementConsent],
