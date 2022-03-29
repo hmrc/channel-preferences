@@ -2,6 +2,7 @@
 
 
 ###
+# The below GET endpoint is modelled on the resource oriented api design here: https://cloud.google.com/apis/design/resources
 # responses:
 #   200:
 #     description: an email was found for the taxIdValue
@@ -12,7 +13,8 @@
 #   502:
 #     description: map all upstream error codes to 502
 ###
-GET        /channel-preferences/preference/:channel         uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String)
+GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
+
 POST       /channel-preferences/enrolment                   uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
 POST       /channel-preferences/preference/:key/status      uk.gov.hmrc.channelpreferences.controllers.PreferenceController.update(key: String)

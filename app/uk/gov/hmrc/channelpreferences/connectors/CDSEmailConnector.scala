@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.HeaderCarrier
-import play.api.http.Status.{ BAD_GATEWAY, OK }
+import play.api.http.Status.OK
 import play.api.libs.json.{ JsSuccess, Json }
 import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.{ ExecutionContext, Future }
 import javax.inject.{ Inject, Singleton }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
 @Singleton
@@ -34,30 +35,29 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
   private val log: LoggerLike = Logger(this.getClass)
   val serviceUrl: String = baseUrl("customs-data-store")
 
-  private def parseCDSVerifiedEmailResp(body: String): Either[Int, EmailVerification] =
-    Try(Json.parse(body)) match {
-      case Success(v) =>
-        v.validate[EmailVerification] match {
-          case JsSuccess(ev, _) => Right(ev)
-          case _ =>
-            log.warn(s"unable to parse $body")
-            Left(BAD_GATEWAY)
-        }
-      case Failure(e) =>
-        log.error(s"cds response was invalid Json", e)
-        Left(BAD_GATEWAY)
-    }
-
-  def getVerifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[Int, EmailVerification]] =
+  def getVerifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[PreferenceError, EmailVerification]] =
     httpClient
       .doGet(
         s"$serviceUrl/customs-data-store/eori/$taxId/verified-email",
         hc.headers(Seq("Authorization", "X-Request-Id")))
       .map { resp =>
         resp.status match {
-          case OK => parseCDSVerifiedEmailResp(resp.body)
-          case s  => Left(s)
+          case OK     => parseCDSVerifiedEmailResp(resp.body)
+          case status => Left(UpstreamError(Option(resp.body).getOrElse(""), status))
         }
-
       }
+
+  private def parseCDSVerifiedEmailResp(body: String): Either[PreferenceError, EmailVerification] =
+    Try(Json.parse(body)) match {
+      case Success(v) =>
+        v.validate[EmailVerification] match {
+          case JsSuccess(ev, _) => Right(ev)
+          case _ =>
+            log.warn(s"unable to parse $body")
+            Left(ParseError(s"unable to parse $body"))
+        }
+      case Failure(e) =>
+        log.error(s"cds response was invalid Json", e)
+        Left(ParseError(s"cds response was invalid Json"))
+    }
 }

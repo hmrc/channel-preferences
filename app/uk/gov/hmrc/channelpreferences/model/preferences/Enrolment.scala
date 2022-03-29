@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc
+package uk.gov.hmrc.channelpreferences.model.preferences
 
-import _root_.play.api.mvc.PathBindable
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
+import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
 
-package object channelpreferences {
-  object ChannelBinder {
-    implicit def channelBinder(implicit stringBinder: PathBindable[String]): PathBindable[Channel] =
-      new PathBindable[Channel] {
-        override def bind(key: String, value: String): Either[String, Channel] =
-          for {
-            name <- stringBinder.bind(key, value).right
-            ch   <- Channel.channelFromName(name)
-          } yield ch
+sealed trait Enrolment {
+  val enrolmentKey: EnrolmentKey
+  val identifierKey: IdentifierKey
+  val identifierValue: IdentifierValue
+  val channel: Channel
+}
 
-        override def unbind(key: String, value: Channel): String = value.name
-      }
-  }
+case class CustomsServiceEnrolment(
+  identifierValue: IdentifierValue,
+  channel: Channel
+) extends Enrolment {
+  override val enrolmentKey: EnrolmentKey = CustomsServiceKey
+  override val identifierKey: IdentifierKey = EORINumber
 }
