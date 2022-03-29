@@ -56,7 +56,7 @@ case class Message(
 case class Email(
   index: EmailIndex,
   email: String,
-  `type`: String,
+  contentType: String,
   language: Language,
   contactable: Boolean,
   purposes: List[Int]
@@ -73,7 +73,7 @@ case class ManagementConsent(
   status: Boolean,
   updated: LocalDateTime,
   version: Version,
-  purposes: List[Int]
+  purposes: List[String]
 )
 
 case class Management(
