@@ -20,6 +20,15 @@ import play.api.libs.json.{ Format, Reads, Writes }
 
 import java.time.LocalDateTime
 
+sealed trait Purpose
+
+object Purpose extends Enumeration {
+  type Purpose = Value
+  val one, two, three = Value
+
+  implicit val format: Format[Purpose] = Format(Reads.enumNameReads(Purpose), Writes.enumNameWrites)
+}
+
 sealed trait EmailIndex
 
 object EmailIndex extends Enumeration {
@@ -59,7 +68,7 @@ case class Email(
   contentType: String,
   language: Language,
   contactable: Boolean,
-  purposes: List[Int]
+  purposes: List[Purpose]
 )
 
 case class Version(
@@ -73,7 +82,7 @@ case class ManagementConsent(
   status: Boolean,
   updated: LocalDateTime,
   version: Version,
-  purposes: List[String]
+  purposes: List[Purpose]
 )
 
 case class Management(
