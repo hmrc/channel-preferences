@@ -14,29 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.repository.model
+package uk.gov.hmrc.channelpreferences.services.preferences
 
-import java.time.LocalDateTime
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, PreferenceError }
+import uk.gov.hmrc.http.HeaderCarrier
 
-case class Verification(
-  sent: LocalDateTime,
-  email: String,
-  id: String
-)
+import scala.concurrent.Future
 
-case class ContextConsent(
-  consentType: String,
-  status: Boolean,
-  created: LocalDateTime,
-  version: Version,
-  purposes: List[Int]
-)
-
-case class Context(
-  id: String,
-  key: String,
-  resourcePath: String,
-  expiry: LocalDateTime,
-  consented: ContextConsent,
-  verification: Verification
-)
+trait PreferenceProvider[I <: Enrolment] {
+  def getPreference(enrolment: I)(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
+}

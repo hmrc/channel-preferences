@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
+import akka.util.ByteString
 import play.api.Logger
+import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, Result }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
@@ -27,23 +29,21 @@ import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
 import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
-import uk.gov.hmrc.channelpreferences.model.preferences.Event
-import uk.gov.hmrc.channelpreferences.services.cds.CdsPreference
+import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
-import uk.gov.hmrc.channelpreferences.services.preferences.ProcessEmail
+import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 import scala.util.Try
 
 @Singleton
 class PreferenceController @Inject()(
-  cdsPreference: CdsPreference,
+  preferenceService: PreferenceService,
   entityResolver: EntityResolver,
   eisContactPreference: EISContactPreference,
   processEmail: ProcessEmail,
@@ -54,18 +54,25 @@ class PreferenceController @Inject()(
 
   private val logger: Logger = Logger(this.getClass)
 
-  private val ITSA_REGIME = "ITSA"
-
-  implicit val emailWrites = uk.gov.hmrc.channelpreferences.model.cds.EmailVerification.emailVerificationFormat
-  def preference(channel: Channel, enrolmentKey: String, taxIdName: String, taxIdValue: String): Action[AnyContent] =
+  def preference(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue,
+    channel: Channel): Action[AnyContent] =
     Action.async { implicit request =>
-      cdsPreference.getPreference(channel, enrolmentKey, taxIdName, taxIdValue).map {
-        case Right(e)              => Ok(Json.toJson(e))
-        case Left(NOT_FOUND)       => NotFound
-        case Left(NOT_IMPLEMENTED) => NotImplemented
-        case Left(_)               => BadGateway
-      }
+      preferenceService
+        .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
+        .map(toResult)
     }
+
+  private def toResult(resolution: Either[PreferenceError, JsValue]): Result = resolution.fold(
+    preferenceError =>
+      Result(
+        header = ResponseHeader(preferenceError.statusCode.intValue()),
+        body = HttpEntity.Strict(ByteString.apply(preferenceError.message), Some(ContentTypes.TEXT))
+    ),
+    json => Ok(json)
+  )
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
@@ -94,6 +101,8 @@ class PreferenceController @Inject()(
     }
   }
 
+  private val ITSA_REGIME = "ITSA"
+
   private def updateEtmp(status: Boolean)(implicit request: Request[JsValue]): Future[Result] =
     withJsonBody[AgentEnrolment] { agentEnrolment =>
       val correlationId = request.headers
@@ -120,10 +129,9 @@ class PreferenceController @Inject()(
         .process(event)
         .map {
           case Right(content) => Ok(content)
-          case Left(error) => {
+          case Left(error) =>
             logger.error(s"Failed to update email bounce $error")
             NotModified
-          }
         }
         .recover {
           case error =>
