@@ -25,7 +25,7 @@ case class Verification(
 )
 
 case class ContextConsent(
-  consentType: String,
+  `type`: String,
   status: Boolean,
   created: LocalDateTime,
   version: Version,
@@ -33,9 +33,7 @@ case class ContextConsent(
 )
 
 case class Context(
-  id: String,
-  key: String,
-  resourcePath: String,
+  keys: String,
   expiry: LocalDateTime,
   consented: ContextConsent,
   verification: Verification
