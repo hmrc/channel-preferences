@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.channelpreferences.repository.model
 
-import play.api.libs.json.{ Format, Reads, Writes }
+import play.api.libs.json.{ Format, Json, Reads, Writes }
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 sealed trait Purpose
 
@@ -62,14 +63,22 @@ case class Message(
   archive: String
 )
 
+//object Message {
+//  implicit val reads = Json.reads[Message]
+//}
+
 case class Email(
   index: EmailIndex,
   email: String,
   contentType: String,
   language: Language,
   contactable: Boolean,
-  purposes: List[Purpose]
+  purposes: List[Purpose.Value]
 )
+
+//object Email {
+//  implicit val reads = Json.reads[Email]
+//}
 
 case class Version(
   major: Int,
@@ -77,16 +86,24 @@ case class Version(
   patch: Int
 )
 
+//object Version {
+//  implicit val reads = Json.reads[Version]
+//}
+
 case class ManagementConsent(
-  `type`: String,
+  consentType: String,
   status: Boolean,
   updated: LocalDateTime,
   version: Version,
-  purposes: List[Purpose]
+  purposes: List[Purpose.Value]
 )
 
+//object ManagementConsent {
+//  implicit val reads = Json.reads[ManagementConsent]
+//}
+
 case class Management(
-  id: String,
+  id: UUID,
   key: List[String],
   created: LocalDateTime,
   consent: List[ManagementConsent],
@@ -94,3 +111,7 @@ case class Management(
   message: Message,
   status: Status
 )
+
+//object Management {
+//  implicit val reads = Json.reads[Management]
+//}
