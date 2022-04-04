@@ -4,50 +4,36 @@
   },
   "openapi" : "3.0.3",
   "paths" : {
-    "/channel-preferences/preference/{channel}" : {
+    "/channel-preferences/preferences/enrolments/{enrolmentKey}/identifier-keys/{key}/identifier-values/{value}/channels/{channel}" : {
       "get" : {
         "operationId" : "preference",
         "tags" : [ "app" ],
-        "responses" : {
-          "200" : {
-            "description" : "an email was found for the taxIdValue"
-          },
-          "404" : {
-            "description" : "conversation not found"
-          },
-          "501" : {
-            "description" : "if the channel is not email, enrolmentKey not HMRC-CUS-ORG, taxIdName not EORINumber"
-          },
-          "502" : {
-            "description" : "map all upstream error codes to 502"
-          }
-        },
         "parameters" : [ {
+          "in" : "path",
+          "name" : "enrolmentKey",
+          "schema" : {
+            "type" : "enrolmentkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "identifierkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "value",
+          "schema" : {
+            "type" : "identifiervalue"
+          },
+          "required" : true
+        }, {
           "in" : "path",
           "name" : "channel",
           "schema" : {
             "type" : "channel"
-          },
-          "required" : true
-        }, {
-          "in" : "query",
-          "name" : "enrolmentKey",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        }, {
-          "in" : "query",
-          "name" : "taxIdName",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        }, {
-          "in" : "query",
-          "name" : "taxIdValue",
-          "schema" : {
-            "type" : "string"
           },
           "required" : true
         } ]
@@ -83,6 +69,50 @@
       "post" : {
         "operationId" : "confirm",
         "tags" : [ "app" ]
+      }
+    },
+    "/channel-preferences/context" : {
+      "post" : {
+        "operationId" : "create",
+        "tags" : [ "app" ]
+      }
+    },
+    "/channel-preferences/context/{key}" : {
+      "get" : {
+        "operationId" : "get",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ]
+      },
+      "delete" : {
+        "operationId" : "delete",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ]
+      },
+      "put" : {
+        "operationId" : "update",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ]
       }
     },
     "/{path}" : {
@@ -151,7 +181,7 @@
   "produces" : [ "application/json" ],
   "info" : {
     "title" : "Channel Preferences API",
-    "version" : "0.44.0-SNAPSHOT"
+    "version" : "0.62.0-SNAPSHOT"
   },
   "consumes" : [ "application/json" ],
   "tags" : [ {
