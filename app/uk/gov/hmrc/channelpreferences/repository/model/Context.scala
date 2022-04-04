@@ -52,14 +52,22 @@ object ContextConsent {
   implicit val reads = Json.reads[ContextConsent]
 }
 
+case class ContextPayload(
+  consented: ContextConsent,
+  verification: Verification,
+  confirm: Confirm
+)
+
+object ContextPayload {
+  implicit val reads = Json.reads[ContextPayload]
+}
+
 case class Context(
   id: UUID,
   key: String,
   resourcePath: String,
   expiry: LocalDateTime,
-  consented: ContextConsent,
-  verification: Verification,
-  confirm: Confirm
+  context: ContextPayload
 )
 
 object Context {

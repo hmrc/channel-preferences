@@ -23,62 +23,65 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ContextSpec extends PlaySpec {
-  private val dateTime = new LocalDateTime(1987, 3, 20, 1, 2, 3)
+  private val dateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
+  val contextId = UUID.randomUUID()
   val verificationId = UUID.randomUUID()
-  val keyId = UUID.randomUUID()
+  val confirmId = UUID.randomUUID()
   val timestamp = dateTime
   val expiry = dateTime
   val verification = Verification(id = verificationId, sent = timestamp, email = "test@test.com")
   val version = Version(1, 1, 1)
-  val confirm = Confirm(id = keyId, started = timestamp)
+  val confirm = Confirm(id = confirmId, started = timestamp)
   val consented = ContextConsent(
-    consentType = "not sure",
+    consentType = "default",
     status = true,
     created = timestamp,
     version = version,
     purposes = List(Purpose.one, Purpose.two))
-  val context = Context(
-    id = verificationId,
-    key = "61ea7c5951d7a42da4fd4608",
-    resourcePath = "email[index=primary]",
-    expiry = expiry,
+  val contextPayload = ContextPayload(
     consented = consented,
     verification = verification,
     confirm = confirm
   )
+  val context = Context(
+    id = contextId,
+    key = "61ea7c5951d7a42da4fd4608",
+    resourcePath = "email[index=primary]",
+    expiry = expiry,
+    context = contextPayload
+  )
   val contextJson = Json.parse(s"""
                                   |{
-                                  | "id":"$verificationId",
+                                  | "id":"$contextId",
                                   | "key":"61ea7c5951d7a42da4fd4608",
                                   | "resourcePath":"email[index=primary]",
                                   | "expiry":"$expiry",
-                                  | "consented":{
-                                  |  "consentType":"not sure",
-                                  |  "status" "true",
-                                  |  "created":"$timestamp",
-                                  |  "version":{
-                                  |    "major":1,
-                                  |    "minor":1,
-                                  |    "patch":1
+                                  | "context":{
+                                  |   "consented":{
+                                  |     "consentType":"default",
+                                  |     "status":true,
+                                  |     "created":"$timestamp",
+                                  |     "version":{
+                                  |       "major":1,
+                                  |       "minor":1,
+                                  |       "patch":1
+                                  |     },
+                                  |     "purposes":[
+                                  |       "one",
+                                  |       "two"
+                                  |     ]
                                   |  },
-                                  |  "purposes":[
-                                  |    "one",
-                                  |    "two"
-                                  |  ]
-                                  | },
-                                  | "verification":{
-                                  |  "id":"$verificationId",
-                                  |  "email":"test@test.com",
-                                  |  "sent":"$timestamp"
-                                  | },
-                                  | "keys":[
-                                  |   {
-                                  |     "id":"$keyId",
-                                  |     "started:"$timestamp"
-                                  |   }
-                                  | ]
-                                  |}
-                                  |""".stripMargin)
+                                  |  "verification":{
+                                  |     "id":"$verificationId",
+                                  |     "email":"test@test.com",
+                                  |     "sent":"$timestamp"
+                                  |  },
+                                  |  "confirm":{
+                                  |      "id":"$confirmId",
+                                  |      "started":"$timestamp"
+                                  |  }
+                                  | }
+                                  |}""".stripMargin)
 
   "read" must {
     "successfully parse from json" in {

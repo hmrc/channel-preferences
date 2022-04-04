@@ -63,10 +63,6 @@ case class Message(
   archive: String
 )
 
-//object Message {
-//  implicit val reads = Json.reads[Message]
-//}
-
 case class Email(
   index: EmailIndex,
   email: String,
@@ -76,19 +72,15 @@ case class Email(
   purposes: List[Purpose.Value]
 )
 
-//object Email {
-//  implicit val reads = Json.reads[Email]
-//}
-
 case class Version(
   major: Int,
   minor: Int,
   patch: Int
 )
 
-//object Version {
-//  implicit val reads = Json.reads[Version]
-//}
+object Version {
+  implicit val reads = Json.reads[Version]
+}
 
 case class ManagementConsent(
   consentType: String,
@@ -97,10 +89,6 @@ case class ManagementConsent(
   version: Version,
   purposes: List[Purpose.Value]
 )
-
-//object ManagementConsent {
-//  implicit val reads = Json.reads[ManagementConsent]
-//}
 
 case class Management(
   id: UUID,
@@ -111,7 +99,3 @@ case class Management(
   message: Message,
   status: Status
 )
-
-//object Management {
-//  implicit val reads = Json.reads[Management]
-//}
