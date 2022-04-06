@@ -47,8 +47,13 @@ class OutboundProxyConnectorSpec extends PlaySpec with ScalaFutures with Mockito
 
   "proxy" should {
     "send the request to entity resolver with the required headers" in new TestCase {
-      when(mockHttp
-        .singleRequest(any[HttpRequest], any[HttpsConnectionContext], any[ConnectionPoolSettings], any[LoggingAdapter]))
+      when(
+        mockHttp
+          .singleRequest(
+            any[HttpRequest],
+            any[HttpsConnectionContext],
+            any[ConnectionPoolSettings],
+            any[LoggingAdapter]))
         .thenReturn(Future.successful(successResponse))
       connector
         .proxy(request(Headers(), RequestTarget("/test", "", Map.empty)))
@@ -56,8 +61,13 @@ class OutboundProxyConnectorSpec extends PlaySpec with ScalaFutures with Mockito
         .header mustBe ResponseHeader(Status.OK, Map("Content-Length" -> "10"))
     }
     "send the request to entity resolver with the headers passed" in new TestCase {
-      when(mockHttp
-        .singleRequest(any[HttpRequest], any[HttpsConnectionContext], any[ConnectionPoolSettings], any[LoggingAdapter]))
+      when(
+        mockHttp
+          .singleRequest(
+            any[HttpRequest],
+            any[HttpsConnectionContext],
+            any[ConnectionPoolSettings],
+            any[LoggingAdapter]))
         .thenReturn(Future.successful(successResponse))
       connector
         .proxy(request(
