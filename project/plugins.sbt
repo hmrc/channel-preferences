@@ -14,7 +14,3 @@ addSbtPlugin("uk.gov.hmrc"       % "sbt-bobby"             % "3.2.0")
 addSbtPlugin("uk.gov.hmrc"       % "sbt-distributables"    % "2.1.0")
 addSbtPlugin("uk.gov.hmrc"       % "sbt-service-manager"   % "0.8.0")
 addSbtPlugin("com.iheart"        % "sbt-play-swagger"      % "0.10.2")
-
-
-
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.10.0-RC1")
