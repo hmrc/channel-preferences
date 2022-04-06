@@ -36,7 +36,8 @@ import uk.gov.hmrc.play.audit.model.EventTypes
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers with ScalaFutures with IdiomaticMockito {
+class CustomsDataStorePreferenceProviderSpec
+    extends AnyFlatSpec with Matchers with ScalaFutures with IdiomaticMockito {
 
   behavior of "CustomsDataStorePreferenceProvider.getPreference"
 

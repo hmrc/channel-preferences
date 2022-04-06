@@ -60,7 +60,8 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
 
     "define the unbind" in new Scope {
       val test: Call =
-        controllers.routes.PreferenceController.preference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
+        controllers.routes.PreferenceController
+          .preference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
       test.url mustBe "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
     }
   }
