@@ -17,69 +17,9 @@
 package uk.gov.hmrc.channelpreferences.repository.model
 
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{ JsSuccess, Json }
+import play.api.libs.json.JsSuccess
 
-import java.time.LocalDateTime
-import java.util.UUID
-
-class ContextSpec extends PlaySpec {
-  private val timestamp = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
-  val contextId = UUID.randomUUID()
-  val verificationId = UUID.randomUUID()
-  val confirmId = UUID.randomUUID()
-  val verification = Verification(id = verificationId, sent = timestamp, email = "test@test.com")
-  val version = Version(1, 1, 1)
-  val confirm = Confirm(id = confirmId, started = timestamp)
-  val consented = ContextConsent(
-    consentType = "default",
-    status = true,
-    created = timestamp,
-    version = version,
-    purposes = List(Purpose.one, Purpose.two))
-  val contextPayload = ContextPayload(
-    consented = consented,
-    verification = verification,
-    confirm = confirm
-  )
-  val context = Context(
-    id = contextId,
-    key = "61ea7c5951d7a42da4fd4608",
-    resourcePath = "email[index=primary]",
-    expiry = timestamp,
-    context = contextPayload
-  )
-  val contextJson = Json.parse(s"""
-                                  |{
-                                  | "id":"$contextId",
-                                  | "key":"61ea7c5951d7a42da4fd4608",
-                                  | "resourcePath":"email[index=primary]",
-                                  | "expiry":"$timestamp",
-                                  | "context":{
-                                  |   "consented":{
-                                  |     "consentType":"default",
-                                  |     "status":true,
-                                  |     "created":"$timestamp",
-                                  |     "version":{
-                                  |       "major":1,
-                                  |       "minor":1,
-                                  |       "patch":1
-                                  |     },
-                                  |     "purposes":[
-                                  |       "one",
-                                  |       "two"
-                                  |     ]
-                                  |  },
-                                  |  "verification":{
-                                  |     "id":"$verificationId",
-                                  |     "email":"test@test.com",
-                                  |     "sent":"$timestamp"
-                                  |  },
-                                  |  "confirm":{
-                                  |      "id":"$confirmId",
-                                  |      "started":"$timestamp"
-                                  |  }
-                                  | }
-                                  |}""".stripMargin)
+class ContextSpec extends PlaySpec with TestModels {
 
   "read" must {
     "successfully parse from json" in {
