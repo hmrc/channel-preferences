@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.channelpreferences.repository
 
-import java.util.UUID
+//import java.util.UUID
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.Future
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.mongodb.scala.model.Filters.equal
+//import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.channelpreferences.repository.model.Context
 
@@ -30,8 +30,8 @@ class ContextRepository @Inject()(contextRepository: PlayMongoRepository[Context
   def addContext(context: Context): Future[InsertOneResult] =
     contextRepository.collection.insertOne(context).toFuture()
 
-  def find(contextId: UUID): Future[Option[Context]] =
-    contextRepository.collection
-      .find(equal("contextId", contextId.toString))
-      .headOption()
+//  def find(contextId: UUID): Future[Option[Context]] =
+//    contextRepository.collection
+//      .find(equal("contextId", contextId.toString))
+//      .headOption()
 }
