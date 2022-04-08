@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.repository
 import com.mongodb.client.result.InsertOneResult
 import org.mockito.ArgumentMatchersSugar.*
 import org.mockito.IdiomaticMockito
-import org.mongodb.scala.{ FindObservable, MongoCollection, Observable, SingleObservable }
+import org.mongodb.scala.{ FindObservable, MongoCollection, SingleObservable }
 import org.mongodb.scala.bson.BsonObjectId
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.{ DeleteResult, UpdateResult }
@@ -28,6 +28,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import uk.gov.hmrc.channelpreferences.repository.model.{ ContextPayload, TestModels }
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+
+import scala.concurrent.Future
 
 class ContextRepositorySpec extends AnyFlatSpec with Matchers with IdiomaticMockito with ScalaFutures with TestModels {
 
@@ -41,9 +43,9 @@ class ContextRepositorySpec extends AnyFlatSpec with Matchers with IdiomaticMock
   behavior of "ContextRepository.find"
 
   it should "return a context when the underlying repo successfully finds one for that context ID" in new Scope {
-    findObservableMock.map[ContextPayload](*) returns Observable(Seq(contextPayload))
+    findObservableMock.headOption() returns Future.successful(Some(contextPayload))
     mongoCollectionMock.find[ContextPayload](*[Bson])(*, *) returns findObservableMock
-    contextRepository.findContext(keyIdentifier) should be(Some(contextPayload))
+    contextRepository.findContext(keyIdentifier).value.get.get should be(Some(contextPayload))
   }
 
   behavior of "ContextRepository.updateContext"
