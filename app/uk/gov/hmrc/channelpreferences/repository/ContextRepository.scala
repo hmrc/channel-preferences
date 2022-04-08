@@ -21,20 +21,19 @@ import scala.concurrent.Future
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
-import org.mongodb.scala.SingleObservable
 import uk.gov.hmrc.channelpreferences.repository.model.ContextPayload
 
 @Singleton
 class ContextRepository @Inject()(contextRepository: PlayMongoRepository[ContextPayload]) {
 
-  def addContext(contextPayload: ContextPayload): SingleObservable[InsertOneResult] =
-    contextRepository.collection.insertOne(contextPayload)
+  def addContext(contextPayload: ContextPayload): Future[InsertOneResult] =
+    contextRepository.collection.insertOne(contextPayload).toFuture()
 
-  def updateContext(contextPayload: ContextPayload): SingleObservable[UpdateResult] =
-    contextRepository.collection.replaceOne(equal("key", contextPayload.key), contextPayload)
+  def updateContext(contextPayload: ContextPayload): Future[UpdateResult] =
+    contextRepository.collection.replaceOne(equal("key", contextPayload.key), contextPayload).toFuture()
 
-  def deleteContext(key: String): SingleObservable[DeleteResult] =
-    contextRepository.collection.deleteOne(equal("key", key))
+  def deleteContext(key: String): Future[DeleteResult] =
+    contextRepository.collection.deleteOne(equal("key", key)).toFuture()
 
   def findContext(key: String): Future[Option[ContextPayload]] =
     contextRepository.collection
