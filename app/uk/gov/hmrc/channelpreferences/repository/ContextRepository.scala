@@ -16,22 +16,28 @@
 
 package uk.gov.hmrc.channelpreferences.repository
 
-//import java.util.UUID
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.Future
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-//import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.result.InsertOneResult
-import uk.gov.hmrc.channelpreferences.repository.model.Context
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
+import org.mongodb.scala.SingleObservable
+import uk.gov.hmrc.channelpreferences.repository.model.ContextPayload
 
 @Singleton
-class ContextRepository @Inject()(contextRepository: PlayMongoRepository[Context]) {
+class ContextRepository @Inject()(contextRepository: PlayMongoRepository[ContextPayload]) {
 
-  def addContext(context: Context): Future[InsertOneResult] =
-    contextRepository.collection.insertOne(context).toFuture()
+  def addContext(contextPayload: ContextPayload): SingleObservable[InsertOneResult] =
+    contextRepository.collection.insertOne(contextPayload)
 
-//  def find(contextId: UUID): Future[Option[Context]] =
-//    contextRepository.collection
-//      .find(equal("contextId", contextId.toString))
-//      .headOption()
+  def updateContext(contextPayload: ContextPayload): SingleObservable[UpdateResult] =
+    contextRepository.collection.replaceOne(equal("key", contextPayload.key), contextPayload)
+
+  def deleteContext(key: String): SingleObservable[DeleteResult] =
+    contextRepository.collection.deleteOne(equal("key", key))
+
+  def findContext(key: String): Future[Option[ContextPayload]] =
+    contextRepository.collection
+      .find(equal("key", key))
+      .headOption()
 }

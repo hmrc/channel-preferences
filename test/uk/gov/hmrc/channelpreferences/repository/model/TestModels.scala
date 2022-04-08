@@ -24,6 +24,7 @@ import java.util.UUID
 trait TestModels {
 
   val timestamp = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
+  val keyIdentifier = "61ea7c5951d7a42da4fd4608";
   val managementId = UUID.randomUUID()
   val version = Version(1, 1, 1)
   val purposes = List(Purpose.one, Purpose.two)
@@ -61,29 +62,29 @@ trait TestModels {
   val confirmId = UUID.randomUUID()
   val verification = Verification(id = verificationId, sent = timestamp, email = "test@test.com")
   val confirm = Confirm(id = confirmId, started = timestamp)
-  val consented = ContextConsent(
+  val consented = Consented(
     consentType = "default",
     status = true,
     created = timestamp,
     version = version,
     purposes = List(Purpose.one, Purpose.two))
-  val contextPayload = ContextPayload(
+  val context = Context(
     consented = consented,
     verification = verification,
     confirm = confirm
   )
-  val context = Context(
+  val contextPayload = ContextPayload(
     id = contextId,
-    key = "61ea7c5951d7a42da4fd4608",
+    key = keyIdentifier,
     resourcePath = "email[index=primary]",
     expiry = timestamp,
-    context = contextPayload
+    context = context
   )
 
   val contextJson = Json.parse(s"""
                                   |{
                                   | "id":"$contextId",
-                                  | "key":"61ea7c5951d7a42da4fd4608",
+                                  | "key":"$keyIdentifier",
                                   | "resourcePath":"email[index=primary]",
                                   | "expiry":"$timestamp",
                                   | "context":{

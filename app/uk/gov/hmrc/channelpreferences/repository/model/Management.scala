@@ -64,7 +64,7 @@ case class Message(
 )
 
 object Message {
-  implicit val reads = Json.reads[Message]
+  implicit val messageFormat = Json.format[Message]
 }
 
 case class Email(
@@ -77,7 +77,7 @@ case class Email(
 )
 
 object Email {
-  implicit val reads = Json.reads[Email]
+  implicit val emailFormat = Json.format[Email]
 }
 
 case class Version(
@@ -87,7 +87,7 @@ case class Version(
 )
 
 object Version {
-  implicit val reads = Json.reads[Version]
+  implicit val versionFormat = Json.format[Version]
 }
 
 case class ManagementConsent(
@@ -99,7 +99,7 @@ case class ManagementConsent(
 )
 
 object ManagementConsent {
-  implicit val reads = Json.reads[ManagementConsent]
+  implicit val managementConsentFormat = Json.format[ManagementConsent]
 }
 
 case class Management(
@@ -113,5 +113,5 @@ case class Management(
 )
 
 object Management {
-  implicit val reads = Json.reads[Management]
+  implicit val managementForm = Json.format[Management]
 }

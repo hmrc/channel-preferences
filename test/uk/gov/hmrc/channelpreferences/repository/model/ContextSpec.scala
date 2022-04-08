@@ -23,7 +23,7 @@ class ContextSpec extends PlaySpec with TestModels {
 
   "read" must {
     "successfully parse from json" in {
-      contextJson.validate[Context] mustBe JsSuccess(context)
+      contextJson.validate[ContextPayload] mustBe JsSuccess(contextPayload)
     }
   }
 }
