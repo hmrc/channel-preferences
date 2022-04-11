@@ -125,10 +125,13 @@ class PreferenceController @Inject()(
 
   def processBounce(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Event] { event =>
+      logger.info(s"ProcessBounce: Processing the event $event")
       processEmail
         .process(event)
         .map {
-          case Right(content) => Ok(content)
+          case Right(content) =>
+            logger.info(s"ProcessBounce the event ${event.eventId} $content")
+            Ok(content)
           case Left(error) =>
             logger.error(s"Failed to update email bounce $error")
             NotModified
