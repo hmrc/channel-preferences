@@ -181,7 +181,7 @@
   "produces" : [ "application/json" ],
   "info" : {
     "title" : "Channel Preferences API",
-    "version" : "0.62.0-SNAPSHOT"
+    "version" : "0.65.0-SNAPSHOT"
   },
   "consumes" : [ "application/json" ],
   "tags" : [ {

@@ -62,7 +62,6 @@ object Context {
 }
 
 case class ContextPayload(
-  id: UUID,
   key: String,
   resourcePath: String,
   expiry: LocalDateTime,

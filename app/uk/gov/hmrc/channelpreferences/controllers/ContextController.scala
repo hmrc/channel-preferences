@@ -19,20 +19,22 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.channelpreferences.controllers.model._
+import uk.gov.hmrc.channelpreferences.repository.ContextRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class ContextController @Inject()(controllerComponents: ControllerComponents)
+class ContextController @Inject()(contextRepository: ContextRepository, controllerComponents: ControllerComponents)(
+  implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) {
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[ContextPayload] { context =>
-      Future.successful(Created(context.key))
+      contextRepository.addContext(contextPayload = context.toDbContextPayload()).map(_ => Created(context.key))
     }
   }
 

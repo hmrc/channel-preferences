@@ -17,6 +17,8 @@
 package uk.gov.hmrc.channelpreferences.controllers.model
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.channelpreferences.repository
+import uk.gov.hmrc.channelpreferences.repository.model.Purpose
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -57,7 +59,50 @@ final case class ContextPayload(
   resourcePath: String,
   expiry: LocalDateTime,
   context: Context
-)
+) {
+
+  def toDbContextPayload(): repository.model.ContextPayload = {
+
+    val purposes: List[repository.model.Purpose.Value] = this.context.consented.purposes.map(p => Purpose.withName(p))
+
+    val version = repository.model.Version(
+      major = this.context.consented.version.major,
+      minor = this.context.consented.version.minor,
+      patch = this.context.consented.version.patch
+    )
+
+    val consented = repository.model.Consented(
+      consentType = this.context.consented.consentType,
+      status = this.context.consented.status,
+      created = this.context.consented.created,
+      version = version,
+      purposes = purposes
+    )
+
+    val verification = repository.model.Verification(
+      id = this.context.verification.id,
+      email = this.context.verification.email,
+      sent = this.context.verification.sent
+    )
+
+    val confirm = repository.model.Confirm(
+      id = this.context.confirm.id,
+      started = this.context.confirm.started
+    )
+
+    val context = repository.model.Context(
+      consented = consented,
+      verification = verification,
+      confirm = confirm
+    )
+    repository.model.ContextPayload(
+      key = this.key,
+      resourcePath = this.resourcePath,
+      expiry = this.expiry,
+      context = context
+    )
+  }
+}
 
 object ContextPayload {
   implicit val versionFormat = Json.format[Version]

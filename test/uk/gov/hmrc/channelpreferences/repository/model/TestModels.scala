@@ -74,7 +74,6 @@ trait TestModels {
     confirm = confirm
   )
   val contextPayload = ContextPayload(
-    id = contextId,
     key = keyIdentifier,
     resourcePath = "email[index=primary]",
     expiry = timestamp,

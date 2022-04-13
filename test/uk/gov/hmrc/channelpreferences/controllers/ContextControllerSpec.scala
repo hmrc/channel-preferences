@@ -16,6 +16,10 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
+import com.mongodb.client.result.InsertOneResult
+import org.mockito.IdiomaticMockito
+import org.mockito.ArgumentMatchersSugar.*
+import org.mongodb.scala.bson.BsonObjectId
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
@@ -24,14 +28,20 @@ import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
+import uk.gov.hmrc.channelpreferences.repository
+import uk.gov.hmrc.channelpreferences.repository.ContextRepository
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.io.Source
 
-class ContextControllerSpec extends PlaySpec with ScalaFutures {
+class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMockito {
 
   "Create context" should {
     "return status Created for a valid payload" in new TestClass {
-      val controller = new ContextController(Helpers.stubControllerComponents())
+      val insertOneResult: InsertOneResult = InsertOneResult.acknowledged(BsonObjectId())
+      contextRepositoryMock.addContext(*[repository.model.ContextPayload]) returns Future.successful(insertOneResult)
+      val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
 
       val payload = Json.parse(readResources("contextPayload.json"))
 
@@ -46,7 +56,7 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures {
 
   "Update context" should {
     "return status OK for a valid payload" in new TestClass {
-      val controller = new ContextController(Helpers.stubControllerComponents())
+      val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
 
       val payload = Json.parse(readResources("contextPayload.json"))
 
@@ -61,8 +71,8 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures {
   }
 
   "GET context by key" should {
-    "return status OK with context details" in {
-      val controller = new ContextController(Helpers.stubControllerComponents())
+    "return status OK with context details" in new TestClass {
+      val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
       val result =
         controller
           .get("b25fb7aab4d911ecb9090242ac120002")
@@ -75,8 +85,8 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures {
   }
 
   "DELETE context by key" should {
-    "return status Accepted" in {
-      val controller = new ContextController(Helpers.stubControllerComponents())
+    "return status Accepted" in new TestClass {
+      val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
       val result =
         controller
           .delete("b25fb7aab4d911ecb9090242ac120002")
@@ -86,6 +96,7 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures {
   }
 
   class TestClass {
+    val contextRepositoryMock: ContextRepository = mock[ContextRepository]
 
     def readResources(fileName: String): String = {
       val resource = Source.fromURL(getClass.getResource("/context/" + fileName))
@@ -93,7 +104,6 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures {
       resource.close()
       str
     }
-
   }
 
 }

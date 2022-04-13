@@ -13,9 +13,9 @@
         "patch": 123
       },
       "purposes": [
-        "123",
-        "34",
-        "11"
+        "one",
+        "two",
+        "three"
       ]
     },
     "verification": {
