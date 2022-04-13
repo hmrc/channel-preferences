@@ -19,11 +19,11 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.channelpreferences.controllers.model._
+import uk.gov.hmrc.channelpreferences.model.mapping.ContextConversion
+import uk.gov.hmrc.channelpreferences.repository
 import uk.gov.hmrc.channelpreferences.repository.ContextRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import java.time.LocalDateTime
-import java.util.UUID
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -34,27 +34,27 @@ class ContextController @Inject()(contextRepository: ContextRepository, controll
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[ContextPayload] { context =>
-      contextRepository.addContext(contextPayload = context.toDbContextPayload()).map(_ => Created(context.key))
+      contextRepository
+        .addContext(contextPayload = ContextConversion.toDbContextPayload(context))
+        .map(_ => Created(context.key))
     }
   }
 
   def get(key: String): Action[AnyContent] = Action.async { _ =>
-    val context = ContextPayload(
-      key,
-      "path",
-      LocalDateTime.now(),
-      Context(
-        Consented("DEFAULT", true, LocalDateTime.now(), Version(1, 2, 5), List.empty),
-        Verification(UUID.fromString("b25fb7aa-b4d9-11ec-b909-0242ac120002"), "test@test.com", LocalDateTime.now()),
-        Confirm(UUID.fromString("b25fb7aa-b4d9-11ec-b909-0242ac120002"), LocalDateTime.now())
-      )
-    )
-    Future.successful(Ok(Json.toJson(context)))
+    contextRepository
+      .findContext(key)
+      .map((context: Option[repository.model.ContextPayload]) =>
+        context match {
+          case Some(payload) => Ok(Json.toJson(ContextConversion.toApiContextPayload(payload)))
+          case None          => NotFound("Context could not be found")
+      })
   }
 
   def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[ContextPayload] { _ =>
-      Future.successful(Ok(s"$id updated"))
+    withJsonBody[ContextPayload] { context =>
+      contextRepository
+        .updateContext(contextPayload = ContextConversion.toDbContextPayload(context))
+        .map(_ => Ok(s"$id updated"))
     }
   }
 

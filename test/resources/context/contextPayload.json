@@ -1,6 +1,6 @@
 {
   "key": "61ea7c5951d7a42da4fd4608",
-  "resourcePath": "email",
+  "resourcePath": "email[index=primary]",
   "expiry": "2022-01-28T09:26:49.556Z",
   "context": {
     "consented": {

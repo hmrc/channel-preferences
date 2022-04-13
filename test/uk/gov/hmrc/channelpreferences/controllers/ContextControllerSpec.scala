@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import com.mongodb.client.result.InsertOneResult
+import com.mongodb.client.result.{ DeleteResult, InsertOneResult, UpdateResult }
 import org.mockito.IdiomaticMockito
 import org.mockito.ArgumentMatchersSugar.*
 import org.mongodb.scala.bson.BsonObjectId
@@ -41,6 +41,7 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
     "return status Created for a valid payload" in new TestClass {
       val insertOneResult: InsertOneResult = InsertOneResult.acknowledged(BsonObjectId())
       contextRepositoryMock.addContext(*[repository.model.ContextPayload]) returns Future.successful(insertOneResult)
+
       val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
 
       val payload = Json.parse(readResources("contextPayload.json"))
@@ -56,9 +57,13 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
 
   "Update context" should {
     "return status OK for a valid payload" in new TestClass {
-      val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
-
       val payload = Json.parse(readResources("contextPayload.json"))
+
+      val updateOneResult: UpdateResult = UpdateResult.acknowledged(1, 1, BsonObjectId())
+      contextRepositoryMock.updateContext(*[repository.model.ContextPayload]) returns Future.successful(
+        updateOneResult)
+
+      val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
 
       val result =
         controller
@@ -72,20 +77,29 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
 
   "GET context by key" should {
     "return status OK with context details" in new TestClass {
+      val payload = Json.parse(readResources("contextPayload.json"))
+      val context = repository.model.ContextPayload.contextPayloadFormat.reads(payload)
+
+      contextRepositoryMock.findContext(*[String]) returns Future.successful(Some(context.get))
+
       val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
       val result =
         controller
-          .get("b25fb7aab4d911ecb9090242ac120002")
+          .get("61ea7c5951d7a42da4fd4608")
           .apply(FakeRequest("GET", "/channel-preferences/context/:key"))
       status(result) mustBe 200
       val contextResponse = contentAsJson(result).validate[ContextPayload].get
-      contextResponse.key mustBe "b25fb7aab4d911ecb9090242ac120002"
-      contextResponse.resourcePath mustBe "path"
+      contextResponse.key mustBe "61ea7c5951d7a42da4fd4608"
+      contextResponse.resourcePath mustBe "email[index=primary]"
     }
   }
 
   "DELETE context by key" should {
     "return status Accepted" in new TestClass {
+
+      val deleteResult: DeleteResult = DeleteResult.acknowledged(1)
+      contextRepositoryMock.deleteContext(*[String]) returns Future.successful(deleteResult)
+
       val controller = new ContextController(contextRepositoryMock, Helpers.stubControllerComponents())
       val result =
         controller
