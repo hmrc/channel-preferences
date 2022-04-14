@@ -26,7 +26,7 @@ import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
-import uk.gov.hmrc.channelpreferences.model.context.ContextStoreAcknowledged
+import uk.gov.hmrc.channelpreferences.model.context.{ ContextStorageError, ContextStoreAcknowledged }
 import uk.gov.hmrc.channelpreferences.services.preferences.ContextService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,6 +36,7 @@ import scala.io.Source
 class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMockito {
 
   "Create context" should {
+
     "return status Created for a valid payload" in new TestClass {
 
       contextServiceMock.store(*[ContextPayload]) returns Future.successful(Right(new ContextStoreAcknowledged()))
@@ -51,10 +52,27 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
       status(result) mustBe Status.CREATED
       contentAsString(result) mustBe "61ea7c5951d7a42da4fd4608"
     }
+
+    "return status Bad Request" in new TestClass {
+
+      contextServiceMock.store(*[ContextPayload]) returns Future.successful(Left(new ContextStorageError("oops!")))
+
+      val controller = new ContextController(contextServiceMock, Helpers.stubControllerComponents())
+
+      val payload = Json.parse(readResources("contextPayload.json"))
+
+      val result =
+        controller.create
+          .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
+
+      status(result) mustBe Status.BAD_REQUEST
+      contentAsString(result) mustBe "Context 61ea7c5951d7a42da4fd4608 could not be created"
+    }
   }
 
   "Update context" should {
-    "return status OK for a valid payload" in new TestClass {
+
+    "return status Ok for a valid payload" in new TestClass {
 
       val payload = Json.parse(readResources("contextPayload.json"))
 
@@ -68,12 +86,30 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
           .apply(FakeRequest("PUT", "", Headers("Content-Type" -> "application/json"), payload))
 
       status(result) mustBe Status.OK
-      contentAsString(result) mustBe "61ea7c5951d7a42da4fd4608 updated"
+      contentAsString(result) mustBe "61ea7c5951d7a42da4fd4608 updated with id 61ea7c5951d7a42da4fd4608"
+    }
+
+    "return status Bad Request" in new TestClass {
+
+      val payload = Json.parse(readResources("contextPayload.json"))
+
+      contextServiceMock.replace(*[ContextPayload]) returns Future.successful(Left(new ContextStorageError("oops!")))
+
+      val controller = new ContextController(contextServiceMock, Helpers.stubControllerComponents())
+
+      val result =
+        controller
+          .update("61ea7c5951d7a42da4fd4608")
+          .apply(FakeRequest("PUT", "", Headers("Content-Type" -> "application/json"), payload))
+
+      status(result) mustBe Status.BAD_REQUEST
+      contentAsString(result) mustBe "Context 61ea7c5951d7a42da4fd4608 with id: 61ea7c5951d7a42da4fd4608 could not be updated"
     }
   }
 
   "Get context by key" should {
-    "return status OK with context details" in new TestClass {
+
+    "return status Ok with context details" in new TestClass {
 
       val payload = Json.parse(readResources("contextPayload.json"))
       val context = ContextPayload.contextPayloadFormat.reads(payload)
@@ -85,14 +121,27 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
         controller
           .get("61ea7c5951d7a42da4fd4608")
           .apply(FakeRequest("GET", "/channel-preferences/context/:key"))
-      status(result) mustBe 200
+      status(result) mustBe Status.OK
       val contextResponse = contentAsJson(result).validate[ContextPayload].get
       contextResponse.key mustBe "61ea7c5951d7a42da4fd4608"
       contextResponse.resourcePath mustBe "email[index=primary]"
     }
+
+    "return status Bad Request" in new TestClass {
+
+      contextServiceMock.retrieve(*[String]) returns Future.successful(Left(new ContextStorageError("oops!")))
+
+      val controller = new ContextController(contextServiceMock, Helpers.stubControllerComponents())
+      val result =
+        controller
+          .get("61ea7c5951d7a42da4fd4608")
+          .apply(FakeRequest("GET", "/channel-preferences/context/:key"))
+      status(result) mustBe Status.NOT_FOUND
+    }
   }
 
   "Delete context by key" should {
+
     "return status Accepted" in new TestClass {
 
       contextServiceMock.remove(*[String]) returns Future.successful(Right(new ContextStoreAcknowledged()))
@@ -103,6 +152,18 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
           .delete("b25fb7aab4d911ecb9090242ac120002")
           .apply(FakeRequest("GET", "/channel-preferences/context/:key"))
       status(result) mustBe Status.ACCEPTED
+    }
+
+    "return status Bad Request" in new TestClass {
+
+      contextServiceMock.remove(*[String]) returns Future.successful(Left(new ContextStorageError("oops!")))
+
+      val controller = new ContextController(contextServiceMock, Helpers.stubControllerComponents())
+      val result =
+        controller
+          .delete("b25fb7aab4d911ecb9090242ac120002")
+          .apply(FakeRequest("GET", "/channel-preferences/context/:key"))
+      status(result) mustBe Status.BAD_REQUEST
     }
   }
 

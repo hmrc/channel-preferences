@@ -19,11 +19,12 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.channelpreferences.controllers.model._
+import uk.gov.hmrc.channelpreferences.model.context.ContextStoreAcknowledged
 import uk.gov.hmrc.channelpreferences.services.preferences.ContextService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class ContextController @Inject()(contextService: ContextService, controllerComponents: ControllerComponents)(
@@ -34,7 +35,10 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
     withJsonBody[ContextPayload] { context =>
       contextService
         .store(context)
-        .map(_ => Created(context.key))
+        .map {
+          case Right(_: ContextStoreAcknowledged) => Created(context.key)
+          case _                                  => BadRequest(s"Context ${context.key} could not be created")
+        }
     }
   }
 
@@ -43,7 +47,7 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
       .retrieve(key)
       .map {
         case Right(payload) => Ok(Json.toJson(payload))
-        case _              => NotFound("Context could not be found")
+        case _              => NotFound(s"Context $key could not be retrieved")
       }
   }
 
@@ -51,12 +55,19 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
     withJsonBody[ContextPayload] { context =>
       contextService
         .replace(context)
-        .map(_ => Ok(s"$id updated"))
+        .map {
+          case Right(_: ContextStoreAcknowledged) => Ok(s"${context.key} updated with id $id")
+          case _                                  => BadRequest(s"Context ${context.key} with id: $id could not be updated")
+        }
     }
   }
 
   def delete(key: String): Action[AnyContent] = Action.async { _ =>
-    Future.successful(Accepted(s"$key deleted"))
+    contextService
+      .remove(key)
+      .map {
+        case Right(_: ContextStoreAcknowledged) => Accepted(s"$key deleted")
+        case _                                  => BadRequest(s"Context $key could not be deleted")
+      }
   }
-
 }
