@@ -23,7 +23,7 @@ import com.google.inject.name.Names.named
 import com.typesafe.config.ConfigException
 import play.api.{ Configuration, Environment }
 import uk.gov.hmrc.channelpreferences.repository.ContextRepository
-import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceResolver, PreferenceResolverImpl }
+import uk.gov.hmrc.channelpreferences.services.preferences.{ ContextService, ContextServiceImpl, PreferenceResolver, PreferenceResolverImpl }
 import uk.gov.hmrc.mongo.MongoComponent
 
 class DIModule(environment: Environment, configuration: Configuration) extends AbstractModule {
@@ -35,6 +35,11 @@ class DIModule(environment: Environment, configuration: Configuration) extends A
   @Singleton
   def contextRepository(mongoComponent: MongoComponent)(implicit ec: ExecutionContext): ContextRepository =
     new ContextRepository(mongoComponent)
+
+  @Provides
+  @Singleton
+  def contextService(contextRepository: ContextRepository)(implicit ec: ExecutionContext): ContextService =
+    new ContextServiceImpl(contextRepository)
 
   protected def bindString(path: String, name: String): Unit =
     bindConstant()

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.repository.model
+package uk.gov.hmrc.channelpreferences.controllers.model
 
 import play.api.libs.json.Json
 
@@ -27,43 +27,19 @@ trait TestModels {
   val keyIdentifier = "61ea7c5951d7a42da4fd4608";
   val managementId = UUID.randomUUID()
   val version = Version(1, 1, 1)
-  val purposes = List(Purpose.one, Purpose.two)
-  val message = Message(
-    language = Language.en,
-    nudge = true,
-    archive = "3.months"
-  )
-  val email = Email(
-    index = EmailIndex.primary,
-    email = "test@test.com",
-    contentType = "text/plain",
-    language = Language.en,
-    contactable = true,
-    purposes = purposes
-  )
-  val managementConsent = ManagementConsent(
-    consentType = "default",
-    status = true,
-    updated = timestamp,
-    version = version,
-    purposes = purposes
-  )
-  val management = Management(
-    id = managementId,
-    key = List("HMRC-MTD-VAT~VRN~GB123456789", "HMRC-CUS-ORG~EORINumber~GB123456789"),
-    created = timestamp,
-    consent = List(managementConsent),
-    email = List(email),
-    message = message,
-    status = Status.ACTIVE
-  )
+  val purposes = List("one", "two")
   val contextId = UUID.randomUUID()
   val verificationId = UUID.randomUUID()
   val confirmId = UUID.randomUUID()
   val verification = Verification(id = verificationId, sent = timestamp, email = "test@test.com")
   val confirm = Confirm(id = confirmId, started = timestamp)
-  val consented =
-    Consented(consentType = "default", status = true, created = timestamp, version = version, purposes = purposes)
+  val consented = Consented(
+    consentType = "default",
+    status = true,
+    created = timestamp,
+    version = version,
+    purposes = purposes
+  )
   val context = Context(
     consented = consented,
     verification = verification,
