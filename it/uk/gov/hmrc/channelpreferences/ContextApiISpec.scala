@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences
 import play.api.http.Status
 import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
 
-class ContextApiSpec extends ISpec {
+class ContextApiISpec extends ISpec {
 
   "POST to /channel-preferences/context endpoint" should {
     "work with valid payload" in {
@@ -39,9 +39,8 @@ class ContextApiSpec extends ISpec {
                         |                "patch": 123
                         |            },
                         |            "purposes": [
-                        |                "123",
-                        |                "34",
-                        |                "11"
+                        |                "one",
+                        |                "two"
                         |            ]
                         |        },
                         |        "verification": {
@@ -85,9 +84,8 @@ class ContextApiSpec extends ISpec {
                        |                "patch": 123
                        |            },
                        |            "purposes": [
-                       |                "123",
-                       |                "34",
-                       |                "11"
+                       |                "one",
+                       |                "two"
                        |            ]
                        |        },
                        |        "verification": {
@@ -137,7 +135,6 @@ class ContextApiSpec extends ISpec {
           .futureValue
 
       response.status mustBe Status.ACCEPTED
-
     }
   }
 
