@@ -34,7 +34,9 @@ import scala.io.Source
 class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockito with TestModels {
 
   "Create a new context" should {
+
     "return a success status in response to a successful DB insert" in new TestClass {
+
       val insertOneResult: InsertOneResult = InsertOneResult.acknowledged(BsonObjectId())
       contextRepositoryMock.addContext(*[repository.model.ContextPayload]) returns Future.successful(insertOneResult)
 
@@ -42,9 +44,20 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       val result = contextService.store(contextPayload).futureValue
       result.isRight mustBe true
     }
+
+    "return an error status in response to a failed DB insert" in new TestClass {
+
+      val insertOneResult: InsertOneResult = InsertOneResult.unacknowledged()
+      contextRepositoryMock.addContext(*[repository.model.ContextPayload]) returns Future.successful(insertOneResult)
+
+      val contextService = new ContextServiceImpl(contextRepositoryMock)
+      val result = contextService.store(contextPayload).futureValue
+      result.isLeft mustBe true
+    }
   }
 
   "Replace context" should {
+
     "return a success status in response to a successful DB upsert" in new TestClass {
 
       val updateOneResult: UpdateResult = UpdateResult.acknowledged(1, 1, BsonObjectId())
@@ -55,9 +68,21 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       val result = contextService.replace(contextPayload).futureValue
       result.isRight mustBe true
     }
+
+    "return an error status in response to a failed DB upsert" in new TestClass {
+
+      val updateOneResult: UpdateResult = UpdateResult.unacknowledged()
+      contextRepositoryMock.updateContext(*[repository.model.ContextPayload]) returns Future.successful(
+        updateOneResult)
+
+      val contextService = new ContextServiceImpl(contextRepositoryMock)
+      val result = contextService.replace(contextPayload).futureValue
+      result.isLeft mustBe true
+    }
   }
 
   "Retrieve existing context by key" should {
+
     "return the associated context payload in response to a successful DB document retrieval" in new TestClass {
 
       contextRepositoryMock.findContext(*[String]) returns Future.successful(
@@ -68,9 +93,19 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       result.isRight mustBe true
       result.right.get mustBe contextPayload
     }
+
+    "return an error status in response to a failed DB document retrieval" in new TestClass {
+
+      contextRepositoryMock.findContext(*[String]) returns Future.successful(Option.empty)
+
+      val contextService = new ContextServiceImpl(contextRepositoryMock)
+      val result = contextService.retrieve(keyIdentifier).futureValue
+      result.isLeft mustBe true
+    }
   }
 
   "Delete context by key" should {
+
     "return a success status in response to a successful DB document removal" in new TestClass {
 
       val deleteResult: DeleteResult = DeleteResult.acknowledged(1)
@@ -79,6 +114,16 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       val contextService = new ContextServiceImpl(contextRepositoryMock)
       val result = contextService.remove(keyIdentifier).futureValue
       result.isRight mustBe true
+    }
+
+    "return an error status in response to a failed DB document removal" in new TestClass {
+
+      val deleteResult: DeleteResult = DeleteResult.unacknowledged()
+      contextRepositoryMock.deleteContext(*[String]) returns Future.successful(deleteResult)
+
+      val contextService = new ContextServiceImpl(contextRepositoryMock)
+      val result = contextService.remove(keyIdentifier).futureValue
+      result.isLeft mustBe true
     }
   }
 
