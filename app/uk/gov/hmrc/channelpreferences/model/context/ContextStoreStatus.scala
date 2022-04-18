@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.repository.model
+package uk.gov.hmrc.channelpreferences.model.context
 
-import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.JsSuccess
+sealed trait ContextStoreStatus
 
-class ContextSpec extends PlaySpec with TestModels {
+sealed class ContextStorageError(val message: String) extends ContextStoreStatus
 
-  "read" must {
-    "successfully parse from json" in {
-      contextJson.validate[ContextPayload] mustBe JsSuccess(contextPayload)
-    }
-  }
-}
+sealed class ContextStoreAcknowledged() extends ContextStoreStatus

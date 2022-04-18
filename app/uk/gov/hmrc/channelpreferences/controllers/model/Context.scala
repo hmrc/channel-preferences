@@ -27,9 +27,17 @@ final case class Version(
   patch: Int
 )
 
-final case class Verification(id: UUID, email: String, sent: LocalDateTime)
+final case class Verification(
+  id: UUID,
+  email: String,
+  sent: LocalDateTime
+)
 
-final case class Context(consented: Consented, verification: Verification, confirm: Confirm)
+final case class Context(
+  consented: Consented,
+  verification: Verification,
+  confirm: Confirm
+)
 
 final case class Consented(
   consentType: String,
@@ -39,9 +47,17 @@ final case class Consented(
   purposes: List[String]
 )
 
-final case class Confirm(id: UUID, started: LocalDateTime)
+final case class Confirm(
+  id: UUID,
+  started: LocalDateTime
+)
 
-final case class ContextPayload(key: String, resourcePath: String, expiry: LocalDateTime, context: Context)
+final case class ContextPayload(
+  key: String,
+  resourcePath: String,
+  expiry: LocalDateTime,
+  context: Context
+)
 
 object ContextPayload {
   implicit val versionFormat = Json.format[Version]
