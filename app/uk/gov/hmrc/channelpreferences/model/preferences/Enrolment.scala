@@ -16,21 +16,25 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
-import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
+import play.api.libs.json.{ Json, OFormat }
 
 sealed trait Enrolment {
   val enrolmentKey: EnrolmentKey
   val identifierKey: IdentifierKey
   val identifierValue: IdentifierValue
-  val channel: Channel
 }
 
 case class CustomsServiceEnrolment(
-  identifierValue: IdentifierValue,
-  channel: Channel
+  identifierValue: IdentifierValue
 ) extends Enrolment {
   override val enrolmentKey: EnrolmentKey = CustomsServiceKey
   override val identifierKey: IdentifierKey = EORINumber
+}
+
+object CustomsServiceEnrolment {
+  implicit val format: OFormat[CustomsServiceEnrolment] = Json.format[CustomsServiceEnrolment]
+}
+
+object Enrolment {
+  implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
 }

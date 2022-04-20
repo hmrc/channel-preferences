@@ -19,31 +19,36 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 import cats.syntax.either._
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, Enrolment, EnrolmentKey, IdentifierKey, IdentifierValue, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 trait PreferenceResolver {
-  def resolvePreferenceForEnrolment(enrolment: Enrolment)(
+  def resolveChannelPreference(channelledEnrolment: ChannelledEnrolment)(
     implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
 }
 
 object PreferenceResolver {
-  def toEnrolment(
+  def toChannelledEnrolment(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel
+  ): Either[PreferenceError, ChannelledEnrolment] =
+    toEnrolment(enrolmentKey, identifierKey, identifierValue).map(
+      ChannelledEnrolment(_, channel)
+    )
+
+  def toEnrolment(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue
   ): Either[PreferenceError, Enrolment] =
     enrolmentKey match {
-      case EnrolmentKey.CustomsServiceKey =>
+      case CustomsServiceKey =>
         identifierKey match {
-          case IdentifierKey.EORINumber =>
-            CustomsServiceEnrolment(
-              identifierValue,
-              channel
-            ).asRight
+          case EORINumber => CustomsServiceEnrolment(identifierValue).asRight
         }
     }
 }

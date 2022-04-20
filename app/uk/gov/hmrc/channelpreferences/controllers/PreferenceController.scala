@@ -65,15 +65,6 @@ class PreferenceController @Inject()(
         .map(toResult)
     }
 
-  private def toResult(resolution: Either[PreferenceError, JsValue]): Result = resolution.fold(
-    preferenceError =>
-      Result(
-        header = ResponseHeader(preferenceError.statusCode.intValue()),
-        body = HttpEntity.Strict(ByteString.apply(preferenceError.message), Some(ContentTypes.TEXT))
-    ),
-    json => Ok(json)
-  )
-
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
       for {

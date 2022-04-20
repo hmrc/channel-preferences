@@ -43,7 +43,7 @@ class CustomsDataStorePreferenceProviderSpec
 
   it should "return the json representation of a email verification" in new Scope {
     customsDataStorePreferenceProvider
-      .getPreference(customsServiceEnrolment)
+      .getChannelPreference(customsServiceEnrolment)
       .futureValue shouldBe Json.toJson(emailVerification).asRight
 
     auditConnector.sendExplicitAudit(
@@ -58,7 +58,7 @@ class CustomsDataStorePreferenceProviderSpec
     private val unsupportedChannelEnrolment = CustomsServiceEnrolment(identifierValue, Phone)
 
     customsDataStorePreferenceProvider
-      .getPreference(unsupportedChannelEnrolment)
+      .getChannelPreference(unsupportedChannelEnrolment)
       .futureValue shouldBe UnsupportedChannelError(Phone).asLeft
 
     auditConnector.sendExplicitAudit(*[String], *[Map[String, String]]) wasNever called

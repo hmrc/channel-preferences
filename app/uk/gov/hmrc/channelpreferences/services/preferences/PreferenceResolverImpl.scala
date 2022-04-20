@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.services.preferences
 
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, Enrolment, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, CustomsServiceEnrolment, PreferenceError }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{ Inject, Singleton }
@@ -27,9 +27,9 @@ import scala.concurrent.Future
 class PreferenceResolverImpl @Inject()(
   customerDataStorePreferenceProvider: CustomsDataStorePreferenceProvider
 ) extends PreferenceResolver {
-  override def resolvePreferenceForEnrolment(enrolment: Enrolment)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] = enrolment match {
-    case customsServiceEnrolment: CustomsServiceEnrolment =>
-      customerDataStorePreferenceProvider.getPreference(customsServiceEnrolment)
+  override def resolveChannelPreference(channelledEnrolment: ChannelledEnrolment)(
+    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] = channelledEnrolment match {
+    case ChannelledEnrolment(customsServiceEnrolment: CustomsServiceEnrolment, channel) =>
+      customerDataStorePreferenceProvider.getChannelPreference(customsServiceEnrolment, channel)
   }
 }
