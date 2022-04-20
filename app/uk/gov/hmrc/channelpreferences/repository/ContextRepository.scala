@@ -52,7 +52,7 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
     collection.insertOne(contextPayload).toFuture()
 
   def updateContext(contextPayload: ContextPayload): Future[UpdateResult] =
-    collection.replaceOne(equal("key", contextPayload.key), contextPayload).toFuture()
+    collection.replaceOne(equal("key", contextPayload.contextId), contextPayload).toFuture()
 
   def deleteContext(key: String): Future[DeleteResult] =
     collection.deleteOne(equal("key", key)).toFuture()

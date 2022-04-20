@@ -16,12 +16,18 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
+import cats.syntax.parallel._
+import cats.syntax.either._
 import play.api.libs.json.{ Json, OFormat }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
+import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
 
 sealed trait Enrolment {
   val enrolmentKey: EnrolmentKey
   val identifierKey: IdentifierKey
   val identifierValue: IdentifierValue
+
+  final def value: String = s"$enrolmentKey~$identifierKey~$identifierValue"
 }
 
 case class CustomsServiceEnrolment(
@@ -36,5 +42,30 @@ object CustomsServiceEnrolment {
 }
 
 object Enrolment {
+  val Separator = "~"
   implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
+
+  def fromValue(value: String): Either[PreferenceError, Enrolment] =
+    value.split(Separator) match {
+      case Array(enrolmentKey, identifierKey, identifierValue) =>
+        fromTriplet(enrolmentKey, identifierKey, identifierValue)
+      case anotherShape =>
+        ParseError(s"expected 3 values for an enrolment, but got ${anotherShape.mkString(" | ")}").asLeft
+    }
+
+  def fromTriplet(
+    enrolmentKey: String,
+    identifierKey: String,
+    identifierValue: String): Either[PreferenceError, Enrolment] = {
+    val tupled = (
+      EnrolmentKey.fromValue(enrolmentKey).leftMap[PreferenceError](ParseError),
+      IdentifierKey.fromValue(identifierKey).leftMap[PreferenceError](ParseError),
+      IdentifierValue(identifierValue).asRight[PreferenceError]
+    ).parTupled
+
+    tupled.flatMap {
+      case (enrolmentKey, identifierKey, identifierValue) =>
+        PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue)
+    }
+  }
 }

@@ -16,40 +16,42 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.{ Json, OFormat }
+import play.api.libs.json.{ Format, Json, OFormat }
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
 
 sealed trait Context
 
+case class Consent(
+  consentType: ConsentType,
+  status: ConsentStatus,
+  updated: Updated,
+  version: Version,
+  purposes: List[Purpose]
+) extends Context
+
+object Consent {
+  implicit val format: OFormat[Consent] = Json.format[Consent]
+}
+
+case class VerificationContext(
+  consented: Consent,
+  verification: Verification
+) extends Context
+
+object VerificationContext {
+  implicit val format: OFormat[VerificationContext] = Json.format[VerificationContext]
+}
+
+case class ConfirmationContext(
+  consented: Consent,
+  verification: Verification,
+  confirm: Confirm
+) extends Context
+
+object ConfirmationContext {
+  implicit val format: OFormat[ConfirmationContext] = Json.format[ConfirmationContext]
+}
+
 object Context {
-  case class Consent(
-    consentType: ConsentType,
-    status: ConsentStatus,
-    updated: Updated,
-    version: Version,
-    purposes: List[Purpose]
-  ) extends Context
-
-  object Consent {
-    implicit val format: OFormat[Consent] = Json.format[Consent]
-  }
-
-  case class VerificationContext(
-    consented: Consent,
-    verification: Verification
-  ) extends Context
-
-  object VerificationContext {
-    implicit val format: OFormat[VerificationContext] = Json.format[VerificationContext]
-  }
-
-  case class ConfirmationContext(
-    consented: Consent,
-    verification: Verification,
-    confirm: Confirm
-  ) extends Context
-
-  object ConfirmationContext {
-    implicit val format: OFormat[ConfirmationContext] = Json.format[ConfirmationContext]
-  }
+  implicit val format: Format[Context] = Json.format[Context]
 }

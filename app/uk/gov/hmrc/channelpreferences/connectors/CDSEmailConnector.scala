@@ -21,7 +21,7 @@ import play.api.libs.json.{ JsSuccess, Json }
 import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UpstreamError, UpstreamParseError }
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -54,10 +54,10 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
           case JsSuccess(ev, _) => Right(ev)
           case _ =>
             log.warn(s"unable to parse $body")
-            Left(ParseError(s"unable to parse $body"))
+            Left(UpstreamParseError(s"unable to parse $body"))
         }
       case Failure(e) =>
         log.error(s"cds response was invalid Json", e)
-        Left(ParseError(s"cds response was invalid Json"))
+        Left(UpstreamParseError(s"cds response was invalid Json"))
     }
 }

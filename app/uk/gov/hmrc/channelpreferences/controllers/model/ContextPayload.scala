@@ -21,6 +21,7 @@ import play.api.libs.json.{ Format, Json }
 import java.time.LocalDateTime
 
 case class ContextPayload(
+  contextId: ContextId,
   expiry: LocalDateTime,
   context: Context
 )

@@ -42,7 +42,7 @@ import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerificat
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
 import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
 import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UnsupportedChannelError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UnsupportedChannelError, UpstreamError, UpstreamParseError }
 import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
@@ -84,7 +84,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
           *[HeaderCarrier],
           *[ExecutionContext]))
-        .thenReturn(Future.successful(ParseError("boom").asLeft))
+        .thenReturn(Future.successful(UpstreamParseError("boom").asLeft))
 
       val response =
         controller.preference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email).apply(FakeRequest("GET", "/"))
