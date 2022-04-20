@@ -17,10 +17,15 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
+import play.api.libs.json._
 import play.api.mvc.PathBindable
 
 sealed trait EnrolmentKey {
   val value: String
+}
+
+case object CustomsServiceKey extends EnrolmentKey {
+  override val value: String = "HMRC-CUS-ORG"
 }
 
 object EnrolmentKey {
@@ -40,7 +45,7 @@ object EnrolmentKey {
     case other                   => s"EnrolmentKey: $other, not found".asLeft
   }
 
-  case object CustomsServiceKey extends EnrolmentKey {
-    override val value: String = "HMRC-CUS-ORG"
-  }
+  implicit val customsServiceKeyFormat: Format[CustomsServiceKey.type] = objectJsonFormat(CustomsServiceKey)
+
+  implicit val format: Format[EnrolmentKey] = Json.format[EnrolmentKey]
 }

@@ -47,7 +47,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
     private val error = UnsupportedChannelError(Phone)
 
     preferenceResolver
-      .resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel))
+      .resolveChannelPreference(CustomsServiceEnrolment(identifierValue, channel))
       .returns(Future.successful(error.asLeft))
 
     preferenceService
@@ -65,7 +65,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
 
     val preferenceResolver: PreferenceResolver = mock[PreferenceResolver]
     preferenceResolver
-      .resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel))
+      .resolveChannelPreference(CustomsServiceEnrolment(identifierValue, channel))
       .returns(Future.successful(JsObject.empty.asRight))
 
     val preferenceService: PreferenceService = new PreferenceService(preferenceResolver)

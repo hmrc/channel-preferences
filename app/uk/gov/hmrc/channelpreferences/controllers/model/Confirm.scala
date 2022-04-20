@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.services.preferences
+package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, PreferenceError }
-import uk.gov.hmrc.http.HeaderCarrier
+import java.time.LocalDateTime
+import java.util.UUID
 
-import scala.concurrent.Future
-
-trait PreferenceProvider[I <: Enrolment] {
-  def getChannelPreference(enrolment: I, channel: Channel)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
-}
+case class Confirm(
+  id: UUID,
+  started: LocalDateTime
+)

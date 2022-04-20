@@ -17,10 +17,15 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
+import play.api.libs.json.{ Format, Json }
 import play.api.mvc.PathBindable
 
 sealed trait IdentifierKey {
   val value: String
+}
+
+case object EORINumber extends IdentifierKey {
+  override val value: String = "EORINumber"
 }
 
 object IdentifierKey {
@@ -40,7 +45,6 @@ object IdentifierKey {
     case other            => s"IdentifierKey: $other, not found".asLeft
   }
 
-  case object EORINumber extends IdentifierKey {
-    override val value: String = "EORINumber"
-  }
+  implicit val eoriNumberFormat: Format[EORINumber.type] = objectJsonFormat(EORINumber)
+  implicit val format: Format[IdentifierKey] = Json.format[IdentifierKey]
 }

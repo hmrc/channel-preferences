@@ -17,13 +17,14 @@
 package uk.gov.hmrc.channelpreferences.repository
 
 import com.google.inject.{ Inject, Singleton }
+
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import com.mongodb.client.model.Indexes.ascending
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{ IndexModel, IndexOptions }
 import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
-import uk.gov.hmrc.channelpreferences.repository.model.ContextPayload
+import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.util.concurrent.TimeUnit

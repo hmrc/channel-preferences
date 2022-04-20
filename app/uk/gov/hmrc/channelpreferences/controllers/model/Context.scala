@@ -16,54 +16,40 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.Json
+import play.api.libs.json.{ Json, OFormat }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
 
-import java.time.LocalDateTime
-import java.util.UUID
+sealed trait Context
 
-final case class Version(
-  major: Int,
-  minor: Int,
-  patch: Int
-)
+object Context {
+  case class Consent(
+    consentType: ConsentType,
+    status: ConsentStatus,
+    updated: Updated,
+    version: Version,
+    purposes: List[Purpose]
+  ) extends Context
 
-final case class Verification(
-  id: UUID,
-  email: String,
-  sent: LocalDateTime
-)
+  object Consent {
+    implicit val format: OFormat[Consent] = Json.format[Consent]
+  }
 
-final case class Context(
-  consented: Consented,
-  verification: Verification,
-  confirm: Confirm
-)
+  case class VerificationContext(
+    consented: Consent,
+    verification: Verification
+  ) extends Context
 
-final case class Consented(
-  consentType: String,
-  status: Boolean,
-  created: LocalDateTime,
-  version: Version,
-  purposes: List[String]
-)
+  object VerificationContext {
+    implicit val format: OFormat[VerificationContext] = Json.format[VerificationContext]
+  }
 
-final case class Confirm(
-  id: UUID,
-  started: LocalDateTime
-)
+  case class ConfirmationContext(
+    consented: Consent,
+    verification: Verification,
+    confirm: Confirm
+  ) extends Context
 
-final case class ContextPayload(
-  key: String,
-  resourcePath: String,
-  expiry: LocalDateTime,
-  context: Context
-)
-
-object ContextPayload {
-  implicit val versionFormat = Json.format[Version]
-  implicit val consentedFormat = Json.format[Consented]
-  implicit val confirmFormat = Json.format[Confirm]
-  implicit val verificationFormat = Json.format[Verification]
-  implicit val contextReadsFormat = Json.format[Context]
-  implicit val contextPayloadFormat = Json.format[ContextPayload]
+  object ConfirmationContext {
+    implicit val format: OFormat[ConfirmationContext] = Json.format[ConfirmationContext]
+  }
 }
