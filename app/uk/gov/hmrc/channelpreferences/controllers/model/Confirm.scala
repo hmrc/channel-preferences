@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
+import play.api.libs.json.{ Json, OFormat }
+
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -23,3 +25,7 @@ case class Confirm(
   id: UUID,
   started: LocalDateTime
 )
+
+object Confirm {
+  implicit val format: OFormat[Confirm] = Json.format[Confirm]
+}

@@ -13,10 +13,11 @@
 #   502:
 #     description: map all upstream error codes to 502
 ###
-GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
+GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.channelPreference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
+GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.getPreference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue)
 PUT        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/consent uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.consent(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue)
-PUT        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel/index/:index/verify uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.verify(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel, index: Index)
-PUT        /channel-preferences/preferences/verify/:verificationId/confirm uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.confirm(verificationId: UUID)
+POST       /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel/index/:index/verify uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.verify(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel, index: Index)
+PUT        /channel-preferences/preferences/verify/:verificationId/confirm uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.confirm(verificationId: VerificationId)
 
 POST       /channel-preferences/enrolment                   uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()

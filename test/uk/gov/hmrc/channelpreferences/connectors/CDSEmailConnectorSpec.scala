@@ -30,7 +30,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import play.api.http.Status.{ NOT_FOUND, OK }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UpstreamError, UpstreamParseError }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -78,7 +78,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(inValidEmailVerification)
       connector.getVerifiedEmail("123").futureValue mustBe
-        Left(ParseError("""unable to parse {"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""))
+        Left(UpstreamParseError("""unable to parse {"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""))
     }
 
     "return Bad Gateway if CDS returns non Json response" in new TestCase {
@@ -91,7 +91,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn("NonJsonResponse")
       connector.getVerifiedEmail("123").futureValue mustBe
-        Left(ParseError("cds response was invalid Json"))
+        Left(UpstreamParseError("cds response was invalid Json"))
     }
   }
 

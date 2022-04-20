@@ -41,10 +41,16 @@ object PreferenceError {
   case class PreferenceErrors(values: NonEmptyList[PreferenceError])
       extends PreferenceError(values.map(_.message).asString, values.map(_.statusCode).toList.maxBy(_.intValue))
 
-  case class ParseError(override val message: String)
+  case class UpstreamParseError(override val message: String)
       extends PreferenceError(
         message,
         StatusCodes.BadGateway
+      )
+
+  case class ParseError(override val message: String)
+      extends PreferenceError(
+        message,
+        StatusCodes.BadRequest
       )
 
   case class UpstreamError(

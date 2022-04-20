@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, Json, Writes }
 
 import java.time.Instant
 
 case class Created(value: Instant) extends AnyVal
 
 object Created {
-  implicit val format: Format[Created] = Json.valueFormat[Created]
+  implicit def format(implicit writes: Writes[Instant]): Format[Created] = Json.valueFormat[Created]
+  val formatter = format
 }

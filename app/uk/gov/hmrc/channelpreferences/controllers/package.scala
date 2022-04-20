@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,23 @@ package uk.gov.hmrc.channelpreferences
 
 import akka.util.ByteString
 import play.api.http.{ ContentTypes, HttpEntity }
-import play.api.libs.json.{ Json, Writes }
+import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.Results.Ok
 import play.api.mvc.{ ResponseHeader, Result }
+import uk.gov.hmrc.channelpreferences.controllers.model.ContextualPreference
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError
 
 package object controllers {
-  def toResult[T: Writes](eitherResult: Either[PreferenceError, T]): Result = eitherResult.fold(
+  def toResult(eitherResult: Either[PreferenceError, ContextualPreference]): Result = eitherResult.fold(
+    preferenceError =>
+      Result(
+        header = ResponseHeader(preferenceError.statusCode.intValue()),
+        body = HttpEntity.Strict(ByteString.apply(preferenceError.message), Some(ContentTypes.TEXT))
+    ),
+    result => Ok(Json.toJson(result))
+  )
+
+  def toJsResult(eitherResult: Either[PreferenceError, JsValue]): Result = eitherResult.fold(
     preferenceError =>
       Result(
         header = ResponseHeader(preferenceError.statusCode.intValue()),

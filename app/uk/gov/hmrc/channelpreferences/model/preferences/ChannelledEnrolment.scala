@@ -16,9 +16,36 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
+import cats.syntax.either._
+import cats.syntax.parallel._
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
 
 case class ChannelledEnrolment(
   enrolment: Enrolment,
   channel: Channel
 )
+
+object ChannelledEnrolment {
+  def fromValue(value: String): Either[PreferenceError, ChannelledEnrolment] =
+    value.split(Enrolment.Separator) match {
+      case Array(enrolmentKey, identifierKey, identifierValue, channelValue) =>
+        fromQuad(enrolmentKey, identifierKey, identifierValue, channelValue)
+      case anotherShape =>
+        ParseError(s"expected 4 values for a channelled enrolment, but got ${anotherShape.mkString(" | ")}").asLeft
+    }
+
+  def fromQuad(
+    enrolmentKey: String,
+    identifierKey: String,
+    identifierValue: String,
+    channelValue: String): Either[PreferenceError, ChannelledEnrolment] = {
+    val enrolment = Enrolment.fromTriplet(enrolmentKey, identifierKey, identifierValue)
+    val channel = Channel.channelFromName(channelValue).leftMap(ParseError)
+
+    (enrolment, channel).parMapN(ChannelledEnrolment(_, _))
+  }
+
+  def value(channelledEnrolment: ChannelledEnrolment): String =
+    s"${channelledEnrolment.enrolment.value}${Enrolment.Separator}${channelledEnrolment.channel.name}"
+}

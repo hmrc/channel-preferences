@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,32 +21,31 @@ import uk.gov.hmrc.channelpreferences.model.preferences.Preference
 
 sealed trait ContextualPreference
 
+case class PreferenceWithoutContext(
+  preference: Preference
+) extends ContextualPreference
+
+object PreferenceWithoutContext {
+  implicit val format: OFormat[PreferenceWithoutContext] = Json.format[PreferenceWithoutContext]
+}
+
+case class PreferenceContext(
+  context: Context
+) extends ContextualPreference
+
+object PreferenceContext {
+  implicit val format: OFormat[PreferenceContext] = Json.format[PreferenceContext]
+}
+
+case class PreferenceWithContext(
+  preference: Preference,
+  contexts: List[Context]
+) extends ContextualPreference
+
+object PreferenceWithContext {
+  implicit val format: OFormat[PreferenceWithContext] = Json.format[PreferenceWithContext]
+}
+
 object ContextualPreference {
-
-  case class PreferenceWithoutContext(
-    preference: Preference
-  ) extends ContextualPreference
-
-  object PreferenceWithoutContext {
-    implicit val format: OFormat[PreferenceWithoutContext] = Json.format[PreferenceWithoutContext]
-  }
-
-  case class PreferenceContext(
-    context: Context
-  ) extends ContextualPreference
-
-  object PreferenceContext {
-    implicit val format: OFormat[PreferenceContext] = Json.format[PreferenceContext]
-  }
-
-  case class PreferenceWithContext(
-    preference: Preference,
-    contexts: List[Context]
-  ) extends ContextualPreference
-
-  object PreferenceWithContext {
-    implicit val format: OFormat[PreferenceWithContext] = Json.format[PreferenceWithContext]
-  }
-
   implicit val format: OFormat[ContextualPreference] = Json.format[ContextualPreference]
 }

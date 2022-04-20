@@ -18,15 +18,14 @@ package uk.gov.hmrc.channelpreferences.controllers
 
 import cats.data.EitherT
 import play.api.libs.json.JsValue
-import play.api.mvc.{ Action, ControllerComponents }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Context, ContextualPreference, Verification }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, Verification, VerificationId }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.PreferenceManagementService
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -41,14 +40,14 @@ class PreferenceManagementController @Inject()(
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue
   ): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[Context.Consent](handleConsent(enrolmentKey, identifierKey, identifierValue, _).map(toResult))
+    withJsonBody[Consent](handleConsent(enrolmentKey, identifierKey, identifierValue, _).map(toResult))
   }
 
   private def handleConsent(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
-    consent: Context.Consent
+    consent: Consent
   ): Future[Either[PreferenceError, ContextualPreference]] =
     (for {
       enrolment <- EitherT.fromEither[Future](
@@ -83,12 +82,26 @@ class PreferenceManagementController @Inject()(
     } yield preference).value
 
   def confirm(
-    verificationId: UUID
-  ): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    verificationId: VerificationId
+  ): Action[AnyContent] = Action.async { _ =>
     PreferenceManagementService.confirm(verificationId).map(toResult)
   }
 
-  def getPreference(enrolment: Enrolment): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    PreferenceManagementService.getPreference(enrolment).map(toResult)
-  }
+  def getPreference(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue): Action[AnyContent] =
+    Action.async { _ =>
+      handleGetPreference(enrolmentKey, identifierKey, identifierValue).map(toResult)
+    }
+
+  private def handleGetPreference(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue): Future[Either[PreferenceError, ContextualPreference]] =
+    (for {
+      enrolment <- EitherT.fromEither[Future](
+                    PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue))
+      preference <- EitherT(PreferenceManagementService.getPreference(enrolment))
+    } yield preference).value
 }

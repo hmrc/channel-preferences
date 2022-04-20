@@ -20,10 +20,9 @@ import play.api.libs.json.{ Json, OFormat }
 import uk.gov.hmrc.channelpreferences.model.preferences.EmailAddress
 
 import java.time.LocalDateTime
-import java.util.UUID
 
 case class Verification(
-  id: UUID,
+  id: VerificationId,
   email: EmailAddress,
   sent: LocalDateTime
 )
