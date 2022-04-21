@@ -25,6 +25,7 @@ class PreferenceSpec extends PlaySpec with TestModels {
   "it" must {
     "be isomorphic" in {
       val json = Json.toJson(preference)
+      println(Json.prettyPrint(json))
       json.as[Preference] mustBe preference
       preferenceJson.validate[Preference] mustBe JsSuccess(preference)
     }
