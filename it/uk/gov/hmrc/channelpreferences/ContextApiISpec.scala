@@ -24,35 +24,20 @@ class ContextApiISpec extends ISpec {
   "POST to /channel-preferences/context endpoint" should {
     "work with valid payload" in {
       val postData = s"""
-                        |{
-                        |    "key": "61ea7c5951d7a42da4fd4608",
-                        |    "resourcePath": "email",
-                        |    "expiry": "2022-01-28T09:26:49.556Z",
-                        |    "context": {
-                        |        "consented": {
-                        |            "consentType": "default",
-                        |            "status": true,
-                        |            "created": "2022-01-28T09:26:49.556Z",
-                        |            "version": {
-                        |                "major": 2,
-                        |                "minor": 1,
-                        |                "patch": 123
-                        |            },
-                        |            "purposes": [
-                        |                "one",
-                        |                "two"
-                        |            ]
-                        |        },
-                        |        "verification": {
-                        |            "id": "3cbcbfd1-71c8-49d6-905e-4eca464fd0a7",
-                        |            "email": "test@test.com",
-                        |            "sent": "2022-01-28T09:26:49.556Z"
-                        |        },
-                        |        "confirm": {
-                        |            "started": "2022-01-28T09:26:49.556Z",
-                        |            "id": "3cbcbfd1-71c8-49d6-905e-4eca464fd0a7"
-                        |        }
-                        |    }
+                        {
+                        |  "contextId" : "HMRC-CUS-ORG~EORINumber~GB123456789",
+                        |  "expiry" : "1987-03-20T14:33:48.00064",
+                        |  "context" : {
+                        |    "consentType" : "Default",
+                        |    "status" : true,
+                        |    "updated" : "1987-03-20T14:33:48.000640Z",
+                        |    "version" : {
+                        |      "major" : 1,
+                        |      "minor" : 1,
+                        |      "patch" : 1
+                        |    },
+                        |    "purposes" : [ "DigitalCommunications" ]
+                        |  }
                         |}
       """.stripMargin
       val response =
@@ -69,35 +54,20 @@ class ContextApiISpec extends ISpec {
   "PUT to /channel-preferences/context/:key endpoint" should {
     "work with valid payload" in {
       val putData = s"""
-                       |{
-                       |    "key": "61ea7c5951d7a42da4fd4608",
-                       |    "resourcePath": "email",
-                       |    "expiry": "2022-01-28T09:26:49.556Z",
-                       |    "context": {
-                       |        "consented": {
-                       |            "consentType": "default",
-                       |            "status": true,
-                       |            "created": "2022-01-28T09:26:49.556Z",
-                       |            "version": {
-                       |                "major": 2,
-                       |                "minor": 1,
-                       |                "patch": 123
-                       |            },
-                       |            "purposes": [
-                       |                "one",
-                       |                "two"
-                       |            ]
-                       |        },
-                       |        "verification": {
-                       |            "id": "3cbcbfd1-71c8-49d6-905e-4eca464fd0a7",
-                       |            "email": "test@test.com",
-                       |            "sent": "2022-01-28T09:26:49.556Z"
-                       |        },
-                       |        "confirm": {
-                       |            "started": "2022-01-28T09:26:49.556Z",
-                       |            "id": "3cbcbfd1-71c8-49d6-905e-4eca464fd0a7"
-                       |        }
-                       |    }
+                       {
+                       |  "contextId" : "HMRC-CUS-ORG~EORINumber~GB123456789",
+                       |  "expiry" : "1987-03-20T14:33:48.00064",
+                       |  "context" : {
+                       |    "consentType" : "Default",
+                       |    "status" : true,
+                       |    "updated" : "1987-03-20T14:33:48.000640Z",
+                       |    "version" : {
+                       |      "major" : 1,
+                       |      "minor" : 1,
+                       |      "patch" : 1
+                       |    },
+                       |    "purposes" : [ "DigitalCommunications" ]
+                       |  }
                        |}
       """.stripMargin
       val response =
@@ -115,13 +85,13 @@ class ContextApiISpec extends ISpec {
     "return a context" in {
       val response =
         wsClient
-          .url(resource(s"/channel-preferences/context/61ea7c5951d7a42da4fd4608"))
+          .url(resource(s"/channel-preferences/context/HMRC-CUS-ORG~EORINumber~GB123456789"))
           .withHttpHeaders(("Content-Type" -> "application/json"))
           .get
           .futureValue
 
       response.status mustBe Status.OK
-      response.json.validate[ContextPayload].get.contextId.value mustBe "61ea7c5951d7a42da4fd4608"
+      response.json.validate[ContextPayload].get.contextId.value mustBe "HMRC-CUS-ORG~EORINumber~GB123456789"
     }
   }
 
@@ -129,7 +99,7 @@ class ContextApiISpec extends ISpec {
     "return accepted response" in {
       val response =
         wsClient
-          .url(resource(s"/channel-preferences/context/61ea7c5951d7a42da4fd4608"))
+          .url(resource(s"/channel-preferences/context/HMRC-CUS-ORG~EORINumber~GB123456789"))
           .withHttpHeaders(("Content-Type" -> "application/json"))
           .delete
           .futureValue
