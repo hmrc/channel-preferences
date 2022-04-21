@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 import play.api.mvc.PathBindable
 
 sealed trait IdentifierKey {
@@ -45,6 +45,17 @@ object IdentifierKey {
     case other            => s"IdentifierKey: $other, not found".asLeft
   }
 
-  implicit val eoriNumberFormat: Format[EORINumber.type] = objectJsonFormat(EORINumber)
-  implicit val format: Format[IdentifierKey] = Json.format[IdentifierKey]
+  implicit object Format extends Format[IdentifierKey] {
+    override def writes(o: IdentifierKey): JsValue = JsString(o.value)
+    override def reads(json: JsValue): JsResult[IdentifierKey] = json match {
+      case JsString(value) =>
+        IdentifierKey
+          .fromValue(value)
+          .fold(
+            JsError(_),
+            JsSuccess(_)
+          )
+      case other => JsError(s"expected a json string for identifier key but got $other")
+    }
+  }
 }
