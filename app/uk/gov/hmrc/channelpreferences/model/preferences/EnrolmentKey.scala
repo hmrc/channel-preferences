@@ -45,7 +45,18 @@ object EnrolmentKey {
     case other                   => s"EnrolmentKey: $other, not found".asLeft
   }
 
-  implicit val customsServiceKeyFormat: Format[CustomsServiceKey.type] = objectJsonFormat(CustomsServiceKey)
+  implicit object Format extends Format[EnrolmentKey] {
+    override def writes(o: EnrolmentKey): JsValue = JsString(o.value)
 
-  implicit val format: Format[EnrolmentKey] = Json.format[EnrolmentKey]
+    override def reads(json: JsValue): JsResult[EnrolmentKey] = json match {
+      case JsString(value) =>
+        EnrolmentKey
+          .fromValue(value)
+          .fold(
+            JsError(_),
+            JsSuccess(_)
+          )
+      case other => JsError(s"expected a json string for enrolment key but got $other")
+    }
+  }
 }
