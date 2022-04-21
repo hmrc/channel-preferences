@@ -18,13 +18,15 @@ package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, OFormat }
+import uk.gov.hmrc.channelpreferences.controllers.model.Consent
 
 case class Preference(
   id: PreferenceId,
   enrolment: Enrolment,
   created: Created,
   consents: NonEmptyList[Consent],
-  emailPreferences: List[EmailPreference]
+  emailPreferences: List[EmailPreference],
+  status: Status
 )
 
 object Preference {

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 import play.api.mvc.PathBindable
 
 sealed trait Index {
@@ -29,8 +29,18 @@ case object PrimaryIndex extends Index {
 }
 
 object Index {
-  implicit val primaryIndexFormat: Format[PrimaryIndex.type] = objectJsonFormat(PrimaryIndex)
-  implicit val IndexFormat: Format[Index] = Json.format[Index]
+  implicit object Format extends Format[Index] {
+    override def writes(o: Index): JsValue = JsString(o.name)
+
+    override def reads(json: JsValue): JsResult[Index] = json match {
+      case JsString(name) =>
+        name match {
+          case PrimaryIndex.name => JsSuccess(PrimaryIndex)
+          case other             => JsError(s"unsupported index type $other")
+        }
+      case other => JsError(s"expected a json string for index but got $other")
+    }
+  }
 
   implicit def indexBinder(implicit stringBinder: PathBindable[String]): PathBindable[Index] =
     new PathBindable[Index] {

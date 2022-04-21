@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model.preferences
+package uk.gov.hmrc.channelpreferences.repository.model
 
-import play.api.libs.json.{ Json, OFormat }
-import uk.gov.hmrc.channelpreferences.controllers.model.Version
+import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.{ JsSuccess, Json }
+import uk.gov.hmrc.channelpreferences.model.preferences.Preference
 
-case class Consent(
-  consentType: ConsentType,
-  status: ConsentStatus,
-  updated: Updated,
-  version: Version,
-  purposes: List[Purpose]
-)
+class PreferenceSpec extends PlaySpec with TestModels {
 
-object Consent {
-  implicit val format: OFormat[Consent] = Json.format[Consent]
+  "it" must {
+    "be isomorphic" in {
+      val json = Json.toJson(preference)
+      json.as[Preference] mustBe preference
+      preferenceJson.validate[Preference] mustBe JsSuccess(preference)
+    }
+  }
 }

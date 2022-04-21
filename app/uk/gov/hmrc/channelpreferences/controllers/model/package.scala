@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.repository.model
+package uk.gov.hmrc.channelpreferences.controllers
 
-import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsonConfiguration.Aux
+import play.api.libs.json.{ Json, JsonConfiguration, JsonNaming }
 
-class ManagementSpec extends PlaySpec with TestModels {
-
-  "read" must {
-    "successfully parse from json" in {
-      managementJson.validate[Management] mustBe JsSuccess(management)
-    }
-  }
+package object model {
+  implicit val jsonConfiguration: Aux[Json.MacroOptions] = JsonConfiguration(
+    discriminator = "type",
+    typeNaming = JsonNaming(_.split("\\.").last)
+  )
 }

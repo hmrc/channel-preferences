@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 
 sealed trait Purpose {
   val name: String
@@ -27,7 +27,16 @@ case object DigitalCommunicationsPurpose extends Purpose {
 }
 
 object Purpose {
-  implicit val digitalCommunicationsPurposeFormat: Format[DigitalCommunicationsPurpose.type] = objectJsonFormat(
-    DigitalCommunicationsPurpose)
-  implicit val purposeFormat: Format[Purpose] = Json.format[Purpose]
+  implicit object Format extends Format[Purpose] {
+    override def writes(o: Purpose): JsValue = JsString(o.name)
+
+    override def reads(json: JsValue): JsResult[Purpose] = json match {
+      case JsString(name) =>
+        name match {
+          case DigitalCommunicationsPurpose.name => JsSuccess(DigitalCommunicationsPurpose)
+          case other                             => JsError(s"unsupported purpose $other")
+        }
+      case other => JsError(s"expected a json string for purpose but got $other")
+    }
+  }
 }

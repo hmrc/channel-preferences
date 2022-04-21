@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 
 sealed trait ConsentType {
   val name: String
@@ -27,6 +27,16 @@ case object DefaultConsentType extends ConsentType {
 }
 
 object ConsentType {
-  implicit val defaultContentTypeFormat: Format[DefaultConsentType.type] = objectJsonFormat(DefaultConsentType)
-  implicit val consentTypeFormat: Format[ConsentType] = Json.format[ConsentType]
+  implicit object Format extends Format[ConsentType] {
+    override def writes(o: ConsentType): JsValue = JsString(o.name)
+
+    override def reads(json: JsValue): JsResult[ConsentType] = json match {
+      case JsString(name) =>
+        name match {
+          case DefaultConsentType.name => JsSuccess(DefaultConsentType)
+          case other                   => JsError(s"unsupported consent type $other")
+        }
+      case other => JsError(s"expected a json string for consent type but got $other")
+    }
+  }
 }

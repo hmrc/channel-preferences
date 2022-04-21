@@ -37,8 +37,8 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
       domainFormat = ContextPayload.contextPayloadFormat,
       indexes = Seq(
         IndexModel(
-          ascending("key"),
-          IndexOptions().name("keyIndex")
+          ascending("contextId"),
+          IndexOptions().name("contextIdIndex")
         ),
         IndexModel(
           ascending("expiry"),
@@ -52,13 +52,13 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
     collection.insertOne(contextPayload).toFuture()
 
   def updateContext(contextPayload: ContextPayload): Future[UpdateResult] =
-    collection.replaceOne(equal("key", contextPayload.contextId), contextPayload).toFuture()
+    collection.replaceOne(equal("contextId", contextPayload.contextId.value), contextPayload).toFuture()
 
   def deleteContext(key: String): Future[DeleteResult] =
-    collection.deleteOne(equal("key", key)).toFuture()
+    collection.deleteOne(equal("contextId", key)).toFuture()
 
   def findContext(key: String): Future[Option[ContextPayload]] =
     collection
-      .find(equal("key", key))
+      .find(equal("contextId", key))
       .headOption()
 }

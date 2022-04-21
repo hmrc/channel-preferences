@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.{ Json, OFormat }
+import play.api.libs.json.{ Format, JsError, JsObject, JsResult, JsValue, Json, OFormat }
 import uk.gov.hmrc.channelpreferences.model.preferences.Preference
 
 sealed trait ContextualPreference
@@ -47,5 +47,23 @@ object PreferenceWithContext {
 }
 
 object ContextualPreference {
-  implicit val format: OFormat[ContextualPreference] = Json.format[ContextualPreference]
+  implicit object Format extends Format[ContextualPreference] {
+    override def writes(o: ContextualPreference): JsValue = o match {
+      case p: PreferenceWithoutContext => PreferenceWithoutContext.format.writes(p)
+      case c: PreferenceContext        => PreferenceContext.format.writes(c)
+      case pc: PreferenceWithContext   => PreferenceWithContext.format.writes(pc)
+    }
+
+    override def reads(json: JsValue): JsResult[ContextualPreference] = json match {
+      case JsObject(value) =>
+        if (value.contains("contexts")) {
+          PreferenceWithContext.format.reads(json)
+        } else if (value.contains("preference")) {
+          PreferenceWithoutContext.format.reads(json)
+        } else {
+          PreferenceContext.format.reads(json)
+        }
+      case other => JsError(s"expected a json object for contextual preference but got $other")
+    }
+  }
 }

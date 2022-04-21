@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 
 sealed trait ContentType {
   val name: String
@@ -27,6 +27,16 @@ case object TextPlain extends ContentType {
 }
 
 object ContentType {
-  implicit val textPlainFormat: Format[TextPlain.type] = objectJsonFormat(TextPlain)
-  implicit val contentTypeFormat: Format[ContentType] = Json.format[ContentType]
+  implicit object Format extends Format[ContentType] {
+    override def writes(o: ContentType): JsValue = JsString(o.name)
+
+    override def reads(json: JsValue): JsResult[ContentType] = json match {
+      case JsString(name) =>
+        name match {
+          case TextPlain.name => JsSuccess(TextPlain)
+          case other          => JsError(s"unsupported content type $other")
+        }
+      case other => JsError(s"expected a json string for content type but got $other")
+    }
+  }
 }

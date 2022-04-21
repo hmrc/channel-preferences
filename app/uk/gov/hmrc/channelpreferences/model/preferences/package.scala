@@ -16,9 +16,15 @@
 
 package uk.gov.hmrc.channelpreferences.model
 
-import play.api.libs.json.{ Format, JsError, JsObject, JsSuccess, Json }
+import play.api.libs.json.JsonConfiguration.Aux
+import play.api.libs.json.{ Format, JsError, JsObject, JsSuccess, Json, JsonConfiguration, JsonNaming }
 
 package object preferences {
+  implicit val jsonConfiguration: Aux[Json.MacroOptions] = JsonConfiguration(
+    discriminator = "type",
+    typeNaming = JsonNaming(_.split("\\.").last)
+  )
+
   def objectJsonFormat[A](value: A): Format[A] = Format[A](
     {
       case JsObject(_) => JsSuccess(value)

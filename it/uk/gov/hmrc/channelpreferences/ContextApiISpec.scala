@@ -121,7 +121,7 @@ class ContextApiISpec extends ISpec {
           .futureValue
 
       response.status mustBe Status.OK
-      response.json.validate[ContextPayload].get.key mustBe "61ea7c5951d7a42da4fd4608"
+      response.json.validate[ContextPayload].get.contextId.value mustBe "61ea7c5951d7a42da4fd4608"
     }
   }
 

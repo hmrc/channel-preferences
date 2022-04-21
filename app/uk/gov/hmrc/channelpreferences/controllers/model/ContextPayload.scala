@@ -27,6 +27,5 @@ case class ContextPayload(
 )
 
 object ContextPayload {
-  implicit val contextReadsFormat: Format[Context] = Json.format[Context]
   implicit val contextPayloadFormat: Format[ContextPayload] = Json.format[ContextPayload]
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.parallel._
 import cats.syntax.either._
-import play.api.libs.json.{ Json, OFormat }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat }
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
 
@@ -27,7 +27,7 @@ sealed trait Enrolment {
   val identifierKey: IdentifierKey
   val identifierValue: IdentifierValue
 
-  final def value: String = s"$enrolmentKey~$identifierKey~$identifierValue"
+  final def value: String = s"${enrolmentKey.value}~${identifierKey.value}~${identifierValue.value}"
 }
 
 case class CustomsServiceEnrolment(
@@ -43,7 +43,18 @@ object CustomsServiceEnrolment {
 
 object Enrolment {
   val Separator = "~"
-  implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
+  implicit object Format extends Format[Enrolment] {
+    override def writes(o: Enrolment): JsValue = JsString(o.value)
+
+    override def reads(json: JsValue): JsResult[Enrolment] = json match {
+      case JsString(value) =>
+        fromValue(value).fold(
+          preferencesError => JsError(preferencesError.message),
+          JsSuccess(_)
+        )
+      case json => JsError(s"expected a json string value for Enrolment, but got $json")
+    }
+  }
 
   def fromValue(value: String): Either[PreferenceError, Enrolment] =
     value.split(Separator) match {
