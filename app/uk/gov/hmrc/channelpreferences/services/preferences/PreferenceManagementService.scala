@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.services
+package uk.gov.hmrc.channelpreferences.services.preferences
 
 import cats.syntax.either._
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, PreferenceContext, Verification, VerificationId, Version }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, ConsentStatus, DefaultConsentType }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ DigitalCommunicationsPurpose, Enrolment, Index, PreferenceError, Updated }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, ConsentStatus, DefaultConsentType, DigitalCommunicationsPurpose, Enrolment, Index, PreferenceError, Updated }
 
 import java.time.Instant
 import scala.concurrent.Future

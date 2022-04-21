@@ -22,8 +22,7 @@ import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, Verification, VerificationId }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences._
-import uk.gov.hmrc.channelpreferences.services.PreferenceManagementService
-import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
+import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceManagementService, PreferenceResolver }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
