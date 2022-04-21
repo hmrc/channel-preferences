@@ -66,7 +66,9 @@ trait TestModels extends EitherValues {
 
   val contextJson: JsValue = Json.parse("""
                                           |{
-                                          |  "contextId" : "HMRC-CUS-ORG~EORINumber~GB123456789",
+                                          |  "contextId" : {
+                                          |    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
+                                          |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {
                                           |    "consentType" : "Default",

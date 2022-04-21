@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import cats.syntax.either._
-import cats.syntax.parallel._
-import play.api.libs.json.JsonConfiguration.Aux
-import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, JsonConfiguration, JsonNaming }
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, Enrolment, Index }
+import play.api.libs.json._
+import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, Index }
 
 sealed trait ContextId {
   def value: String
@@ -34,74 +31,35 @@ case class EnrolmentContextId(
 }
 
 object EnrolmentContextId {
-  implicit object EnrolmentContextIdFormat extends Format[EnrolmentContextId] {
-    override def writes(o: EnrolmentContextId): JsValue = JsString(o.enrolment.value)
-
-    override def reads(json: JsValue): JsResult[EnrolmentContextId] = json match {
-      case JsString(value) =>
-        Enrolment
-          .fromValue(value)
-          .fold(
-            preferenceError => JsError(preferenceError.message),
-            enrolment => JsSuccess(EnrolmentContextId(enrolment))
-          )
-
-      case otherJsValue => JsError(s"expected a json string for enrolment context id but got, $otherJsValue")
-    }
-  }
+  implicit val format: OFormat[EnrolmentContextId] = Json.format[EnrolmentContextId]
 }
 
 case class IndexedEnrolmentContextId(
-  channelledEnrolment: ChannelledEnrolment,
+  enrolment: Enrolment,
+  channel: Channel,
   index: Index
 ) extends ContextId {
-  override def value: String = IndexedEnrolmentContextId.value(this)
+  override def value: String =
+    s"${enrolment.value}${Enrolment.Separator}${channel.name}${Enrolment.Separator}${index.name}"
 }
 
 object IndexedEnrolmentContextId {
-  def value(indexedEnrolmentContextId: IndexedEnrolmentContextId): String =
-    s"${ChannelledEnrolment.value(indexedEnrolmentContextId.channelledEnrolment)}${Enrolment.Separator}${indexedEnrolmentContextId.index.name}"
-
-  implicit object IndexedEnrolmentContextIdFormat extends Format[IndexedEnrolmentContextId] {
-    override def writes(o: IndexedEnrolmentContextId): JsValue = JsString(value(o))
-
-    override def reads(json: JsValue): JsResult[IndexedEnrolmentContextId] = json match {
-      case JsString(value) =>
-        value.split(Enrolment.Separator) match {
-          case Array(enrolmentKey, identifierKey, identifierValue, channelValue, indexValue) =>
-            val channelledEnrolment =
-              ChannelledEnrolment.fromQuad(enrolmentKey, identifierKey, identifierValue, channelValue)
-            val index = Index.fromValue(indexValue).leftMap(ParseError)
-
-            (channelledEnrolment, index)
-              .parMapN(IndexedEnrolmentContextId.apply)
-              .fold(
-                preferenceError => JsError(preferenceError.message),
-                JsSuccess(_)
-              )
-
-          case anotherShape =>
-            JsError(s"expected 5 values for a indexed channelled enrolment, but got ${anotherShape.mkString(" | ")}")
-        }
-      case otherJsValue =>
-        JsError(s"expected a json string for indexed channelled enrolment context id but got, $otherJsValue")
-    }
-  }
+  implicit val format: OFormat[IndexedEnrolmentContextId] =
+    Json.format[IndexedEnrolmentContextId]
 }
 
 object ContextId {
-  implicit val jsonConfiguration: Aux[Json.MacroOptions] = JsonConfiguration(
-    discriminator = "type",
-    typeNaming = JsonNaming(_.split("\\.").last)
-  )
   implicit object Format extends Format[ContextId] {
-    override def writes(o: ContextId): JsValue = JsString(o.value)
+    override def writes(o: ContextId): JsValue = o match {
+      case e: EnrolmentContextId        => EnrolmentContextId.format.writes(e)
+      case i: IndexedEnrolmentContextId => IndexedEnrolmentContextId.format.writes(i)
+    }
 
     override def reads(json: JsValue): JsResult[ContextId] =
-      IndexedEnrolmentContextId.IndexedEnrolmentContextIdFormat
+      IndexedEnrolmentContextId.format
         .reads(json)
         .orElse(
-          EnrolmentContextId.EnrolmentContextIdFormat.reads(json)
+          EnrolmentContextId.format.reads(json)
         )
   }
 }

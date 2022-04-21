@@ -24,8 +24,10 @@ class ContextApiISpec extends ISpec {
   "POST to /channel-preferences/context endpoint" should {
     "work with valid payload" in {
       val postData = s"""
-                        {
-                        |  "contextId" : "HMRC-CUS-ORG~EORINumber~GB123456789",
+                        |{
+                        |  "contextId" : {
+                        |    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
+                        |  },
                         |  "expiry" : "1987-03-20T14:33:48.00064",
                         |  "context" : {
                         |    "consentType" : "Default",
@@ -54,8 +56,10 @@ class ContextApiISpec extends ISpec {
   "PUT to /channel-preferences/context/:key endpoint" should {
     "work with valid payload" in {
       val putData = s"""
-                       {
-                       |  "contextId" : "HMRC-CUS-ORG~EORINumber~GB123456789",
+                       |{
+                       |  "contextId" : {
+                       |    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
+                       |  },
                        |  "expiry" : "1987-03-20T14:33:48.00064",
                        |  "context" : {
                        |    "consentType" : "Default",
@@ -72,7 +76,7 @@ class ContextApiISpec extends ISpec {
       """.stripMargin
       val response =
         wsClient
-          .url(resource(s"/channel-preferences/context/61ea7c5951d7a42da4fd4608"))
+          .url(resource(s"/channel-preferences/context/HMRC-CUS-ORG~EORINumber~GB123456789"))
           .withHttpHeaders(("Content-Type" -> "application/json"))
           .put(putData)
           .futureValue
