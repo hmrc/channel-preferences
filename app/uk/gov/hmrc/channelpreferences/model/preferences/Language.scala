@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 
 sealed trait Language {
   val name: String
@@ -31,7 +31,17 @@ case object WelshLanguage extends Language {
 }
 
 object Language {
-  implicit val englishLanguageFormat: Format[EnglishLanguage.type] = objectJsonFormat(EnglishLanguage)
-  implicit val welshLanguageFormat: Format[WelshLanguage.type] = objectJsonFormat(WelshLanguage)
-  implicit val languageFormat: Format[Language] = Json.format[Language]
+  implicit object Format extends Format[Language] {
+    override def writes(o: Language): JsValue = JsString(o.name)
+
+    override def reads(json: JsValue): JsResult[Language] = json match {
+      case JsString(name) =>
+        name match {
+          case EnglishLanguage.name => JsSuccess(EnglishLanguage)
+          case WelshLanguage.name   => JsSuccess(WelshLanguage)
+          case other                => JsError(s"unsupported language $other")
+        }
+      case other => JsError(s"expected a json string for language but got $other")
+    }
+  }
 }

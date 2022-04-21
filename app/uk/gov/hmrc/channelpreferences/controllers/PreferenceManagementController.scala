@@ -30,7 +30,6 @@ import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class PreferenceManagementController @Inject()(
-  preferenceManagementService: PreferenceManagementService,
   controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents) {
@@ -52,7 +51,7 @@ class PreferenceManagementController @Inject()(
     (for {
       enrolment <- EitherT.fromEither[Future](
                     PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue))
-      preference <- EitherT(preferenceManagementService.updateConsent(enrolment, consent))
+      preference <- EitherT(PreferenceManagementService.updateConsent(enrolment, consent))
     } yield preference).value
 
   def verify(

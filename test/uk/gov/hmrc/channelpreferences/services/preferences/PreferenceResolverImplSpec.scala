@@ -25,7 +25,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.channelpreferences.model.cds.{ Email, Phone }
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
-import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, IdentifierValue }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, CustomsServiceEnrolment, IdentifierValue }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -36,27 +36,28 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
 
   it should "resolve a preference for a customs enrolment" in new Scope {
     preferenceResolverImpl
-      .resolveChannelPreferenceForEnrolment(customsServiceEnrolment)
+      .resolveChannelPreference(channelledEnrolment)
       .futureValue shouldBe JsObject.empty.asRight
   }
 
   it should "return a preferences error from a provider" in new Scope {
     private val error = UnsupportedChannelError(Phone)
-    customsDataStorePreferenceProvider.getChannelPreference(customsServiceEnrolment) returns Future.successful(
+    customsDataStorePreferenceProvider.getChannelPreference(customsServiceEnrolment, Phone) returns Future.successful(
       error.asLeft)
 
     preferenceResolverImpl
-      .resolveChannelPreferenceForEnrolment(customsServiceEnrolment)
+      .resolveChannelPreference(channelledEnrolment.copy(channel = Phone))
       .futureValue shouldBe error.asLeft
   }
 
   trait Scope {
     val customsDataStorePreferenceProvider: CustomsDataStorePreferenceProvider =
       mock[CustomsDataStorePreferenceProvider]
-    val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(IdentifierValue("foo"), Email)
+    val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(IdentifierValue("foo"))
+    val channelledEnrolment: ChannelledEnrolment = ChannelledEnrolment(customsServiceEnrolment, Email)
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-    customsDataStorePreferenceProvider.getChannelPreference(customsServiceEnrolment) returns Future.successful(
+    customsDataStorePreferenceProvider.getChannelPreference(customsServiceEnrolment, Email) returns Future.successful(
       JsObject.empty.asRight)
 
     val preferenceResolverImpl: PreferenceResolverImpl = new PreferenceResolverImpl(

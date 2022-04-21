@@ -50,7 +50,7 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
           .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
       status(result) mustBe Status.CREATED
-      contentAsString(result) mustBe "61ea7c5951d7a42da4fd4608"
+      contentAsString(result) mustBe "HMRC-CUS-ORG~EORINumber~GB123456789"
     }
 
     "return status Bad Request" in new TestClass {
@@ -66,7 +66,7 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
           .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
       status(result) mustBe Status.BAD_REQUEST
-      contentAsString(result) mustBe "Context 61ea7c5951d7a42da4fd4608 could not be created"
+      contentAsString(result) mustBe "Context HMRC-CUS-ORG~EORINumber~GB123456789 could not be created"
     }
   }
 
@@ -86,7 +86,7 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
           .apply(FakeRequest("PUT", "", Headers("Content-Type" -> "application/json"), payload))
 
       status(result) mustBe Status.OK
-      contentAsString(result) mustBe "61ea7c5951d7a42da4fd4608 updated with id 61ea7c5951d7a42da4fd4608"
+      contentAsString(result) mustBe "HMRC-CUS-ORG~EORINumber~GB123456789 updated with id 61ea7c5951d7a42da4fd4608"
     }
 
     "return status Bad Request" in new TestClass {
@@ -99,11 +99,11 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
 
       val result =
         controller
-          .update("61ea7c5951d7a42da4fd4608")
+          .update("HMRC-CUS-ORG~EORINumber~GB123456789")
           .apply(FakeRequest("PUT", "", Headers("Content-Type" -> "application/json"), payload))
 
       status(result) mustBe Status.BAD_REQUEST
-      contentAsString(result) mustBe "Context 61ea7c5951d7a42da4fd4608 with id: 61ea7c5951d7a42da4fd4608 could not be updated"
+      contentAsString(result) mustBe "Context HMRC-CUS-ORG~EORINumber~GB123456789 with id: HMRC-CUS-ORG~EORINumber~GB123456789 could not be updated"
     }
   }
 
@@ -119,12 +119,11 @@ class ContextControllerSpec extends PlaySpec with ScalaFutures with IdiomaticMoc
       val controller = new ContextController(contextServiceMock, Helpers.stubControllerComponents())
       val result =
         controller
-          .get("61ea7c5951d7a42da4fd4608")
+          .get("HMRC-CUS-ORG~EORINumber~GB123456789")
           .apply(FakeRequest("GET", "/channel-preferences/context/:key"))
       status(result) mustBe Status.OK
       val contextResponse = contentAsJson(result).validate[ContextPayload].get
-      contextResponse.key mustBe "61ea7c5951d7a42da4fd4608"
-      contextResponse.resourcePath mustBe "email[index=primary]"
+      contextResponse.contextId.value mustBe "HMRC-CUS-ORG~EORINumber~GB123456789"
     }
 
     "return status Bad Request" in new TestClass {

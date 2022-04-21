@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.{ Format, Json, OFormat }
+import play.api.libs.json._
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
 
 sealed trait Context
@@ -53,5 +53,23 @@ object ConfirmationContext {
 }
 
 object Context {
-  implicit val format: Format[Context] = Json.format[Context]
+  implicit object Format extends Format[Context] {
+    override def writes(o: Context): JsValue = o match {
+      case c: Consent             => Consent.format.writes(c)
+      case v: VerificationContext => VerificationContext.format.writes(v)
+      case c: ConfirmationContext => ConfirmationContext.format.writes(c)
+    }
+
+    override def reads(json: JsValue): JsResult[Context] = json match {
+      case JsObject(value) =>
+        if (value.contains("confirm")) {
+          ConfirmationContext.format.reads(json)
+        } else if (value.contains("verification")) {
+          VerificationContext.format.reads(json)
+        } else {
+          Consent.format.reads(json)
+        }
+      case other => JsError(s"expected json object for Context but got $other")
+    }
+  }
 }

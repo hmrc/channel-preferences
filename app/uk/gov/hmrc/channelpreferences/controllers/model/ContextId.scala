@@ -18,7 +18,8 @@ package uk.gov.hmrc.channelpreferences.controllers.model
 
 import cats.syntax.either._
 import cats.syntax.parallel._
-import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json }
+import play.api.libs.json.JsonConfiguration.Aux
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, JsonConfiguration, JsonNaming }
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, Enrolment, Index }
 
@@ -89,5 +90,18 @@ object IndexedEnrolmentContextId {
 }
 
 object ContextId {
-  implicit val format: Format[ContextId] = Json.format[ContextId]
+  implicit val jsonConfiguration: Aux[Json.MacroOptions] = JsonConfiguration(
+    discriminator = "type",
+    typeNaming = JsonNaming(_.split("\\.").last)
+  )
+  implicit object Format extends Format[ContextId] {
+    override def writes(o: ContextId): JsValue = JsString(o.value)
+
+    override def reads(json: JsValue): JsResult[ContextId] =
+      IndexedEnrolmentContextId.IndexedEnrolmentContextIdFormat
+        .reads(json)
+        .orElse(
+          EnrolmentContextId.EnrolmentContextIdFormat.reads(json)
+        )
+  }
 }

@@ -37,7 +37,7 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
         .store(context)
         .map {
           case Right(_: ContextStoreAcknowledged) => Created(context.contextId.value)
-          case _                                  => BadRequest(s"Context ${context.contextId} could not be created")
+          case _                                  => BadRequest(s"Context ${context.contextId.value} could not be created")
         }
     }
   }
@@ -56,8 +56,8 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
       contextService
         .replace(context)
         .map {
-          case Right(_: ContextStoreAcknowledged) => Ok(s"${context.contextId} updated with id $id")
-          case _                                  => BadRequest(s"Context ${context.contextId} with id: $id could not be updated")
+          case Right(_: ContextStoreAcknowledged) => Ok(s"${context.contextId.value} updated with id $id")
+          case _                                  => BadRequest(s"Context ${context.contextId.value} with id: $id could not be updated")
         }
     }
   }
