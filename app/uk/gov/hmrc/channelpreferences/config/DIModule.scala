@@ -16,30 +16,18 @@
 
 package uk.gov.hmrc.channelpreferences.config
 
-import com.google.inject.{ AbstractModule, Provides, Singleton }
-
-import scala.concurrent.ExecutionContext
+import com.google.inject.AbstractModule
 import com.google.inject.name.Names.named
 import com.typesafe.config.ConfigException
 import play.api.{ Configuration, Environment }
-import uk.gov.hmrc.channelpreferences.repository.ContextRepository
 import uk.gov.hmrc.channelpreferences.services.preferences.{ ContextService, ContextServiceImpl, PreferenceResolver, PreferenceResolverImpl }
-import uk.gov.hmrc.mongo.MongoComponent
 
 class DIModule(environment: Environment, configuration: Configuration) extends AbstractModule {
 
-  override def configure(): Unit =
+  override def configure(): Unit = {
     bind(classOf[PreferenceResolver]).to(classOf[PreferenceResolverImpl]).asEagerSingleton()
-
-  @Provides
-  @Singleton
-  def contextRepository(mongoComponent: MongoComponent)(implicit ec: ExecutionContext): ContextRepository =
-    new ContextRepository(mongoComponent)
-
-  @Provides
-  @Singleton
-  def contextService(contextRepository: ContextRepository)(implicit ec: ExecutionContext): ContextService =
-    new ContextServiceImpl(contextRepository)
+    bind(classOf[ContextService]).to(classOf[ContextServiceImpl]).asEagerSingleton()
+  }
 
   protected def bindString(path: String, name: String): Unit =
     bindConstant()
