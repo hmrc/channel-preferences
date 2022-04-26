@@ -85,7 +85,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.findContext(*[String]) returns Future.successful(Some(contextPayload))
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result: Either[ContextStorageError, ContextPayload] = contextService.retrieve(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextPayload] = contextService.retrieve(enrolmentValue).futureValue
       result.isRight mustBe true
       result.right.get mustBe contextPayload
     }
@@ -95,7 +95,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.findContext(*[String]) returns Future.successful(Option.empty)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result: Either[ContextStorageError, ContextPayload] = contextService.retrieve(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextPayload] = contextService.retrieve(enrolmentValue).futureValue
       result.isLeft mustBe true
     }
   }
@@ -108,7 +108,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.deleteContext(*[String]) returns Future.successful(deleteResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.remove(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.remove(enrolmentValue).futureValue
       result.isRight mustBe true
     }
 
@@ -118,7 +118,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.deleteContext(*[String]) returns Future.successful(deleteResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.remove(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.remove(enrolmentValue).futureValue
       result.isLeft mustBe true
     }
   }

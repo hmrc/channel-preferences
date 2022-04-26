@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.channelpreferences.repository.model
 
-import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{ JsSuccess, Json }
+import play.api.libs.json.{ Format, Json }
+import uk.gov.hmrc.channelpreferences.model.preferences.Preference
 
-class PreferenceSpec extends PlaySpec with TestModels {
+case class PreferenceDocument(
+  id: PreferenceId,
+  preference: Preference
+)
 
-  "it" must {
-    "be isomorphic" in {
-      val json = Json.toJson(preferenceDocument)
-      println(Json.prettyPrint(json))
-      json.as[PreferenceDocument] mustBe preferenceDocument
-      preferenceDocumentJson.validate[PreferenceDocument] mustBe JsSuccess(preferenceDocument)
-    }
-  }
+object PreferenceDocument {
+  implicit val format: Format[PreferenceDocument] = Json.format[PreferenceDocument]
 }

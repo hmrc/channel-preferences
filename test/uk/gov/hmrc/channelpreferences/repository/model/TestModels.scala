@@ -17,6 +17,7 @@
 package uk.gov.hmrc.channelpreferences.repository.model
 
 import cats.data.NonEmptyList
+import org.mongodb.scala.bson.ObjectId
 import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextPayload, EnrolmentContextId, VerificationId, Version }
@@ -28,10 +29,10 @@ import java.util.UUID
 trait TestModels extends EitherValues {
 
   val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
-  val keyIdentifier = "HMRC-CUS-ORG~EORINumber~GB123456789";
-  val preferenceId: UUID = UUID.randomUUID()
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
+  val enrolmentValue = "HMRC-CUS-ORG~EORINumber~GB123456789"
+
   val email: EmailPreference = EmailPreference(
     index = PrimaryIndex,
     email = EmailAddress("test@test.com"),
@@ -47,17 +48,24 @@ trait TestModels extends EitherValues {
     version = version,
     purposes = purposes
   )
+
+  val preferenceId: PreferenceId = PreferenceId(new ObjectId)
+
   val preference: Preference = Preference(
-    id = PreferenceId(preferenceId),
-    enrolment = Enrolment.fromValue("HMRC-CUS-ORG~EORINumber~GB123456789").right.value,
+    enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
     created = Created(timestamp.toInstant(ZoneOffset.UTC)),
     consents = NonEmptyList.of(managementConsent),
     emailPreferences = List(email),
     status = Active
   )
 
+  val preferenceDocument: PreferenceDocument = PreferenceDocument(
+    preferenceId,
+    preference
+  )
+
   val contextPayload: ContextPayload = ContextPayload(
-    EnrolmentContextId(Enrolment.fromValue("HMRC-CUS-ORG~EORINumber~GB123456789").right.value),
+    EnrolmentContextId(Enrolment.fromValue(enrolmentValue).right.value),
     timestamp,
     managementConsent
   )
@@ -84,32 +92,36 @@ trait TestModels extends EitherValues {
                                           |}
                                           |""".stripMargin)
 
-  val preferenceJson: JsValue = Json.parse(s"""
-                                              |{
-                                              |  "id" : "$preferenceId",
-                                              |  "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789",
-                                              |  "created" : "1987-03-20T14:33:48.000640Z",
-                                              |  "consents" : [ {
-                                              |    "consentType" : "Default",
-                                              |    "status" : true,
-                                              |    "updated" : "1987-03-20T14:33:48.000640Z",
-                                              |    "version" : {
-                                              |      "major" : 1,
-                                              |      "minor" : 1,
-                                              |      "patch" : 1
-                                              |    },
-                                              |    "purposes" : [ "DigitalCommunications" ]
-                                              |  } ],
-                                              |  "emailPreferences" : [ {
-                                              |    "index" : "Primary",
-                                              |    "email" : "test@test.com",
-                                              |    "contentType" : "text/plain",
-                                              |    "language" : "en",
-                                              |    "contactable" : true,
-                                              |    "purposes" : [ "DigitalCommunications" ]
-                                              |  } ],
-                                              |  "status" : "Active"
-                                              |}
-                                              |""".stripMargin)
+  val preferenceDocumentJson: JsValue = Json.parse(s"""
+                                                      {
+                                                      |  "id" : {
+                                                      |    "$$oid" : "${preferenceId.value.toString}"
+                                                      |  },
+                                                      |  "preference" : {
+                                                      |    "enrolments" : [ "HMRC-CUS-ORG~EORINumber~GB123456789" ],
+                                                      |    "created" : "1987-03-20T14:33:48.000640Z",
+                                                      |    "consents" : [ {
+                                                      |      "consentType" : "Default",
+                                                      |      "status" : true,
+                                                      |      "updated" : "1987-03-20T14:33:48.000640Z",
+                                                      |      "version" : {
+                                                      |        "major" : 1,
+                                                      |        "minor" : 1,
+                                                      |        "patch" : 1
+                                                      |      },
+                                                      |      "purposes" : [ "DigitalCommunications" ]
+                                                      |    } ],
+                                                      |    "emailPreferences" : [ {
+                                                      |      "index" : "Primary",
+                                                      |      "email" : "test@test.com",
+                                                      |      "contentType" : "text/plain",
+                                                      |      "language" : "en",
+                                                      |      "contactable" : true,
+                                                      |      "purposes" : [ "DigitalCommunications" ]
+                                                      |    } ],
+                                                      |    "status" : "Active"
+                                                      |  }
+                                                      |}
+                                                      |""".stripMargin)
 
 }

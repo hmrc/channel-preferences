@@ -27,11 +27,9 @@ import java.util.UUID
 trait TestModels extends EitherValues {
 
   val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
-  val keyIdentifier = "61ea7c5951d7a42da4fd4608";
-  val preferenceId: UUID = UUID.randomUUID()
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
-
+  val enrolmentValue = "HMRC-CUS-ORG~EORINumber~GB123456789"
   val email: EmailPreference = EmailPreference(
     index = PrimaryIndex,
     email = EmailAddress("test@test.com"),
@@ -47,9 +45,9 @@ trait TestModels extends EitherValues {
     version = version,
     purposes = purposes
   )
+
   val preference: Preference = Preference(
-    id = PreferenceId(preferenceId),
-    enrolment = Enrolment.fromValue("HMRC-CUS-ORG~EORINumber~GB123456789").right.value,
+    enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
     created = Created(timestamp.toInstant(ZoneOffset.UTC)),
     consents = NonEmptyList.of(managementConsent),
     emailPreferences = List(email),
@@ -57,7 +55,7 @@ trait TestModels extends EitherValues {
   )
 
   val contextPayload: ContextPayload = ContextPayload(
-    EnrolmentContextId(Enrolment.fromValue("HMRC-CUS-ORG~EORINumber~GB123456789").right.value),
+    EnrolmentContextId(Enrolment.fromValue(enrolmentValue).right.value),
     timestamp,
     managementConsent
   )
@@ -86,8 +84,7 @@ trait TestModels extends EitherValues {
 
   val preferenceJson: JsValue = Json.parse(s"""
                                               |{
-                                              |  "id" : "$preferenceId",
-                                              |  "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789",
+                                              |  "enrolments" : [ "HMRC-CUS-ORG~EORINumber~GB123456789" ],
                                               |  "created" : "1987-03-20T14:33:48.000640Z",
                                               |  "consents" : [ {
                                               |    "consentType" : "Default",

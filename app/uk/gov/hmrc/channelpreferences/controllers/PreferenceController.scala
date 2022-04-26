@@ -19,14 +19,14 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
 import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue }
+import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
@@ -60,8 +60,13 @@ class PreferenceController @Inject()(
     Action.async { implicit request =>
       preferenceService
         .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
-        .map(toJsResult)
+        .map(toResult)
     }
+
+  def toResult(eitherResult: Either[PreferenceError, JsValue]): Result = eitherResult.fold(
+    PreferenceError.toResult,
+    result => Ok(Json.toJson(result))
+  )
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>

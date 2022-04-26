@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model.preferences
+package uk.gov.hmrc.channelpreferences.repository.model
 
+import org.mongodb.scala.bson.ObjectId
 import play.api.libs.json.{ Format, Json }
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats.objectIdFormat
 
-import java.util.UUID
-
-case class PreferenceId(value: UUID) extends AnyVal
+case class PreferenceId(value: ObjectId) extends AnyVal
 
 object PreferenceId {
+  implicit val idFormat: Format[ObjectId] = objectIdFormat
   implicit val format: Format[PreferenceId] = Json.valueFormat[PreferenceId]
 }
