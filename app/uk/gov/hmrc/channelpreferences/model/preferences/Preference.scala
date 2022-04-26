@@ -21,8 +21,7 @@ import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json,
 import uk.gov.hmrc.channelpreferences.controllers.model.Consent
 
 case class Preference(
-  id: PreferenceId,
-  enrolment: Enrolment,
+  enrolments: NonEmptyList[Enrolment],
   created: Created,
   consents: NonEmptyList[Consent],
   emailPreferences: List[EmailPreference],

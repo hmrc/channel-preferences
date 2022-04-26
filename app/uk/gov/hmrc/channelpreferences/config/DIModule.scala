@@ -23,13 +23,15 @@ import com.google.inject.name.Names.named
 import com.typesafe.config.ConfigException
 import play.api.{ Configuration, Environment }
 import uk.gov.hmrc.channelpreferences.repository.ContextRepository
-import uk.gov.hmrc.channelpreferences.services.preferences.{ ContextService, ContextServiceImpl, PreferenceResolver, PreferenceResolverImpl }
+import uk.gov.hmrc.channelpreferences.services.preferences._
 import uk.gov.hmrc.mongo.MongoComponent
 
 class DIModule(environment: Environment, configuration: Configuration) extends AbstractModule {
 
-  override def configure(): Unit =
+  override def configure(): Unit = {
     bind(classOf[PreferenceResolver]).to(classOf[PreferenceResolverImpl]).asEagerSingleton()
+    bind(classOf[PreferenceManagementService]).toInstance(PreferenceManagementService)
+  }
 
   @Provides
   @Singleton

@@ -17,8 +17,11 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import akka.http.scaladsl.model.{ StatusCode, StatusCodes }
+import akka.util.ByteString
 import cats.Semigroup
 import cats.data.NonEmptyList
+import play.api.http.{ ContentTypes, HttpEntity }
+import play.api.mvc.{ ResponseHeader, Result }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 
 sealed abstract class PreferenceError(val message: String, val statusCode: StatusCode)
@@ -63,4 +66,10 @@ object PreferenceError {
         s"Channel: ${channel.name}, not implemented.",
         StatusCodes.NotImplemented
       )
+
+  def toResult(preferenceError: PreferenceError): Result =
+    Result(
+      header = ResponseHeader(preferenceError.statusCode.intValue()),
+      body = HttpEntity.Strict(ByteString.apply(preferenceError.message), Some(ContentTypes.TEXT))
+    )
 }
