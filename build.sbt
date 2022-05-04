@@ -1,4 +1,4 @@
-import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
+
 import sbt.Resolver
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.SbtBobbyPlugin.BobbyKeys.bobbyRulesURL
@@ -87,7 +87,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     resolvers += Resolver.jcenterRepo,
     inConfig(IntegrationTest)(
-      scalafmtCoreSettings ++
         Seq(compileInputs in compile := Def.taskDyn {
           val task = test in (resolvedScoped.value.scope in scalafmt.key)
           val previousInputs = (compileInputs in compile).value

@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import play.api.libs.json.{ Format, Json }
-
+import play.api.libs.json.{ Format, Json, Writes, __ }
 import java.time.Instant
 
 case class Updated(value: Instant) extends AnyVal
 
 object Updated {
+
+  implicit val instantWrites: Writes[Instant] =
+    Writes
+      .at[String](__ \ "$date" \ "$numberLong")
+      .contramap(_.toEpochMilli.toString)
+
   implicit val format: Format[Updated] = Json.valueFormat[Updated]
 }

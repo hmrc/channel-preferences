@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.{ Format, Json }
+import play.api.libs.json.{ Format, Json, __ }
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
-import java.time.LocalDateTime
+import java.time.{ LocalDateTime, ZoneOffset }
 
 case class ContextPayload(
   contextId: ContextId,
@@ -27,5 +29,19 @@ case class ContextPayload(
 )
 
 object ContextPayload {
-  implicit val contextPayloadFormat: Format[ContextPayload] = Json.format[ContextPayload]
+
+  val contextReads: Reads[ContextPayload] = (
+    (__ \ "contextId").read[ContextId] and
+      (__ \ "expiry").read[LocalDateTime] and
+      (__ \ "context").read[Context]
+  )(ContextPayload.apply _)
+
+  implicit val localDateTimeWrites: Writes[LocalDateTime] =
+    Writes
+      .at[String](__ \ "$date" \ "$numberLong")
+      .contramap(_.toInstant(ZoneOffset.UTC).toEpochMilli.toString)
+
+  implicit val contextWrites: Writes[ContextPayload] = Json.writes[ContextPayload]
+
+  implicit val contextPayloadFormat: Format[ContextPayload] = Format(contextReads, contextWrites)
 }
