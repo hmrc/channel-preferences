@@ -21,7 +21,7 @@ import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
-import java.time.{ LocalDateTime, ZoneOffset }
+import java.time.{ LocalDateTime }
 import java.util.UUID
 
 trait TestModels extends EitherValues {
@@ -41,14 +41,14 @@ trait TestModels extends EitherValues {
   val managementConsent: Consent = Consent(
     consentType = DefaultConsentType,
     status = ConsentStatus(true),
-    updated = Updated(timestamp.toInstant(ZoneOffset.UTC)),
+    updated = Updated(timestamp),
     version = version,
     purposes = purposes
   )
 
   val preference: Preference = Preference(
     enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
-    created = Created(timestamp.toInstant(ZoneOffset.UTC)),
+    created = Created(timestamp),
     consents = NonEmptyList.of(managementConsent),
     emailPreferences = List(email),
     status = Active

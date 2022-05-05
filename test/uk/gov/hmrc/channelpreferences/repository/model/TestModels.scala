@@ -22,13 +22,12 @@ import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextPayload, EnrolmentContextId, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences._
-
-import java.time.{ LocalDateTime, ZoneOffset }
+import java.time.{ LocalDateTime }
 import java.util.UUID
 
 trait TestModels extends EitherValues {
 
-  val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
+  val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48);
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
   val enrolmentValue = "HMRC-CUS-ORG~EORINumber~GB123456789"
@@ -44,7 +43,7 @@ trait TestModels extends EitherValues {
   val managementConsent: Consent = Consent(
     consentType = DefaultConsentType,
     status = ConsentStatus(true),
-    updated = Updated(timestamp.toInstant(ZoneOffset.UTC)),
+    updated = Updated(timestamp),
     version = version,
     purposes = purposes
   )
@@ -53,7 +52,7 @@ trait TestModels extends EitherValues {
 
   val preference: Preference = Preference(
     enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
-    created = Created(timestamp.toInstant(ZoneOffset.UTC)),
+    created = Created(timestamp),
     consents = NonEmptyList.of(managementConsent),
     emailPreferences = List(email),
     status = Active
@@ -77,11 +76,11 @@ trait TestModels extends EitherValues {
                                           |  "contextId" : {
                                           |    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
                                           |  },
-                                          |  "expiry" : "1987-03-20T14:33:48.00064",
+                                          |  "expiry" : "1987-03-20T14:33:48",
                                           |  "context" : {
                                           |    "consentType" : "Default",
                                           |    "status" : true,
-                                          |    "updated" : "1987-03-20T14:33:48.000640Z",
+                                          |    "updated" : "1987-03-20T14:33:48",
                                           |    "version" : {
                                           |      "major" : 1,
                                           |      "minor" : 1,
@@ -99,11 +98,11 @@ trait TestModels extends EitherValues {
                                                       |  },
                                                       |  "preference" : {
                                                       |    "enrolments" : [ "HMRC-CUS-ORG~EORINumber~GB123456789" ],
-                                                      |    "created" : "1987-03-20T14:33:48.000640Z",
+                                                      |    "created" : "1987-03-20T14:33:48",
                                                       |    "consents" : [ {
                                                       |      "consentType" : "Default",
                                                       |      "status" : true,
-                                                      |      "updated" : "1987-03-20T14:33:48.000640Z",
+                                                      |      "updated" : "1987-03-20T14:33:48",
                                                       |      "version" : {
                                                       |        "major" : 1,
                                                       |        "minor" : 1,

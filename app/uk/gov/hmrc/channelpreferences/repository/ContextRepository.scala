@@ -24,7 +24,7 @@ import com.mongodb.client.model.Indexes.ascending
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{ IndexModel, IndexOptions }
 import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
-import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
+import uk.gov.hmrc.channelpreferences.controllers.model.{ ContextPayload, ContextPayloadMongo }
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.util.concurrent.TimeUnit
@@ -34,7 +34,7 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
     extends PlayMongoRepository[ContextPayload](
       collectionName = "context",
       mongoComponent = mongoComponent,
-      domainFormat = ContextPayload.contextPayloadFormat,
+      domainFormat = ContextPayloadMongo.contextPayloadFormat,
       indexes = Seq(
         IndexModel(
           ascending("contextId.enrolment"),

@@ -4,6 +4,7 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.SbtBobbyPlugin.BobbyKeys.bobbyRulesURL
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import play.sbt.routes.RoutesKeys
+import sbt.Keys.scalacOptions
 import uk.gov.hmrc.ExternalService
 import uk.gov.hmrc.ServiceManagerPlugin.Keys.itDependenciesList
 

@@ -22,7 +22,6 @@ import uk.gov.hmrc.channelpreferences.controllers.model._
 import uk.gov.hmrc.channelpreferences.model.context.ContextStoreAcknowledged
 import uk.gov.hmrc.channelpreferences.services.preferences.ContextService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.ExecutionContext
 

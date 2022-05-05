@@ -20,7 +20,7 @@ import cats.syntax.either._
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, PreferenceContext, Verification, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, ConsentStatus, DefaultConsentType, DigitalCommunicationsPurpose, Enrolment, Index, PreferenceError, Updated }
 
-import java.time.Instant
+import java.time.{ LocalDateTime }
 import scala.concurrent.Future
 
 trait PreferenceManagementService {
@@ -34,7 +34,7 @@ trait PreferenceManagementService {
 }
 
 object PreferenceManagementService extends PreferenceManagementService {
-  private val now = Instant.now
+  private val now = LocalDateTime.now
 
   val preferenceContext: ContextualPreference = PreferenceContext(
     Consent(

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.channelpreferences.controllers.model
 
 import play.api.libs.json._
+import uk.gov.hmrc.channelpreferences.controllers.model.Consent.consentCustomFormat
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
 
 sealed trait Context
@@ -30,7 +31,8 @@ case class Consent(
 ) extends Context
 
 object Consent {
-  implicit val format: OFormat[Consent] = Json.format[Consent]
+  implicit val updatedFormat: OFormat[Updated] = Json.format[Updated]
+  def consentCustomFormat(implicit updatedFormat: Format[Updated]): OFormat[Consent] = Json.format[Consent]
 }
 
 case class VerificationContext(
@@ -47,6 +49,8 @@ case class ConsentVerificationContext(
 ) extends Context
 
 object ConsentVerificationContext {
+  val updatedFormat: OFormat[Updated] = Json.format[Updated]
+  implicit val consentFormat: OFormat[Consent] = consentCustomFormat(updatedFormat)
   implicit val format: OFormat[ConsentVerificationContext] = Json.format[ConsentVerificationContext]
 }
 
@@ -57,26 +61,36 @@ case class ConfirmationContext(
 ) extends Context
 
 object ConfirmationContext {
+  implicit val updatedFormat: OFormat[Updated] = Json.format[Updated]
+  implicit val consentFormat: OFormat[Consent] = consentCustomFormat
   implicit val format: OFormat[ConfirmationContext] = Json.format[ConfirmationContext]
 }
 
 object Context {
   implicit object Format extends Format[Context] {
     override def writes(o: Context): JsValue = o match {
-      case c: Consent                     => Consent.format.writes(c)
+      case c: Consent => {
+        val updatedFormat: Format[Updated] = Json.valueFormat[Updated]
+        val consent = Consent.consentCustomFormat(updatedFormat)
+        consent.writes(c)
+
+      }
       case v: VerificationContext         => VerificationContext.format.writes(v)
       case cv: ConsentVerificationContext => ConsentVerificationContext.format.writes(cv)
-      case c: ConfirmationContext         => ConfirmationContext.format.writes(c)
+      case c: ConfirmationContext => {
+
+        ConfirmationContext.format.writes(c)
+      }
     }
 
     override def reads(json: JsValue): JsResult[Context] = json match {
       case JsObject(_) =>
+        implicit val format: Format[Updated] = Json.valueFormat[Updated]
         ConfirmationContext.format
           .reads(json)
           .orElse(ConsentVerificationContext.format.reads(json))
           .orElse(VerificationContext.format.reads(json))
-          .orElse(Consent.format.reads(json))
-
+          .orElse(Consent.consentCustomFormat.reads(json))
       case other => JsError(s"expected json object for Context but got $other")
     }
   }

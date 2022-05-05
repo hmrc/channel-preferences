@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.channelpreferences.repository
 
+//import com.mongodb.client.result.UpdateResult
+import com.mongodb.client.result.UpdateResult
 import org.mockito.IdiomaticMockito
-import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
+import org.mongodb.scala.result.{ DeleteResult, InsertOneResult }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -60,12 +62,13 @@ class ContextRepositorySpec
 
   it should "return a context update confirmation when the underlying repo successfully replaces an entire context" in {
     repository.collection.insertOne(contextPayload).toFuture().futureValue
-    val newExpiry = LocalDateTime.now()
+    val newExpiry = LocalDateTime.now().withNano(0)
     val newContextPayload = contextPayload.copy(expiry = newExpiry)
     val replaceOneResult: UpdateResult = repository.updateContext(newContextPayload).futureValue
     replaceOneResult.wasAcknowledged() should be(true)
     val existing =
       repository.collection.find(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
+
     existing.head should be(newContextPayload)
     repository.collection.deleteOne(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
   }

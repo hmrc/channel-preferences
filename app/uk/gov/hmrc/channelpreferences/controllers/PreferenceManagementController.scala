@@ -40,6 +40,7 @@ class PreferenceManagementController @Inject()(
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue
   ): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    implicit val consentFormat = Json.format[Consent]
     withJsonBody[Consent](handleConsent(enrolmentKey, identifierKey, identifierValue, _).map(toResult(_, Created)))
   }
 

@@ -19,6 +19,7 @@ package uk.gov.hmrc.channelpreferences.model.preferences
 import cats.data.NonEmptyList
 import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, OFormat }
 import uk.gov.hmrc.channelpreferences.controllers.model.Consent
+import uk.gov.hmrc.channelpreferences.controllers.model.Consent.consentCustomFormat
 
 case class Preference(
   enrolments: NonEmptyList[Enrolment],
@@ -29,6 +30,9 @@ case class Preference(
 )
 
 object Preference {
+  implicit val updatedFormat: Format[Updated] = Json.valueFormat[Updated]
+  implicit val consentFormat: OFormat[Consent] = consentCustomFormat
+
   implicit def nonEmptyListFormat[A: Format]: Format[NonEmptyList[A]] = new Format[NonEmptyList[A]] {
     override def writes(o: NonEmptyList[A]): JsValue = Json.toJson(o.toList)
 
