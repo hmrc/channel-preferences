@@ -17,9 +17,11 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.data.NonEmptyList
-import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, OFormat }
+import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, OFormat, Reads, Writes, __ }
 import uk.gov.hmrc.channelpreferences.controllers.model.Consent
 import uk.gov.hmrc.channelpreferences.controllers.model.Consent.consentCustomFormat
+
+import java.time.{ Instant, LocalDateTime, ZoneOffset }
 
 case class Preference(
   enrolments: NonEmptyList[Enrolment],
@@ -30,6 +32,18 @@ case class Preference(
 )
 
 object Preference {
+
+  implicit val localDateTimeReads: Reads[LocalDateTime] =
+    Reads
+      .at[String](__ \ "$date" \ "$numberLong")
+      .map(dateTime => Instant.ofEpochMilli(dateTime.toLong).atZone(ZoneOffset.UTC).toLocalDateTime)
+
+  implicit val localDateTimeWrites: Writes[LocalDateTime] =
+    Writes
+      .at[String](__ \ "$date" \ "$numberLong")
+      .contramap(_.toInstant(ZoneOffset.UTC).toEpochMilli.toString)
+
+  implicit val createdFormat: Format[Created] = Json.valueFormat[Created]
   implicit val updatedFormat: Format[Updated] = Json.valueFormat[Updated]
   implicit val consentFormat: OFormat[Consent] = consentCustomFormat
 
@@ -44,5 +58,6 @@ object Preference {
           .getOrElse(JsError(s"non-empty list cannot be empty"))
       }
   }
+
   implicit val format: OFormat[Preference] = Json.format[Preference]
 }

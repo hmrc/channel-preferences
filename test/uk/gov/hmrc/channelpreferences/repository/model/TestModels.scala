@@ -98,11 +98,20 @@ trait TestModels extends EitherValues {
                                                       |  },
                                                       |  "preference" : {
                                                       |    "enrolments" : [ "HMRC-CUS-ORG~EORINumber~GB123456789" ],
-                                                      |    "created" : "1987-03-20T14:33:48",
+                                                      |        "created" : {
+                                                      |      "$$date" : {
+                                                      |        "$$numberLong" : "543249228000"
+                                                      |      }
+                                                      |    },
+                                                      |
                                                       |    "consents" : [ {
                                                       |      "consentType" : "Default",
                                                       |      "status" : true,
-                                                      |      "updated" : "1987-03-20T14:33:48",
+                                                      |      "updated" : {
+                                                      |        "$$date" : {
+                                                      |          "$$numberLong" : "543249228000"
+                                                      |        }
+                                                      |      },
                                                       |      "version" : {
                                                       |        "major" : 1,
                                                       |        "minor" : 1,
