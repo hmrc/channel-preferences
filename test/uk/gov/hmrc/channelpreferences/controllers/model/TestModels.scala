@@ -29,19 +29,21 @@ trait TestModels extends EitherValues {
   val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
-  val enrolmentValue = "HMRC-CUS-ORG~EORINumber~GB123456789"
+  val enrolmentValue = "HMRC-PODS-ORG~PSAID~GB123456789"
+  val emailAddress: EmailAddress = EmailAddress("test@test.com")
   val email: EmailPreference = EmailPreference(
     index = PrimaryIndex,
-    email = EmailAddress("test@test.com"),
+    email = emailAddress,
     contentType = TextPlain,
     language = EnglishLanguage,
     contactable = Contactable(true),
     purposes = purposes
   )
-  val managementConsent: Consent = Consent(
+  val updated: Updated = Updated(timestamp.toInstant(ZoneOffset.UTC))
+  val consent: Consent = Consent(
     consentType = DefaultConsentType,
     status = ConsentStatus(true),
-    updated = Updated(timestamp.toInstant(ZoneOffset.UTC)),
+    updated = updated,
     version = version,
     purposes = purposes
   )
@@ -49,7 +51,7 @@ trait TestModels extends EitherValues {
   val preference: Preference = Preference(
     enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
     created = Created(timestamp.toInstant(ZoneOffset.UTC)),
-    consents = NonEmptyList.of(managementConsent),
+    consents = NonEmptyList.of(consent),
     emailPreferences = List(email),
     status = Active
   )
@@ -57,15 +59,20 @@ trait TestModels extends EitherValues {
   val contextPayload: ContextPayload = ContextPayload(
     EnrolmentContextId(Enrolment.fromValue(enrolmentValue).right.value),
     timestamp,
-    managementConsent
+    consent
   )
 
-  val verificationId: VerificationId = VerificationId(UUID.randomUUID())
+  val verificationId: VerificationId = VerificationId(UUID.fromString("e273ce4e-c0b4-4189-8eca-ca6ab58744aa"))
+  val verification: Verification = Verification(
+    verificationId,
+    emailAddress,
+    timestamp
+  )
 
   val contextJson: JsValue = Json.parse("""
                                           |{
                                           |  "contextId" : {
-                                          |    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
+                                          |    "enrolment" : "HMRC-PODS-ORG~PSAID~GB123456789"
                                           |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {
@@ -84,7 +91,7 @@ trait TestModels extends EitherValues {
 
   val preferenceJson: JsValue = Json.parse(s"""
                                               |{
-                                              |  "enrolments" : [ "HMRC-CUS-ORG~EORINumber~GB123456789" ],
+                                              |  "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ],
                                               |  "created" : "1987-03-20T14:33:48.000640Z",
                                               |  "consents" : [ {
                                               |    "consentType" : "Default",

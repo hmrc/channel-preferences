@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.controllers
 import cats.data.EitherT
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, Verification, VerificationId }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, VerificationId }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceManagementService, PreferenceResolver }
@@ -61,9 +61,8 @@ class PreferenceManagementController @Inject()(
     identifierValue: IdentifierValue,
     channel: Channel,
     index: Index
-  ): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[Verification](
-      handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index, _).map(toResult(_, Created)))
+  ): Action[AnyContent] = Action.async { _ =>
+    handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index).map(toResult(_, Created))
   }
 
   private def handleVerification(
@@ -71,14 +70,13 @@ class PreferenceManagementController @Inject()(
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel,
-    index: Index,
-    verification: Verification
+    index: Index
   ): Future[Either[PreferenceError, ContextualPreference]] =
     (for {
       channelledEnrolment <- EitherT.fromEither[Future](
                               PreferenceResolver
                                 .toChannelledEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
-      preference <- EitherT(preferenceManagementService.createVerification(channelledEnrolment, index, verification))
+      preference <- EitherT(preferenceManagementService.createVerification(channelledEnrolment, index))
     } yield preference).value
 
   def confirm(

@@ -67,6 +67,15 @@ object PreferenceError {
         StatusCodes.NotImplemented
       )
 
+  case class UnsupportedIdentifierKey(enrolmentKey: EnrolmentKey, identifierKey: IdentifierKey)
+      extends PreferenceError(
+        s"enrolment identifier: ${identifierKey.value}, is not supported for ${enrolmentKey.value}.",
+        StatusCodes.BadRequest
+      )
+
+  case class UnsupportedEnrolment(enrolment: Enrolment)
+      extends PreferenceError(s"enrolment: ${enrolment.value}, is not supported.", StatusCodes.BadRequest)
+
   def toResult(preferenceError: PreferenceError): Result =
     Result(
       header = ResponseHeader(preferenceError.statusCode.intValue()),

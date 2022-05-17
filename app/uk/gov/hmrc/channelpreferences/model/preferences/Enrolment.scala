@@ -37,6 +37,20 @@ case class CustomsServiceEnrolment(
   override val identifierKey: IdentifierKey = EORINumber
 }
 
+case class PensionsAdministratorEnrolment(
+  identifierValue: IdentifierValue
+) extends Enrolment {
+  override val enrolmentKey: EnrolmentKey = PensionsOnlineKey
+  override val identifierKey: IdentifierKey = PensionsAdministrator
+}
+
+case class PensionsPractitionerEnrolment(
+  identifierValue: IdentifierValue
+) extends Enrolment {
+  override val enrolmentKey: EnrolmentKey = PensionsSchemePractitionerKey
+  override val identifierKey: IdentifierKey = PensionsPractitioner
+}
+
 object CustomsServiceEnrolment {
   implicit val format: OFormat[CustomsServiceEnrolment] = Json.format[CustomsServiceEnrolment]
 }
