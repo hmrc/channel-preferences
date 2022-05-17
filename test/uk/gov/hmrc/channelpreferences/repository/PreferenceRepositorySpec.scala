@@ -173,7 +173,7 @@ class PreferenceRepositorySpec extends PlaySpec with MockitoSugar with DefaultPl
     val createdValue = Created(timestamp)
     val updatedValue = Updated(timestamp)
 
-   def insertPreference(enrolments: List[Enrolment]): Either[PreferenceError, Boolean] =
+    def insertPreference(enrolments: List[Enrolment]): Either[PreferenceError, Boolean] =
       preferenceRepository
         .insert(
           preference(enrolments, createdValue, updatedValue)
