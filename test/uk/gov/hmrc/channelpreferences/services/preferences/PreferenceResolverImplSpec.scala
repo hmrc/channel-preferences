@@ -24,8 +24,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.channelpreferences.model.cds.{ Email, Phone }
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, CustomsServiceEnrolment, IdentifierValue }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UnsupportedChannelError, UnsupportedEnrolment }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, CustomsServiceEnrolment, IdentifierValue, PensionsAdministratorEnrolment }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -50,11 +50,20 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
       .futureValue shouldBe error.asLeft
   }
 
+  it should "return a unsupported enrolment error when an enrolment other than a customs service enrolment is provided" in new Scope {
+    preferenceResolverImpl
+      .resolveChannelPreference(ChannelledEnrolment(pensionsAdministratorEnrolment, Email))
+      .futureValue shouldBe UnsupportedEnrolment(pensionsAdministratorEnrolment).asLeft
+  }
+
   trait Scope {
     val customsDataStorePreferenceProvider: CustomsDataStorePreferenceProvider =
       mock[CustomsDataStorePreferenceProvider]
     val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(IdentifierValue("foo"))
     val channelledEnrolment: ChannelledEnrolment = ChannelledEnrolment(customsServiceEnrolment, Email)
+    val pensionsAdministratorEnrolment: PensionsAdministratorEnrolment = PensionsAdministratorEnrolment(
+      IdentifierValue("bar"))
+
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
     customsDataStorePreferenceProvider.getChannelPreference(customsServiceEnrolment, Email) returns Future.successful(

@@ -19,6 +19,7 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 import cats.syntax.either._
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedIdentifierKey
 import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -49,6 +50,17 @@ object PreferenceResolver {
       case CustomsServiceKey =>
         identifierKey match {
           case EORINumber => CustomsServiceEnrolment(identifierValue).asRight
+          case other      => UnsupportedIdentifierKey(enrolmentKey, other).asLeft
+        }
+      case PensionsOnlineKey =>
+        identifierKey match {
+          case PensionsAdministrator => PensionsAdministratorEnrolment(identifierValue).asRight
+          case other                 => UnsupportedIdentifierKey(enrolmentKey, other).asLeft
+        }
+      case PensionsSchemePractitionerKey =>
+        identifierKey match {
+          case PensionsPractitioner => PensionsPractitionerEnrolment(identifierValue).asRight
+          case other                => UnsupportedIdentifierKey(enrolmentKey, other).asLeft
         }
     }
 }

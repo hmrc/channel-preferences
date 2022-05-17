@@ -31,7 +31,7 @@ trait TestModels extends EitherValues {
   val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
-  val enrolmentValue = "HMRC-CUS-ORG~EORINumber~GB123456789"
+  val enrolmentValue = "HMRC-PODS-ORG~PSAID~GB123456789"
 
   val email: EmailPreference = EmailPreference(
     index = PrimaryIndex,
@@ -75,7 +75,7 @@ trait TestModels extends EitherValues {
   val contextJson: JsValue = Json.parse("""
                                           |{
                                           |  "contextId" : {
-                                          |    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
+                                          |    "enrolment" : "HMRC-PODS-ORG~PSAID~GB123456789"
                                           |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {
@@ -98,7 +98,7 @@ trait TestModels extends EitherValues {
                                                       |    "$$oid" : "${preferenceId.value.toString}"
                                                       |  },
                                                       |  "preference" : {
-                                                      |    "enrolments" : [ "HMRC-CUS-ORG~EORINumber~GB123456789" ],
+                                                      |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ],
                                                       |    "created" : "1987-03-20T14:33:48.000640Z",
                                                       |    "consents" : [ {
                                                       |      "consentType" : "Default",

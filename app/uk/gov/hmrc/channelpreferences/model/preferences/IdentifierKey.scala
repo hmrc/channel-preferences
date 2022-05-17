@@ -28,6 +28,14 @@ case object EORINumber extends IdentifierKey {
   override val value: String = "EORINumber"
 }
 
+case object PensionsPractitioner extends IdentifierKey {
+  override val value: String = "PSPID"
+}
+
+case object PensionsAdministrator extends IdentifierKey {
+  override val value: String = "PSAID"
+}
+
 object IdentifierKey {
   implicit def identifierKeyBinder(implicit stringBinder: PathBindable[String]): PathBindable[IdentifierKey] =
     new PathBindable[IdentifierKey] {
@@ -41,8 +49,10 @@ object IdentifierKey {
     }
 
   def fromValue(value: String): Either[String, IdentifierKey] = value match {
-    case EORINumber.value => EORINumber.asRight
-    case other            => s"IdentifierKey: $other, not found".asLeft
+    case EORINumber.value            => EORINumber.asRight
+    case PensionsAdministrator.value => PensionsAdministrator.asRight
+    case PensionsPractitioner.value  => PensionsPractitioner.asRight
+    case other                       => s"IdentifierKey: $other, not found".asLeft
   }
 
   implicit object Format extends Format[IdentifierKey] {

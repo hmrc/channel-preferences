@@ -28,6 +28,14 @@ case object CustomsServiceKey extends EnrolmentKey {
   override val value: String = "HMRC-CUS-ORG"
 }
 
+case object PensionsOnlineKey extends EnrolmentKey {
+  override val value: String = "HMRC-PODS-ORG"
+}
+
+case object PensionsSchemePractitionerKey extends EnrolmentKey {
+  override val value: String = "HMRC-PODSPP-ORG"
+}
+
 object EnrolmentKey {
   implicit def enrolmentKeyBinder(implicit stringBinder: PathBindable[String]): PathBindable[EnrolmentKey] =
     new PathBindable[EnrolmentKey] {
@@ -41,8 +49,10 @@ object EnrolmentKey {
     }
 
   def fromValue(value: String): Either[String, EnrolmentKey] = value match {
-    case CustomsServiceKey.value => CustomsServiceKey.asRight
-    case other                   => s"EnrolmentKey: $other, not found".asLeft
+    case CustomsServiceKey.value             => CustomsServiceKey.asRight
+    case PensionsOnlineKey.value             => PensionsOnlineKey.asRight
+    case PensionsSchemePractitionerKey.value => PensionsSchemePractitionerKey.asRight
+    case other                               => s"EnrolmentKey: $other, not found".asLeft
   }
 
   implicit object Format extends Format[EnrolmentKey] {

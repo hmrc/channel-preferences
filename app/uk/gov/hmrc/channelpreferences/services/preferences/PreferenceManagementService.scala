@@ -17,8 +17,8 @@
 package uk.gov.hmrc.channelpreferences.services.preferences
 
 import cats.syntax.either._
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, PreferenceContext, Verification, VerificationId, Version }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, ConsentStatus, DefaultConsentType, DigitalCommunicationsPurpose, Enrolment, Index, PreferenceError, Updated }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, PreferenceContext, VerificationId, Version }
+import uk.gov.hmrc.channelpreferences.model.preferences._
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -28,8 +28,8 @@ trait PreferenceManagementService {
   def updateConsent(enrolment: Enrolment, consent: Consent): Future[Either[PreferenceError, ContextualPreference]]
   def createVerification(
     channelledEnrolment: ChannelledEnrolment,
-    index: Index,
-    verification: Verification): Future[Either[PreferenceError, ContextualPreference]]
+    index: Index
+  ): Future[Either[PreferenceError, ContextualPreference]]
   def confirm(verificationId: VerificationId): Future[Either[PreferenceError, ContextualPreference]]
 }
 
@@ -55,8 +55,8 @@ object PreferenceManagementService extends PreferenceManagementService {
 
   override def createVerification(
     channelledEnrolment: ChannelledEnrolment,
-    index: Index,
-    verification: Verification): Future[Either[PreferenceError, ContextualPreference]] =
+    index: Index
+  ): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(preferenceContext.asRight)
 
   override def confirm(verificationId: VerificationId): Future[Either[PreferenceError, ContextualPreference]] =
