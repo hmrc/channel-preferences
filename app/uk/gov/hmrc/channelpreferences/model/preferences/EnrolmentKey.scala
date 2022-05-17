@@ -17,10 +17,23 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
+import play.api.libs.json._
 import play.api.mvc.PathBindable
 
 sealed trait EnrolmentKey {
   val value: String
+}
+
+case object CustomsServiceKey extends EnrolmentKey {
+  override val value: String = "HMRC-CUS-ORG"
+}
+
+case object PensionsOnlineKey extends EnrolmentKey {
+  override val value: String = "HMRC-PODS-ORG"
+}
+
+case object PensionsSchemePractitionerKey extends EnrolmentKey {
+  override val value: String = "HMRC-PODSPP-ORG"
 }
 
 object EnrolmentKey {
@@ -36,11 +49,24 @@ object EnrolmentKey {
     }
 
   def fromValue(value: String): Either[String, EnrolmentKey] = value match {
-    case CustomsServiceKey.value => CustomsServiceKey.asRight
-    case other                   => s"EnrolmentKey: $other, not found".asLeft
+    case CustomsServiceKey.value             => CustomsServiceKey.asRight
+    case PensionsOnlineKey.value             => PensionsOnlineKey.asRight
+    case PensionsSchemePractitionerKey.value => PensionsSchemePractitionerKey.asRight
+    case other                               => s"EnrolmentKey: $other, not found".asLeft
   }
 
-  case object CustomsServiceKey extends EnrolmentKey {
-    override val value: String = "HMRC-CUS-ORG"
+  implicit object Format extends Format[EnrolmentKey] {
+    override def writes(o: EnrolmentKey): JsValue = JsString(o.value)
+
+    override def reads(json: JsValue): JsResult[EnrolmentKey] = json match {
+      case JsString(value) =>
+        EnrolmentKey
+          .fromValue(value)
+          .fold(
+            JsError(_),
+            JsSuccess(_)
+          )
+      case other => JsError(s"expected a json string for enrolment key but got $other")
+    }
   }
 }

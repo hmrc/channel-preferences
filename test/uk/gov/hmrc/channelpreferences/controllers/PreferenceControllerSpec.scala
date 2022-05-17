@@ -40,10 +40,8 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification, Phone }
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
-import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UnsupportedChannelError, UpstreamError }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UnsupportedChannelError, UpstreamError, UpstreamParseError }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceKey, EORINumber, EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
@@ -84,10 +82,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
           *[HeaderCarrier],
           *[ExecutionContext]))
-        .thenReturn(Future.successful(ParseError("boom").asLeft))
+        .thenReturn(Future.successful(UpstreamParseError("boom").asLeft))
 
       val response =
-        controller.preference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email).apply(FakeRequest("GET", "/"))
+        controller
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
+          .apply(FakeRequest("GET", "/"))
       status(response) mustBe BAD_GATEWAY
     }
 
@@ -109,7 +109,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         .thenReturn(Future.successful(UpstreamError("boom", StatusCodes.NotFound).asLeft))
 
       val response =
-        controller.preference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email).apply(FakeRequest("GET", "/"))
+        controller
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
+          .apply(FakeRequest("GET", "/"))
       status(response) mustBe NOT_FOUND
     }
 
@@ -131,7 +133,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         .thenReturn(Future.successful(UnsupportedChannelError(Phone).asLeft))
 
       val response =
-        controller.preference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email).apply(FakeRequest("GET", "/"))
+        controller
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
+          .apply(FakeRequest("GET", "/"))
       status(response) mustBe NOT_IMPLEMENTED
     }
 
@@ -153,7 +157,9 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         .thenReturn(Future.successful(Json.toJson(emailVerification).asRight))
 
       val response =
-        controller.preference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email).apply(FakeRequest("GET", "/"))
+        controller
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
+          .apply(FakeRequest("GET", "/"))
       status(response) mustBe OK
       contentAsString(response) mustBe validEmailVerification
     }

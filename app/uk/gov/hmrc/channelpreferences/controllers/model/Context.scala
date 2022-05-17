@@ -16,54 +16,68 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import play.api.libs.json.Json
+import play.api.libs.json._
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
 
-import java.time.LocalDateTime
-import java.util.UUID
+sealed trait Context
 
-final case class Version(
-  major: Int,
-  minor: Int,
-  patch: Int
-)
+case class Consent(
+  consentType: ConsentType,
+  status: ConsentStatus,
+  updated: Updated,
+  version: Version,
+  purposes: List[Purpose]
+) extends Context
 
-final case class Verification(
-  id: UUID,
-  email: String,
-  sent: LocalDateTime
-)
+object Consent {
+  implicit val format: OFormat[Consent] = Json.format[Consent]
+}
 
-final case class Context(
-  consented: Consented,
+case class VerificationContext(
+  verification: Verification
+) extends Context
+
+object VerificationContext {
+  implicit val format: OFormat[VerificationContext] = Json.format[VerificationContext]
+}
+
+case class ConsentVerificationContext(
+  consented: Consent,
+  verification: Verification
+) extends Context
+
+object ConsentVerificationContext {
+  implicit val format: OFormat[ConsentVerificationContext] = Json.format[ConsentVerificationContext]
+}
+
+case class ConfirmationContext(
+  consented: Consent,
   verification: Verification,
   confirm: Confirm
-)
+) extends Context
 
-final case class Consented(
-  consentType: String,
-  status: Boolean,
-  created: LocalDateTime,
-  version: Version,
-  purposes: List[String]
-)
+object ConfirmationContext {
+  implicit val format: OFormat[ConfirmationContext] = Json.format[ConfirmationContext]
+}
 
-final case class Confirm(
-  id: UUID,
-  started: LocalDateTime
-)
+object Context {
+  implicit object Format extends Format[Context] {
+    override def writes(o: Context): JsValue = o match {
+      case c: Consent                     => Consent.format.writes(c)
+      case v: VerificationContext         => VerificationContext.format.writes(v)
+      case cv: ConsentVerificationContext => ConsentVerificationContext.format.writes(cv)
+      case c: ConfirmationContext         => ConfirmationContext.format.writes(c)
+    }
 
-final case class ContextPayload(
-  key: String,
-  resourcePath: String,
-  expiry: LocalDateTime,
-  context: Context
-)
+    override def reads(json: JsValue): JsResult[Context] = json match {
+      case JsObject(_) =>
+        ConfirmationContext.format
+          .reads(json)
+          .orElse(ConsentVerificationContext.format.reads(json))
+          .orElse(VerificationContext.format.reads(json))
+          .orElse(Consent.format.reads(json))
 
-object ContextPayload {
-  implicit val versionFormat = Json.format[Version]
-  implicit val consentedFormat = Json.format[Consented]
-  implicit val confirmFormat = Json.format[Confirm]
-  implicit val verificationFormat = Json.format[Verification]
-  implicit val contextReadsFormat = Json.format[Context]
-  implicit val contextPayloadFormat = Json.format[ContextPayload]
+      case other => JsError(s"expected json object for Context but got $other")
+    }
+  }
 }

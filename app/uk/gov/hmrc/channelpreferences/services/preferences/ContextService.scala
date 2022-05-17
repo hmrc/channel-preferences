@@ -19,8 +19,6 @@ import com.mongodb.client.result.{ DeleteResult, InsertOneResult, UpdateResult }
 import uk.gov.hmrc.channelpreferences.repository.ContextRepository
 import uk.gov.hmrc.channelpreferences.controllers
 import uk.gov.hmrc.channelpreferences.model.context.{ ContextStorageError, ContextStoreAcknowledged, ContextStoreStatus }
-import uk.gov.hmrc.channelpreferences.model.mapping.ContextConversion
-import uk.gov.hmrc.channelpreferences.repository.model.ContextPayload
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -38,7 +36,7 @@ class ContextServiceImpl @Inject()(contextRepository: ContextRepository)(implici
 
   def store(context: controllers.model.ContextPayload): Future[Either[ContextStorageError, ContextStoreStatus]] =
     contextRepository
-      .addContext(contextPayload = ContextConversion.toDbContextPayload(context))
+      .addContext(context)
       .map {
         case result: InsertOneResult if result.wasAcknowledged() => Right(new ContextStoreAcknowledged())
         case _                                                   => Left(new ContextStorageError("There was a problem storing the context"))
@@ -46,7 +44,7 @@ class ContextServiceImpl @Inject()(contextRepository: ContextRepository)(implici
 
   def replace(context: controllers.model.ContextPayload): Future[Either[ContextStorageError, ContextStoreStatus]] =
     contextRepository
-      .updateContext(contextPayload = ContextConversion.toDbContextPayload(context))
+      .updateContext(context)
       .map {
         case result: UpdateResult if result.wasAcknowledged() => Right(new ContextStoreAcknowledged())
         case _                                                => Left(new ContextStorageError("There was a problem updating the context"))
@@ -56,8 +54,8 @@ class ContextServiceImpl @Inject()(contextRepository: ContextRepository)(implici
     contextRepository
       .findContext(key)
       .map {
-        case Some(contextPayload: ContextPayload) => Right(ContextConversion.toApiContextPayload(contextPayload))
-        case _                                    => Left(new ContextStorageError("There was a problem retrieving the context"))
+        case Some(context) => Right(context)
+        case _             => Left(new ContextStorageError("There was a problem retrieving the context"))
       }
 
   def remove(key: String): Future[Either[ContextStorageError, ContextStoreStatus]] =

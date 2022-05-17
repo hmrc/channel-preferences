@@ -17,6 +17,7 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
+import play.api.libs.json.{ Format, Json }
 import play.api.mvc.PathBindable
 
 case class IdentifierValue(value: String) extends AnyVal
@@ -32,4 +33,6 @@ object IdentifierValue {
 
       override def unbind(Value: String, IdentifierValue: IdentifierValue): String = IdentifierValue.value
     }
+
+  implicit val format: Format[IdentifierValue] = Json.valueFormat[IdentifierValue]
 }

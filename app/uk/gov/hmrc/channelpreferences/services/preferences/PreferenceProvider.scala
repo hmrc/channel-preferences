@@ -17,11 +17,13 @@
 package uk.gov.hmrc.channelpreferences.services.preferences
 
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, PreferenceError }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 trait PreferenceProvider[I <: Enrolment] {
-  def getPreference(enrolment: I)(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
+  def getChannelPreference(enrolment: I, channel: Channel)(
+    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
 }

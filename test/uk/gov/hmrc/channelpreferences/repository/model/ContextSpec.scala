@@ -17,12 +17,15 @@
 package uk.gov.hmrc.channelpreferences.repository.model
 
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.JsSuccess
+import play.api.libs.json.{ JsSuccess, Json }
+import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
 
 class ContextSpec extends PlaySpec with TestModels {
 
-  "read" must {
-    "successfully parse from json" in {
+  "it" must {
+    "be isomorphic" in {
+      val json = Json.toJson(contextPayload)
+      json.as[ContextPayload] mustBe contextPayload
       contextJson.validate[ContextPayload] mustBe JsSuccess(contextPayload)
     }
   }
