@@ -78,7 +78,7 @@ class PreferenceManagementController @Inject()(
       channelledEnrolment <- EitherT.fromEither[Future](
                               PreferenceResolver
                                 .toChannelledEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
-      preference <- EitherT(preferenceManagementService.createVerification(channelledEnrolment, index))
+      preference <- EitherT(preferenceManagementService.createVerification(channelledEnrolment, index, emailAddress))
     } yield preference).value
 
   def confirm(

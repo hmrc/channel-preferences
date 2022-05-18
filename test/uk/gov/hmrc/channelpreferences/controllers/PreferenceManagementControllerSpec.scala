@@ -42,11 +42,10 @@ import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Headers, Result }
 import play.api.test.Helpers.{ contentAsJson, defaultAwaitTimeout, status }
 import play.api.test.{ FakeRequest, Helpers }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ ConsentVerificationContext, Context, ContextualPreference, PreferenceContext, PreferenceWithContext, PreferenceWithoutContext, TestModels, VerificationContext }
+import uk.gov.hmrc.channelpreferences.controllers.model._
 import uk.gov.hmrc.channelpreferences.model.cds.Email
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, Enrolment, PrimaryIndex }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, EmailAddress, Enrolment, PrimaryIndex }
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceManagementService
-import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
