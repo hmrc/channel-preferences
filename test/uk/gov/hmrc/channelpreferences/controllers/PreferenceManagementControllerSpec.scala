@@ -46,6 +46,7 @@ import uk.gov.hmrc.channelpreferences.controllers.model.{ ConsentVerificationCon
 import uk.gov.hmrc.channelpreferences.model.cds.Email
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, Enrolment, PrimaryIndex }
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceManagementService
+import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -70,13 +71,17 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   }
 
   it should "return a preference context when successfully creating a verification" in new Scope {
-    preferenceManagementService.createVerification(ChannelledEnrolment(enrolment, Email), PrimaryIndex) returns Future
+    private val email = "test@test.com"
+
+    preferenceManagementService
+      .createVerification(ChannelledEnrolment(enrolment, Email), PrimaryIndex, EmailAddress(email)) returns Future
       .successful(Right(contextualPreferenceVerification))
 
+    val payload: JsValue = Json.parse(s"""{ "email": "$email" }""")
     val result: Future[Result] =
       preferenceManagementController
         .verify(enrolment.enrolmentKey, enrolment.identifierKey, enrolment.identifierValue, Email, PrimaryIndex)
-        .apply(FakeRequest("POST", ""))
+        .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
     status(result) mustBe Status.CREATED
     contentAsJson(result).validate[ContextualPreference].get mustBe contextualPreferenceVerification

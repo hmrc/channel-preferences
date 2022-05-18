@@ -22,7 +22,7 @@ import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, VerificationId }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences._
-import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceManagementService, PreferenceResolver }
+import uk.gov.hmrc.channelpreferences.services.preferences._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{ Inject, Singleton }
@@ -61,8 +61,9 @@ class PreferenceManagementController @Inject()(
     identifierValue: IdentifierValue,
     channel: Channel,
     index: Index
-  ): Action[AnyContent] = Action.async { _ =>
-    handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index).map(toResult(_, Created))
+  ): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[EmailAddress](
+      handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index, _).map(toResult(_, Created)))
   }
 
   private def handleVerification(
@@ -70,7 +71,8 @@ class PreferenceManagementController @Inject()(
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel,
-    index: Index
+    index: Index,
+    emailAddress: EmailAddress
   ): Future[Either[PreferenceError, ContextualPreference]] =
     (for {
       channelledEnrolment <- EitherT.fromEither[Future](
