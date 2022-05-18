@@ -70,13 +70,12 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   }
 
   it should "return a preference context when successfully creating a verification" in new Scope {
-    private val email = "test@test.com"
 
     preferenceManagementService
-      .createVerification(ChannelledEnrolment(enrolment, Email), PrimaryIndex, EmailAddress(email)) returns Future
+      .createVerification(ChannelledEnrolment(enrolment, Email), PrimaryIndex, emailAddress) returns Future
       .successful(Right(contextualPreferenceVerification))
 
-    val payload: JsValue = Json.parse(s"""{ "email": "$email" }""")
+    val payload: JsValue = Json.parse(s"""{ "email": "${emailAddress.email}" }""")
     val result: Future[Result] =
       preferenceManagementController
         .verify(enrolment.enrolmentKey, enrolment.identifierKey, enrolment.identifierValue, Email, PrimaryIndex)
@@ -129,7 +128,6 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
     )
 
     def readContextResource(fileName: String): String = readResource("context", fileName)
-    def readPreferenceResource(fileName: String): String = readResource("preference", fileName)
 
     private def readResource(folder: String, fileName: String): String = {
       val resource = Source.fromURL(getClass.getResource(s"/$folder/$fileName"))
