@@ -16,23 +16,21 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import akka.util.ByteString
 import play.api.Logger
-import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result }
+import play.api.mvc._
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
-import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
 import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
+import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -54,7 +52,7 @@ class PreferenceController @Inject()(
 
   private val logger: Logger = Logger(this.getClass)
 
-  def preference(
+  def channelPreference(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
@@ -65,13 +63,9 @@ class PreferenceController @Inject()(
         .map(toResult)
     }
 
-  private def toResult(resolution: Either[PreferenceError, JsValue]): Result = resolution.fold(
-    preferenceError =>
-      Result(
-        header = ResponseHeader(preferenceError.statusCode.intValue()),
-        body = HttpEntity.Strict(ByteString.apply(preferenceError.message), Some(ContentTypes.TEXT))
-    ),
-    json => Ok(json)
+  def toResult(eitherResult: Either[PreferenceError, JsValue]): Result = eitherResult.fold(
+    PreferenceError.toResult,
+    result => Ok(Json.toJson(result))
   )
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>

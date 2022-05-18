@@ -16,21 +16,81 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
-import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
+import cats.syntax.parallel._
+import cats.syntax.either._
+import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
+import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
 
 sealed trait Enrolment {
   val enrolmentKey: EnrolmentKey
   val identifierKey: IdentifierKey
   val identifierValue: IdentifierValue
-  val channel: Channel
+
+  final def value: String = s"${enrolmentKey.value}~${identifierKey.value}~${identifierValue.value}"
 }
 
 case class CustomsServiceEnrolment(
-  identifierValue: IdentifierValue,
-  channel: Channel
+  identifierValue: IdentifierValue
 ) extends Enrolment {
   override val enrolmentKey: EnrolmentKey = CustomsServiceKey
   override val identifierKey: IdentifierKey = EORINumber
+}
+
+case class PensionsAdministratorEnrolment(
+  identifierValue: IdentifierValue
+) extends Enrolment {
+  override val enrolmentKey: EnrolmentKey = PensionsOnlineKey
+  override val identifierKey: IdentifierKey = PensionsAdministrator
+}
+
+case class PensionsPractitionerEnrolment(
+  identifierValue: IdentifierValue
+) extends Enrolment {
+  override val enrolmentKey: EnrolmentKey = PensionsSchemePractitionerKey
+  override val identifierKey: IdentifierKey = PensionsPractitioner
+}
+
+object CustomsServiceEnrolment {
+  implicit val format: OFormat[CustomsServiceEnrolment] = Json.format[CustomsServiceEnrolment]
+}
+
+object Enrolment {
+  val Separator = "~"
+  implicit object Format extends Format[Enrolment] {
+    override def writes(o: Enrolment): JsValue = JsString(o.value)
+
+    override def reads(json: JsValue): JsResult[Enrolment] = json match {
+      case JsString(value) =>
+        fromValue(value).fold(
+          preferencesError => JsError(preferencesError.message),
+          JsSuccess(_)
+        )
+      case json => JsError(s"expected a json string value for Enrolment, but got $json")
+    }
+  }
+
+  def fromValue(value: String): Either[PreferenceError, Enrolment] =
+    value.split(Separator) match {
+      case Array(enrolmentKey, identifierKey, identifierValue) =>
+        fromTriplet(enrolmentKey, identifierKey, identifierValue)
+      case anotherShape =>
+        ParseError(s"expected 3 values for an enrolment, but got ${anotherShape.mkString(" | ")}").asLeft
+    }
+
+  def fromTriplet(
+    enrolmentKey: String,
+    identifierKey: String,
+    identifierValue: String): Either[PreferenceError, Enrolment] = {
+    val tupled = (
+      EnrolmentKey.fromValue(enrolmentKey).leftMap[PreferenceError](ParseError),
+      IdentifierKey.fromValue(identifierKey).leftMap[PreferenceError](ParseError),
+      IdentifierValue(identifierValue).asRight[PreferenceError]
+    ).parTupled
+
+    tupled.flatMap {
+      case (enrolmentKey, identifierKey, identifierValue) =>
+        PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue)
+    }
+  }
 }

@@ -22,10 +22,9 @@ import org.mockito.ArgumentMatchersSugar.*
 import org.mongodb.scala.bson.BsonObjectId
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.channelpreferences.repository
 import uk.gov.hmrc.channelpreferences.repository.ContextRepository
-import uk.gov.hmrc.channelpreferences.controllers.model.TestModels
-import uk.gov.hmrc.channelpreferences.model.mapping.ContextConversion
+import uk.gov.hmrc.channelpreferences.controllers.model.{ ContextPayload, TestModels }
+import uk.gov.hmrc.channelpreferences.model.context.{ ContextStorageError, ContextStoreStatus }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -38,20 +37,20 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
     "return a success status in response to a successful DB insert" in new TestClass {
 
       val insertOneResult: InsertOneResult = InsertOneResult.acknowledged(BsonObjectId())
-      contextRepositoryMock.addContext(*[repository.model.ContextPayload]) returns Future.successful(insertOneResult)
+      contextRepositoryMock.addContext(*[ContextPayload]) returns Future.successful(insertOneResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.store(contextPayload).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.store(contextPayload).futureValue
       result.isRight mustBe true
     }
 
     "return an error status in response to a failed DB insert" in new TestClass {
 
       val insertOneResult: InsertOneResult = InsertOneResult.unacknowledged()
-      contextRepositoryMock.addContext(*[repository.model.ContextPayload]) returns Future.successful(insertOneResult)
+      contextRepositoryMock.addContext(*[ContextPayload]) returns Future.successful(insertOneResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.store(contextPayload).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.store(contextPayload).futureValue
       result.isLeft mustBe true
     }
   }
@@ -61,22 +60,20 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
     "return a success status in response to a successful DB upsert" in new TestClass {
 
       val updateOneResult: UpdateResult = UpdateResult.acknowledged(1, 1, BsonObjectId())
-      contextRepositoryMock.updateContext(*[repository.model.ContextPayload]) returns Future.successful(
-        updateOneResult)
+      contextRepositoryMock.updateContext(*[ContextPayload]) returns Future.successful(updateOneResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.replace(contextPayload).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.replace(contextPayload).futureValue
       result.isRight mustBe true
     }
 
     "return an error status in response to a failed DB upsert" in new TestClass {
 
       val updateOneResult: UpdateResult = UpdateResult.unacknowledged()
-      contextRepositoryMock.updateContext(*[repository.model.ContextPayload]) returns Future.successful(
-        updateOneResult)
+      contextRepositoryMock.updateContext(*[ContextPayload]) returns Future.successful(updateOneResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.replace(contextPayload).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.replace(contextPayload).futureValue
       result.isLeft mustBe true
     }
   }
@@ -85,11 +82,10 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
 
     "return the associated context payload in response to a successful DB document retrieval" in new TestClass {
 
-      contextRepositoryMock.findContext(*[String]) returns Future.successful(
-        Some(ContextConversion.toDbContextPayload(contextPayload)))
+      contextRepositoryMock.findContext(*[String]) returns Future.successful(Some(contextPayload))
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.retrieve(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextPayload] = contextService.retrieve(enrolmentValue).futureValue
       result.isRight mustBe true
       result.right.get mustBe contextPayload
     }
@@ -99,7 +95,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.findContext(*[String]) returns Future.successful(Option.empty)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.retrieve(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextPayload] = contextService.retrieve(enrolmentValue).futureValue
       result.isLeft mustBe true
     }
   }
@@ -112,7 +108,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.deleteContext(*[String]) returns Future.successful(deleteResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.remove(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.remove(enrolmentValue).futureValue
       result.isRight mustBe true
     }
 
@@ -122,7 +118,7 @@ class ContextServiceSpec extends PlaySpec with ScalaFutures with IdiomaticMockit
       contextRepositoryMock.deleteContext(*[String]) returns Future.successful(deleteResult)
 
       val contextService = new ContextServiceImpl(contextRepositoryMock)
-      val result = contextService.remove(keyIdentifier).futureValue
+      val result: Either[ContextStorageError, ContextStoreStatus] = contextService.remove(enrolmentValue).futureValue
       result.isLeft mustBe true
     }
   }

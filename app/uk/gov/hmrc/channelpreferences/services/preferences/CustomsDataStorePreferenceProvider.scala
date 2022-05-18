@@ -22,7 +22,7 @@ import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
-import uk.gov.hmrc.channelpreferences.model.cds.{ Email, EmailVerification }
+import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
 import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, PreferenceError }
 import uk.gov.hmrc.http.HeaderCarrier
@@ -40,9 +40,9 @@ class CustomsDataStorePreferenceProvider @Inject()(
 
   private val logger = Logger(this.getClass)
 
-  override def getPreference(enrolment: CustomsServiceEnrolment)(
+  override def getChannelPreference(enrolment: CustomsServiceEnrolment, channel: Channel)(
     implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] =
-    enrolment.channel match {
+    channel match {
       case Email =>
         EitherT(cdsEmailConnector.getVerifiedEmail(enrolment.identifierValue.value))
           .map(audit)
