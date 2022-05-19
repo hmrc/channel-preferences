@@ -6,7 +6,7 @@
   "paths" : {
     "/channel-preferences/preferences/enrolments/{enrolmentKey}/identifier-keys/{key}/identifier-values/{value}/channels/{channel}" : {
       "get" : {
-        "operationId" : "preference",
+        "operationId" : "channelPreference",
         "tags" : [ "app" ],
         "parameters" : [ {
           "in" : "path",
@@ -34,6 +34,118 @@
           "name" : "channel",
           "schema" : {
             "type" : "channel"
+          },
+          "required" : true
+        } ]
+      }
+    },
+    "/channel-preferences/preferences/enrolments/{enrolmentKey}/identifier-keys/{key}/identifier-values/{value}" : {
+      "get" : {
+        "operationId" : "getPreference",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "enrolmentKey",
+          "schema" : {
+            "type" : "enrolmentkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "identifierkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "value",
+          "schema" : {
+            "type" : "identifiervalue"
+          },
+          "required" : true
+        } ]
+      }
+    },
+    "/channel-preferences/preferences/enrolments/{enrolmentKey}/identifier-keys/{key}/identifier-values/{value}/consent" : {
+      "put" : {
+        "operationId" : "consent",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "enrolmentKey",
+          "schema" : {
+            "type" : "enrolmentkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "identifierkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "value",
+          "schema" : {
+            "type" : "identifiervalue"
+          },
+          "required" : true
+        } ]
+      }
+    },
+    "/channel-preferences/preferences/enrolments/{enrolmentKey}/identifier-keys/{key}/identifier-values/{value}/channels/{channel}/index/{index}/verify" : {
+      "post" : {
+        "operationId" : "verify",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "enrolmentKey",
+          "schema" : {
+            "type" : "enrolmentkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "key",
+          "schema" : {
+            "type" : "identifierkey"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "value",
+          "schema" : {
+            "type" : "identifiervalue"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "channel",
+          "schema" : {
+            "type" : "channel"
+          },
+          "required" : true
+        }, {
+          "in" : "path",
+          "name" : "index",
+          "schema" : {
+            "type" : "index"
+          },
+          "required" : true
+        } ]
+      }
+    },
+    "/channel-preferences/preferences/verify/{verificationId}/confirm" : {
+      "put" : {
+        "operationId" : "confirm",
+        "tags" : [ "app" ],
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "verificationId",
+          "schema" : {
+            "type" : "verificationid"
           },
           "required" : true
         } ]
@@ -181,7 +293,7 @@
   "produces" : [ "application/json" ],
   "info" : {
     "title" : "Channel Preferences API",
-    "version" : "0.66.0-SNAPSHOT"
+    "version" : "0.68.0-SNAPSHOT"
   },
   "consumes" : [ "application/json" ],
   "tags" : [ {

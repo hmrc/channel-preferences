@@ -112,7 +112,7 @@ trait TestModels extends EitherValues {
                                                       |      "purposes" : [ "DigitalCommunications" ]
                                                       |    } ],
                                                       |    "emailPreferences" : [ {
-                                                      |      "index" : "Primary",
+                                                      |      "index" : "primary",
                                                       |      "email" : "test@test.com",
                                                       |      "contentType" : "text/plain",
                                                       |      "language" : "en",
