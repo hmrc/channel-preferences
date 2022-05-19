@@ -22,6 +22,7 @@ import play.api.mvc.PathBindable
 
 sealed trait Index {
   val name: String
+  final def lowerCaseName: String = name.toLowerCase
 }
 
 case object PrimaryIndex extends Index {

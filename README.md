@@ -123,7 +123,7 @@ Responds with status:
 }
 ```
 
-### GET /channel-preferences/preferences/enrolments/HMRC-PODS-ORG/identifier-keys/PSAID/identifier-values/GB123456789
+### GET /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789
 
 Responds with status:
 
@@ -146,7 +146,7 @@ Responds with status:
 }
 ```
 
-### PUT /channel-preferences/preferences/enrolments/HMRC-PODS-ORG/identifier-keys/PSAID/identifier-values/GB123456789/consent
+### PUT /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/consent
 
 Create or update consent for an enrolment
 
@@ -198,7 +198,7 @@ Responds with status:
 }
 ```
 
-### POST /channel-preferences/preferences/enrolments/HMRC-PODS-ORG/identifier-keys/PSAID/identifier-values/GB123456789/channels/email/index/primary/verify
+### POST /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/channels/email/index/primary/verify
 
 Create a new verification for the target channel (email)
 

@@ -19,6 +19,7 @@ package uk.gov.hmrc.channelpreferences.model.preferences
 import cats.syntax.parallel._
 import cats.syntax.either._
 import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat }
+import play.api.mvc.PathBindable
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
 
@@ -57,6 +58,7 @@ object CustomsServiceEnrolment {
 
 object Enrolment {
   val Separator = "~"
+
   implicit object Format extends Format[Enrolment] {
     override def writes(o: Enrolment): JsValue = JsString(o.value)
 
@@ -93,4 +95,15 @@ object Enrolment {
         PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue)
     }
   }
+
+  implicit def enrolmentBinder(implicit stringBinder: PathBindable[String]): PathBindable[Enrolment] =
+    new PathBindable[Enrolment] {
+      override def bind(key: String, value: String): Either[String, Enrolment] =
+        for {
+          name <- stringBinder.bind(key, value).right
+          ch   <- Enrolment.fromValue(name).leftMap(_.message)
+        } yield ch
+
+      override def unbind(key: String, enrolment: Enrolment): String = enrolment.value
+    }
 }
