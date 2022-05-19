@@ -211,7 +211,7 @@ Create a new verification for the target channel (email)
 
 ```json
 {
-  "email": "test@test.com"
+  "value": "test@test.com"
 }
 ```
 

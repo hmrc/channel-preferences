@@ -75,7 +75,7 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
       .createVerification(ChannelledEnrolment(enrolment, Email), PrimaryIndex, emailAddress) returns Future
       .successful(Right(contextualPreferenceVerification))
 
-    val payload: JsValue = Json.parse(s"""{ "email": "${emailAddress.email}" }""")
+    val payload: JsValue = Json.parse(s"""{ "value": "${emailAddress.value}" }""")
     val result: Future[Result] =
       preferenceManagementController
         .verify(enrolment.enrolmentKey, enrolment.identifierKey, enrolment.identifierValue, Email, PrimaryIndex)

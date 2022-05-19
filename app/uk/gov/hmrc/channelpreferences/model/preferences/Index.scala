@@ -25,7 +25,7 @@ sealed trait Index {
 }
 
 case object PrimaryIndex extends Index {
-  override val name: String = "Primary"
+  override val name: String = "primary"
 }
 
 object Index {

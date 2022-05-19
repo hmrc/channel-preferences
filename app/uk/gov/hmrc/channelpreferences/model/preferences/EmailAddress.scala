@@ -18,7 +18,7 @@ package uk.gov.hmrc.channelpreferences.model.preferences
 
 import play.api.libs.json.{ Format, Json }
 
-case class EmailAddress(email: String) extends AnyVal
+case class EmailAddress(value: String) extends AnyVal
 
 object EmailAddress {
   implicit val format: Format[EmailAddress] = Json.valueFormat[EmailAddress]
