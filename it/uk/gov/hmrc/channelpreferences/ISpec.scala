@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.channelpreferences
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{ BeforeAndAfterEach, EitherValues }
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.integration.ServiceSpec
+
 import scala.concurrent.ExecutionContext
 
-trait ISpec extends PlaySpec with ServiceSpec with BeforeAndAfterEach {
+trait ISpec extends PlaySpec with EitherValues with ServiceSpec with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
 
-  override def externalServices: Seq[String] = Seq.empty
+  override def externalServices: Seq[String] = Seq("auth-login-api")
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 

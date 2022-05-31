@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.channelpreferences.repository
 
+import cats.data.NonEmptyList
 import com.google.inject.{ Inject, Singleton }
-
-import scala.concurrent.{ ExecutionContext, Future }
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import com.mongodb.client.model.Indexes.ascending
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.in
 import org.mongodb.scala.model.{ IndexModel, IndexOptions }
 import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
 import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
+import uk.gov.hmrc.channelpreferences.model.preferences.Enrolment
 import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.concurrent.TimeUnit
+import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
@@ -37,7 +38,7 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
       domainFormat = ContextPayload.contextPayloadFormat,
       indexes = Seq(
         IndexModel(
-          ascending("contextId.enrolment"),
+          ascending("contextId.enrolments"),
           IndexOptions().name("contextIdIndex")
         ),
         IndexModel(
@@ -52,13 +53,19 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
     collection.insertOne(contextPayload).toFuture()
 
   def updateContext(contextPayload: ContextPayload): Future[UpdateResult] =
-    collection.replaceOne(equal("contextId.enrolment", contextPayload.contextId.value), contextPayload).toFuture()
-
-  def deleteContext(key: String): Future[DeleteResult] =
-    collection.deleteOne(equal("contextId.enrolment", key)).toFuture()
-
-  def findContext(key: String): Future[Option[ContextPayload]] =
     collection
-      .find(equal("contextId.enrolment", key))
+      .replaceOne(in("contextId.enrolments", enrolmentKeys(contextPayload.contextId.enrolments)), contextPayload)
+      .toFuture()
+
+  def deleteContext(keys: NonEmptyList[Enrolment]): Future[DeleteResult] =
+    collection.deleteOne(in("contextId.enrolments", enrolmentKeys(keys))).toFuture()
+
+  def findContext(keys: NonEmptyList[Enrolment]): Future[Option[ContextPayload]] =
+    collection
+      .find(in("contextId.enrolments", enrolmentKeys(keys)))
       .headOption()
+
+  private def enrolmentKeys(enrolments: NonEmptyList[Enrolment]): List[String] =
+    enrolments.toList
+      .map(_.value)
 }

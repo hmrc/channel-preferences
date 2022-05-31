@@ -76,6 +76,8 @@ object PreferenceError {
   case class UnsupportedEnrolment(enrolment: Enrolment)
       extends PreferenceError(s"enrolment: ${enrolment.value}, is not supported.", StatusCodes.BadRequest)
 
+  case object UnauthorisedPreferenceRequest extends PreferenceError(s"unauthorised", StatusCodes.Unauthorized)
+
   def toResult(preferenceError: PreferenceError): Result =
     Result(
       header = ResponseHeader(preferenceError.statusCode.intValue()),

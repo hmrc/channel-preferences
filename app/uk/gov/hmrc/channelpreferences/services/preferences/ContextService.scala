@@ -15,10 +15,12 @@
  */
 
 package uk.gov.hmrc.channelpreferences.services.preferences
+import cats.data.NonEmptyList
 import com.mongodb.client.result.{ DeleteResult, InsertOneResult, UpdateResult }
 import uk.gov.hmrc.channelpreferences.repository.ContextRepository
 import uk.gov.hmrc.channelpreferences.controllers
 import uk.gov.hmrc.channelpreferences.model.context.{ ContextStorageError, ContextStoreAcknowledged, ContextStoreStatus }
+import uk.gov.hmrc.channelpreferences.model.preferences.Enrolment
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -26,8 +28,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 trait ContextService {
   def store(context: controllers.model.ContextPayload): Future[Either[ContextStorageError, ContextStoreStatus]]
   def replace(context: controllers.model.ContextPayload): Future[Either[ContextStorageError, ContextStoreStatus]]
-  def retrieve(key: String): Future[Either[ContextStorageError, controllers.model.ContextPayload]]
-  def remove(key: String): Future[Either[ContextStorageError, ContextStoreStatus]]
+  def retrieve(keys: NonEmptyList[Enrolment]): Future[Either[ContextStorageError, controllers.model.ContextPayload]]
+  def remove(keys: NonEmptyList[Enrolment]): Future[Either[ContextStorageError, ContextStoreStatus]]
 }
 
 @Singleton
@@ -50,16 +52,16 @@ class ContextServiceImpl @Inject()(contextRepository: ContextRepository)(implici
         case _                                                => Left(new ContextStorageError("There was a problem updating the context"))
       }
 
-  def retrieve(key: String): Future[Either[ContextStorageError, controllers.model.ContextPayload]] =
+  def retrieve(keys: NonEmptyList[Enrolment]): Future[Either[ContextStorageError, controllers.model.ContextPayload]] =
     contextRepository
-      .findContext(key)
+      .findContext(keys)
       .map {
         case Some(context) => Right(context)
         case _             => Left(new ContextStorageError("There was a problem retrieving the context"))
       }
 
-  def remove(key: String): Future[Either[ContextStorageError, ContextStoreStatus]] =
-    contextRepository.deleteContext(key).map {
+  def remove(keys: NonEmptyList[Enrolment]): Future[Either[ContextStorageError, ContextStoreStatus]] =
+    contextRepository.deleteContext(keys).map {
       case result: DeleteResult if result.wasAcknowledged() => Right(new ContextStoreAcknowledged())
       case _                                                => Left(new ContextStorageError("There was a problem deleting the context"))
     }

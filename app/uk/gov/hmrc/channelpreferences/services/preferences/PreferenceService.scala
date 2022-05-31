@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 import cats.data.EitherT
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, IdentifierKey, IdentifierValue, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentQualifier, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{ Inject, Singleton }
@@ -28,8 +28,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class PreferenceService @Inject()(preferenceResolver: PreferenceResolver) {
   def getChannelPreference(
-    enrolmentKey: EnrolmentKey,
-    identifierKey: IdentifierKey,
+    enrolmentQualifier: EnrolmentQualifier,
     identifierValue: IdentifierValue,
     channel: Channel
   )(
@@ -37,7 +36,7 @@ class PreferenceService @Inject()(preferenceResolver: PreferenceResolver) {
     executionContext: ExecutionContext): Future[Either[PreferenceError, JsValue]] =
     (for {
       enrolment <- EitherT.fromEither[Future](
-                    PreferenceResolver.toChannelledEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
+                    PreferenceResolver.toChannelledEnrolment(enrolmentQualifier, identifierValue, channel))
       resolution <- EitherT(preferenceResolver.resolveChannelPreference(enrolment))
     } yield resolution).value
 }
