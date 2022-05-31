@@ -17,19 +17,19 @@
 package uk.gov.hmrc.channelpreferences.utils
 
 import com.typesafe.config.ConfigFactory
-import uk.gov.hmrc.crypto.{ ApplicationCrypto, Crypted, PlainText }
+import uk.gov.hmrc.crypto.{ Crypted, CryptoWithKeysFromConfig, PlainText }
 
 trait EntityIdCrypto {
+  lazy val currentCrypto = new CryptoWithKeysFromConfig(baseConfigKey = "entityId.encryption", ConfigFactory.load())
 
   def encryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
-    try Left(
-      new ApplicationCrypto(ConfigFactory.load()).QueryParameterCrypto.encrypt(PlainText(encryptedString)).value)
+    try Left(currentCrypto.encrypt(PlainText(encryptedString)).value)
     catch {
       case e: Throwable => Right(EncryptOrDecryptException(e.getMessage))
     }
 
   def decryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
-    try Left(new ApplicationCrypto(ConfigFactory.load()).QueryParameterCrypto.decrypt(Crypted(encryptedString)).value)
+    try Left(currentCrypto.decrypt(Crypted(encryptedString)).value)
     catch {
       case e: Throwable => Right(EncryptOrDecryptException(e.getMessage))
     }
