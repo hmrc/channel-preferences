@@ -30,7 +30,7 @@ import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
-import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
+import uk.gov.hmrc.channelpreferences.utils.{ CustomHeaders, EntityIdCrypto }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -48,7 +48,7 @@ class PreferenceController @Inject()(
   override val authConnector: AuthConnector,
   override val auditConnector: AuditConnector,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing {
+    extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing with EntityIdCrypto {
 
   private val logger: Logger = Logger(this.getClass)
 
@@ -69,8 +69,14 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
+      val entityId = decryptString(enrolment.entityId) match {
+        case Left(value) => value
+        case Right(e) =>
+          logger warn s"Unable to decrypt ${enrolment.entityId}, reason: ${e.message}"
+          enrolment.entityId
+      }
       for {
-        resp <- entityResolver.confirm(enrolment.entityId, enrolment.itsaId)
+        resp <- entityResolver.confirm(entityId, enrolment.itsaId)
         _ <- auditConfirm(
               resp.status,
               resp.body,
