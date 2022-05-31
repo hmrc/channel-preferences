@@ -16,40 +16,37 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import cats.syntax.parallel._
+import cats.Order
 import cats.syntax.either._
-import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat }
+import cats.syntax.parallel._
+import play.api.libs.json._
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceResolver
 
 sealed trait Enrolment {
-  val enrolmentKey: EnrolmentKey
-  val identifierKey: IdentifierKey
+  val enrolmentQualifier: EnrolmentQualifier
   val identifierValue: IdentifierValue
 
-  final def value: String = s"${enrolmentKey.value}~${identifierKey.value}~${identifierValue.value}"
+  final def value: String = s"${enrolmentQualifier.value}${Enrolment.Separator}${identifierValue.value}"
 }
 
 case class CustomsServiceEnrolment(
   identifierValue: IdentifierValue
 ) extends Enrolment {
-  override val enrolmentKey: EnrolmentKey = CustomsServiceKey
-  override val identifierKey: IdentifierKey = EORINumber
+  override val enrolmentQualifier: EnrolmentQualifier = CustomsServiceQualifier
 }
 
 case class PensionsAdministratorEnrolment(
   identifierValue: IdentifierValue
 ) extends Enrolment {
-  override val enrolmentKey: EnrolmentKey = PensionsOnlineKey
-  override val identifierKey: IdentifierKey = PensionsAdministrator
+  override val enrolmentQualifier: EnrolmentQualifier = PensionsAdministratorQualifier
 }
 
 case class PensionsPractitionerEnrolment(
   identifierValue: IdentifierValue
 ) extends Enrolment {
-  override val enrolmentKey: EnrolmentKey = PensionsSchemePractitionerKey
-  override val identifierKey: IdentifierKey = PensionsPractitioner
+  override val enrolmentQualifier: EnrolmentQualifier = PensionsPractitionerQualifier
 }
 
 object CustomsServiceEnrolment {
@@ -57,6 +54,9 @@ object CustomsServiceEnrolment {
 }
 
 object Enrolment {
+  implicit val enrolmentOrder: Order[Enrolment] = (x: Enrolment, y: Enrolment) => x.value.compareTo(y.value)
+  implicit val enrolmentOrdering: Ordering[Enrolment] = enrolmentOrder.toOrdering
+
   val Separator = "~"
 
   implicit object Format extends Format[Enrolment] {
@@ -85,14 +85,15 @@ object Enrolment {
     identifierKey: String,
     identifierValue: String): Either[PreferenceError, Enrolment] = {
     val tupled = (
-      EnrolmentKey.fromValue(enrolmentKey).leftMap[PreferenceError](ParseError),
-      IdentifierKey.fromValue(identifierKey).leftMap[PreferenceError](ParseError),
+      EnrolmentQualifier
+        .fromValue(s"$enrolmentKey${Enrolment.Separator}$identifierKey")
+        .leftMap[PreferenceError](ParseError),
       IdentifierValue(identifierValue).asRight[PreferenceError]
     ).parTupled
 
     tupled.flatMap {
-      case (enrolmentKey, identifierKey, identifierValue) =>
-        PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue)
+      case (enrolmentQualifier, identifierValue) =>
+        PreferenceResolver.toEnrolment(enrolmentQualifier, identifierValue)
     }
   }
 

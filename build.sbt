@@ -73,7 +73,6 @@ lazy val microservice = Project(appName, file("."))
       "-Ywarn-unused:params", // Warn if a value parameter is unused.
       "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
       "-Ywarn-unused:privates", // Warn if a private member is unused.
-      "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
     ),
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
@@ -96,9 +95,13 @@ lazy val microservice = Project(appName, file("."))
     )
   )
   .settings(ServiceManagerPlugin.serviceManagerSettings)
-  .settings(itDependenciesList := List(
-    ExternalService("PREFERENCES")
-  ))
+  .settings(
+    itDependenciesList := List(
+      ExternalService("PREFERENCES"),
+      ExternalService("AUTH"),
+      ExternalService("USER_DETAILS"),
+      ExternalService("IDENTITY_VERIFICATION")
+    ))
   .settings(ScoverageSettings())
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")

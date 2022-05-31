@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.controllers.model
+package uk.gov.hmrc.channelpreferences
 
 import cats.data.NonEmptyList
 import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextPayload, EnrolmentContextId, Verification, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
 import java.time.{ LocalDateTime, ZoneOffset }
@@ -30,7 +31,8 @@ trait TestModels extends EitherValues {
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
   val enrolmentValue = "HMRC-PODS-ORG~PSAID~GB123456789"
-  val enrolments: NonEmptyList[Enrolment] = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value)
+  val enrolment: Enrolment = Enrolment.fromValue(enrolmentValue).right.value
+  val enrolments: NonEmptyList[Enrolment] = NonEmptyList.of(enrolment)
   val emailAddress: EmailAddress = EmailAddress("test@test.com")
   val email: EmailPreference = EmailPreference(
     index = PrimaryIndex,
@@ -117,4 +119,19 @@ trait TestModels extends EitherValues {
                                               |}
                                               |""".stripMargin)
 
+  val consentJson: String = s"""
+                               |{
+                               |  "consentType": "Default",
+                               |  "status": true,
+                               |  "updated": "1987-03-20T14:33:48.000640Z",
+                               |  "version": {
+                               |    "major": 1,
+                               |    "minor": 1,
+                               |    "patch": 1
+                               |  },
+                               |  "purposes": [
+                               |    "DigitalCommunications"
+                               |  ]
+                               |}
+      """.stripMargin
 }

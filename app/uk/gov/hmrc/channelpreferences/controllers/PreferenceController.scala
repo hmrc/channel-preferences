@@ -53,13 +53,12 @@ class PreferenceController @Inject()(
   private val logger: Logger = Logger(this.getClass)
 
   def channelPreference(
-    enrolmentKey: EnrolmentKey,
-    identifierKey: IdentifierKey,
+    enrolmentQualifier: EnrolmentQualifier,
     identifierValue: IdentifierValue,
     channel: Channel): Action[AnyContent] =
     Action.async { implicit request =>
       preferenceService
-        .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
+        .getChannelPreference(enrolmentQualifier, identifierValue, channel)
         .map(toResult)
     }
 

@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.controllers
+package uk.gov.hmrc.channelpreferences.model
 
 import cats.data.NonEmptyList
-import play.api.libs.json.JsonConfiguration.Aux
-import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, JsonConfiguration, JsonNaming }
+import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json }
 
-package object model {
-  implicit val jsonConfiguration: Aux[Json.MacroOptions] = JsonConfiguration(
-    discriminator = "type",
-    typeNaming = JsonNaming(_.split("\\.").last)
-  )
+package object preferences {
   implicit def nonEmptyListFormat[A: Format]: Format[NonEmptyList[A]] = new Format[NonEmptyList[A]] {
     override def writes(o: NonEmptyList[A]): JsValue = Json.toJson(o.toList)
 

@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model.preferences
+package uk.gov.hmrc.channelpreferences.util
 
-import cats.data.NonEmptyList
-import play.api.libs.json.{ Json, OFormat }
-import uk.gov.hmrc.channelpreferences.controllers.model.Consent
+import org.scalatest.OptionValues
+import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
+import org.scalatest.matchers.must.Matchers
+import uk.gov.hmrc.integration.TestId
 
-case class Preference(
-  enrolments: NonEmptyList[Enrolment],
-  created: Created,
-  consents: NonEmptyList[Consent],
-  emailPreferences: List[EmailPreference],
-  status: Status
-)
-
-object Preference {
-  implicit val format: OFormat[Preference] = Json.format[Preference]
+trait BaseISpec extends ScalaFutures with OptionValues with Matchers with IntegrationPatience {
+  implicit val testId: TestId = TestId(this.getClass.getSimpleName)
 }
