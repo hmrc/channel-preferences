@@ -134,4 +134,8 @@ trait TestModels extends EitherValues {
                                |  ]
                                |}
       """.stripMargin
+
+  val emailJson: String = """{ "value": "test@test.com" }"""
+
+  val jsonHeader: (String, String) = "Content-Type" -> "application/json"
 }
