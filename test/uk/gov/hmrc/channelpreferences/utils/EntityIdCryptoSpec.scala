@@ -22,16 +22,16 @@ class EntityIdCryptoSpec extends PlaySpec with EntityIdCrypto {
 
   "encryptString" must {
     "Successfully parse a string " in {
-      encryptString("f0ea9b13-82bf-4d1a-9619-bb1e2481f8d8") mustBe Left(
-        "YL4AfL0xsXviYiQtibOWOZVqZlKLwsna7Xq4XsFOLjkdcBJd5KldTXzrL81IsrEZ")
+      encryptString("929412ba-9915-4a8b-ad88-9d15d4879b62") mustBe Left(
+        "DtPae4zXATc9ja%2BGM3UEKrCUzv0O%2FviemRBEUJU0bb3%2FQu7y%2FdYBs5ZV8SA3hiWw")
     }
 
   }
 
   "decryptString" must {
     "Successfully parse a string " in {
-      decryptString("YL4AfL0xsXviYiQtibOWOZVqZlKLwsna7Xq4XsFOLjkdcBJd5KldTXzrL81IsrEZ") mustBe Left(
-        "f0ea9b13-82bf-4d1a-9619-bb1e2481f8d8")
+      decryptString("DtPae4zXATc9ja%2BGM3UEKrCUzv0O%2FviemRBEUJU0bb3%2FQu7y%2FdYBs5ZV8SA3hiWw") mustBe Left(
+        "929412ba-9915-4a8b-ad88-9d15d4879b62")
     }
 
   }
