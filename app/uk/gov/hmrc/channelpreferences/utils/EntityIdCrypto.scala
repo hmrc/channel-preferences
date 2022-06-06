@@ -19,17 +19,25 @@ package uk.gov.hmrc.channelpreferences.utils
 import com.typesafe.config.ConfigFactory
 import uk.gov.hmrc.crypto.{ Crypted, CryptoWithKeysFromConfig, PlainText }
 
+import java.net.{ URLDecoder, URLEncoder }
+
 trait EntityIdCrypto {
   lazy val currentCrypto = new CryptoWithKeysFromConfig(baseConfigKey = "entityId.encryption", ConfigFactory.load())
 
-  def encryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
-    try Left(currentCrypto.encrypt(PlainText(encryptedString)).value)
+  def encryptString(stringToEncrypt: String): Either[String, EncryptOrDecryptException] =
+    try Left(encryptAndEncodeString(stringToEncrypt))
     catch {
       case e: Throwable => Right(EncryptOrDecryptException(e.getMessage))
     }
 
-  def decryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
-    try Left(currentCrypto.decrypt(Crypted(encryptedString)).value)
+  private def encryptAndEncodeString(s: String): String =
+    URLEncoder.encode(currentCrypto.encrypt(PlainText(s)).value, "UTF-8")
+
+  private def decodeDecryptString(s: String): String =
+    currentCrypto.decrypt(Crypted(URLDecoder.decode(s, "UTF-8"))).value
+
+  def decryptString(stringToDecrypt: String): Either[String, EncryptOrDecryptException] =
+    try Left(decodeDecryptString(stringToDecrypt))
     catch {
       case e: Throwable => Right(EncryptOrDecryptException(e.getMessage))
     }
