@@ -125,17 +125,19 @@ trait TestModels extends EitherValues {
 
   val consentJson: String = s"""
                                |{
-                               |  "consentType": "Default",
-                               |  "status": true,
-                               |  "updated": "1987-03-20T14:33:48.000640Z",
-                               |  "version": {
-                               |    "major": 1,
-                               |    "minor": 1,
-                               |    "patch": 1
-                               |  },
-                               |  "purposes": [
-                               |    "DigitalCommunications"
-                               |  ]
+                               |	"consent": {
+                               |		"consentType": "Default",
+                               |		"status": true,
+                               |		"updated": "1987-03-20T14:33:48.000640Z",
+                               |		"version": {
+                               |			"major": 1,
+                               |			"minor": 1,
+                               |			"patch": 1
+                               |		},
+                               |		"purposes": [
+                               |			"DigitalCommunications"
+                               |		]
+                               |	}
                                |}
       """.stripMargin
 

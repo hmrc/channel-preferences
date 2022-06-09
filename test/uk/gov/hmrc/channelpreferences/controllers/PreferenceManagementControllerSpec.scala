@@ -57,7 +57,7 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   behavior of "PreferenceManagementController.consent"
 
   it should "return a preference context when successfully updating consent" in new Scope {
-    preferenceManagementService.updateConsent(groupId, consent, enrolments.toNes) returns Future.successful(
+    preferenceManagementService.updateConsent(groupId, consentContext, enrolments.toNes) returns Future.successful(
       Right(contextualPreferenceConsent))
 
     val payload: JsValue = Json.parse(readContextResource("consent.json"))

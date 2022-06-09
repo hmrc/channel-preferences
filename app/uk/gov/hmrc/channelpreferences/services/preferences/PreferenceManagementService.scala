@@ -32,7 +32,12 @@ trait PreferenceManagementService {
     enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
   def updateConsent(
     groupId: GroupId,
-    consent: Consent,
+    consent: ConsentContext,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
+
+  def insertNavigation(
+    groupId: GroupId,
+    consent: NavigationContext,
     enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
   def createVerification(
     groupId: GroupId,
@@ -60,6 +65,8 @@ object PreferenceManagementService extends PreferenceManagementService {
   val consentContext: ConsentContext = ConsentContext(consent, None)
 
   val preferenceContext: ContextualPreference = PreferenceContext(consentContext)
+
+  val preferenceNavigationContext: ContextualPreference = PreferenceContext(consentContext)
 
   private def consentVerificationContext(emailAddress: EmailAddress) = ConsentVerificationContext(
     consent,
@@ -98,7 +105,7 @@ object PreferenceManagementService extends PreferenceManagementService {
 
   override def updateConsent(
     groupId: GroupId,
-    consent: Consent,
+    consent: ConsentContext,
     enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(preferenceContext.asRight)
 
@@ -115,4 +122,10 @@ object PreferenceManagementService extends PreferenceManagementService {
     verificationId: VerificationId,
     enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(PreferenceWithoutContext(preference).asRight)
+
+  override def insertNavigation(
+    groupId: GroupId,
+    consent: NavigationContext,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+    Future.successful(preferenceContext.asRight)
 }
