@@ -26,7 +26,6 @@ import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.preferences._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 import javax.inject.{ Inject, Singleton }
 import scala.collection.immutable.SortedSet
 import scala.concurrent.{ ExecutionContext, Future }
@@ -40,6 +39,10 @@ class PreferenceManagementController @Inject()(
     extends BackendController(controllerComponents) {
 
   def consent(groupId: GroupId): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[Consent](handleConsent(groupId, _).map(toResult(_, Created)))
+  }
+
+  def navigation(groupId: GroupId): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Consent](handleConsent(groupId, _).map(toResult(_, Created)))
   }
 

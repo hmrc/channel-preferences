@@ -50,15 +50,16 @@ object PreferenceManagementService extends PreferenceManagementService {
   private val now = Instant.now
   private val id = UUID.randomUUID()
 
-  val consent: Consent = Consent(
+  val consent = Consent(
     DefaultConsentType,
     ConsentStatus(true),
     Updated(now),
     Version(1, 0, 0),
-    List(DigitalCommunicationsPurpose)
-  )
+    List(DigitalCommunicationsPurpose))
 
-  val preferenceContext: ContextualPreference = PreferenceContext(consent)
+  val consentContext: ConsentContext = ConsentContext(consent, None)
+
+  val preferenceContext: ContextualPreference = PreferenceContext(consentContext)
 
   private def consentVerificationContext(emailAddress: EmailAddress) = ConsentVerificationContext(
     consent,
@@ -66,7 +67,8 @@ object PreferenceManagementService extends PreferenceManagementService {
       VerificationId(id),
       emailAddress,
       LocalDateTime.now()
-    )
+    ),
+    None
   )
 
   val preference: Preference = Preference(

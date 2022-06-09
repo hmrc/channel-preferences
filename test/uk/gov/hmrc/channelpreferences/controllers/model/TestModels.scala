@@ -49,6 +49,8 @@ trait TestModels extends EitherValues {
     purposes = purposes
   )
 
+  val consentContext: ConsentContext = ConsentContext(consent, None)
+
   val preference: Preference = Preference(
     enrolments = enrolments,
     created = Created(timestamp.toInstant(ZoneOffset.UTC)),
@@ -60,7 +62,7 @@ trait TestModels extends EitherValues {
   val contextPayload: ContextPayload = ContextPayload(
     EnrolmentContextId(enrolments),
     timestamp,
-    consent
+    consentContext
   )
 
   val verificationId: VerificationId = VerificationId(UUID.fromString("e273ce4e-c0b4-4189-8eca-ca6ab58744aa"))

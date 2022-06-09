@@ -20,7 +20,7 @@ import cats.data.NonEmptyList
 import org.mongodb.scala.bson.ObjectId
 import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextId, ContextPayload, EnrolmentContextId, VerificationId, Version }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ConsentContext, ContextId, ContextPayload, EnrolmentContextId, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
 import java.time.{ LocalDateTime, ZoneOffset }
@@ -50,6 +50,9 @@ trait TestModels extends EitherValues {
     purposes = purposes
   )
 
+  val managementConsentContext: ConsentContext = ConsentContext(managementConsent, None)
+  val navigationContext: ConsentContext = ConsentContext(managementConsent, None)
+
   val preferenceId: PreferenceId = PreferenceId(new ObjectId)
 
   val preference: Preference = Preference(
@@ -68,7 +71,7 @@ trait TestModels extends EitherValues {
   val contextPayload: ContextPayload = ContextPayload(
     EnrolmentContextId(enrolments): ContextId,
     timestamp,
-    managementConsent
+    managementConsentContext
   )
 
   val verificationId: VerificationId = VerificationId(UUID.randomUUID())
@@ -76,19 +79,21 @@ trait TestModels extends EitherValues {
   val contextJson: JsValue = Json.parse("""
                                           |{
                                           |  "contextId" : {
-                                          |    "enrolments" : ["HMRC-PODS-ORG~PSAID~GB123456789"]
+                                          |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ]
                                           |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {
-                                          |    "consentType" : "Default",
-                                          |    "status" : true,
-                                          |    "updated" : "1987-03-20T14:33:48.000640Z",
-                                          |    "version" : {
-                                          |      "major" : 1,
-                                          |      "minor" : 1,
-                                          |      "patch" : 1
-                                          |    },
-                                          |    "purposes" : [ "DigitalCommunications" ]
+                                          |    "consent" : {
+                                          |      "consentType" : "Default",
+                                          |      "status" : true,
+                                          |      "updated" : "1987-03-20T14:33:48.000640Z",
+                                          |      "version" : {
+                                          |        "major" : 1,
+                                          |        "minor" : 1,
+                                          |        "patch" : 1
+                                          |      },
+                                          |      "purposes" : [ "DigitalCommunications" ]
+                                          |    }
                                           |  }
                                           |}
                                           |""".stripMargin)

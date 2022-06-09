@@ -16,6 +16,7 @@
 GET        /channel-preferences/preferences/enrolments/:enrolmentQualifier/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.channelPreference(enrolmentQualifier: EnrolmentQualifier, value: IdentifierValue, channel: Channel)
 GET        /channel-preferences/preferences/enrolments/:groupId uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.getPreference(groupId: GroupId)
 PUT        /channel-preferences/preferences/enrolments/:groupId/consent uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.consent(groupId: GroupId)
+PUT        /channel-preferences/preferences/enrolments/:groupId/navigation uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.navigation(groupId: GroupId)
 POST       /channel-preferences/preferences/enrolments/:groupId/channels/:channel/index/:index/verify uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.verify(groupId: GroupId, channel: Channel, index: Index)
 PUT        /channel-preferences/preferences/verify/:verificationId/confirm uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.confirm(verificationId: VerificationId)
 

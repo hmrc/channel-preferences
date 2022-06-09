@@ -116,14 +116,15 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
 
   trait Scope extends TestModels {
     val groupId: GroupId = PensionsAdministratorGroupId
-    val contextualPreferenceConsent: ContextualPreference = PreferenceContext(consent)
+    val contextualPreferenceConsent: ContextualPreference = PreferenceContext(consentContext)
     val verificationConsent: ConsentVerificationContext = ConsentVerificationContext(
       consent,
-      verification
+      verification,
+      None
     )
     val contextualPreferenceVerification: ContextualPreference = PreferenceContext(verificationConsent)
     val preferenceWithoutContext: ContextualPreference = PreferenceWithoutContext(preference)
-    val verificationContext: Context = VerificationContext(verification)
+    val verificationContext: Context = VerificationContext(verification, None)
     val preferenceWithContext: ContextualPreference = PreferenceWithContext(preference, List(verificationContext))
 
     val authorisationEnrolmentService: AuthorisationEnrolmentService = mock[AuthorisationEnrolmentService]
