@@ -63,10 +63,11 @@ object PreferenceManagementService extends PreferenceManagementService {
     List(DigitalCommunicationsPurpose))
 
   val consentContext: ConsentContext = ConsentContext(consent, None)
+  val navigationContext: NavigationContext = NavigationContext(Some(Map("returnUrl" -> "/whatever")))
+
+  val preferenceNavigationContext: ContextualPreference = PreferenceContext(navigationContext)
 
   val preferenceContext: ContextualPreference = PreferenceContext(consentContext)
-
-  val preferenceNavigationContext: ContextualPreference = PreferenceContext(consentContext)
 
   private def consentVerificationContext(emailAddress: EmailAddress) = ConsentVerificationContext(
     consent,
@@ -127,5 +128,5 @@ object PreferenceManagementService extends PreferenceManagementService {
     groupId: GroupId,
     consent: NavigationContext,
     enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
-    Future.successful(preferenceContext.asRight)
+    Future.successful(preferenceNavigationContext.asRight)
 }

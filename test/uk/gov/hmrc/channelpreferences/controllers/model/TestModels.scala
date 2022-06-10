@@ -50,6 +50,11 @@ trait TestModels extends EitherValues {
   )
 
   val consentContext: ConsentContext = ConsentContext(consent, None)
+  val navigationContext: NavigationContext = NavigationContext(
+    Some(
+      Map(
+        "returnUrl"  -> "VYBxyuFWQBQZAGpe5tSgmw%3D%3D",
+        "returnText" -> "+me3pS/cgiyhgR8ZIqlfH1WAccrhVkAUGQBqXubUoJs=")))
 
   val preference: Preference = Preference(
     enrolments = enrolments,

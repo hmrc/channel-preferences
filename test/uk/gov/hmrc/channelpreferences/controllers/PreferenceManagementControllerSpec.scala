@@ -114,6 +114,22 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
     contentAsJson(result).validate[ContextualPreference].get mustBe preferenceWithContext
   }
 
+  behavior of "PreferenceManagementController.navigation"
+
+  it should "return a preference context when successfully creating navigation context" in new Scope {
+    preferenceManagementService.insertNavigation(groupId, navigationContext, enrolments.toNes) returns Future
+      .successful(Right(contextualPreferenceConsent))
+
+    val payload: JsValue = Json.parse(readContextResource("navigationPayload.json"))
+
+    val result: Future[Result] =
+      preferenceManagementController
+        .navigation(groupId)(FakeRequest("PUT", "", Headers("Content-Type" -> "application/json"), payload))
+
+    status(result) mustBe Status.CREATED
+    contentAsJson(result).validate[ContextualPreference].get mustBe contextualPreferenceConsent
+  }
+
   trait Scope extends TestModels {
     val groupId: GroupId = PensionsAdministratorGroupId
     val contextualPreferenceConsent: ContextualPreference = PreferenceContext(consentContext)
