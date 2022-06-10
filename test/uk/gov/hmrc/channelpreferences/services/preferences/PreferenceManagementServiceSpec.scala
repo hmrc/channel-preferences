@@ -17,16 +17,13 @@
 package uk.gov.hmrc.channelpreferences.services.preferences
 
 import cats.data.NonEmptySet
-import org.mockito.ArgumentMatchers.any
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.channelpreferences.controllers.model.{ ContextualPreference, NavigationContext, PreferenceContext }
-import uk.gov.hmrc.channelpreferences.model.cds.Email
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, CustomsServiceEnrolment, Enrolment, GroupId, IdentifierValue, PensionsAdministratorEnrolment }
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, IdentifierValue, PensionsAdministratorGroupId }
+import scala.collection.immutable.SortedSet
 
 class PreferenceManagementServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures {
   behavior of "PreferenceManagementServiceSpec.insertNavigation"
@@ -37,21 +34,15 @@ class PreferenceManagementServiceSpec extends AnyFlatSpec with Matchers with Sca
     val preferenceNavigationContext: ContextualPreference = PreferenceContext(navigationContext)
 
     PreferenceManagementService
-      .insertNavigation(any[GroupId], any[NavigationContext], any[NonEmptySet[Enrolment]])
+      .insertNavigation(
+        PensionsAdministratorGroupId,
+        NavigationContext(Some(Map("returnUrl" -> "someUrl"))),
+        NonEmptySet(CustomsServiceEnrolment(IdentifierValue("foo")), SortedSet.empty)
+      )
       .futureValue mustBe Right(preferenceNavigationContext)
-
   }
 
   trait Scope {
-    val customsDataStorePreferenceProvider: CustomsDataStorePreferenceProvider =
-      mock[CustomsDataStorePreferenceProvider]
-    val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(IdentifierValue("foo"))
-    val channelledEnrolment: ChannelledEnrolment = ChannelledEnrolment(customsServiceEnrolment, Email)
-    val pensionsAdministratorEnrolment: PensionsAdministratorEnrolment = PensionsAdministratorEnrolment(
-      IdentifierValue("bar"))
-
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-
     val preferenceManagementService: PreferenceManagementService = PreferenceManagementService
   }
 
