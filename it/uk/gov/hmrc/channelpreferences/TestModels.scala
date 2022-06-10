@@ -31,7 +31,7 @@ trait TestModels extends EitherValues {
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
   val enrolmentValue = "HMRC-PODS-ORG~PSAID~GB123456789"
-  val enrolment: Enrolment = Enrolment.fromValue(enrolmentValue).value
+  val enrolment: Enrolment = Enrolment.fromValue(enrolmentValue).right.value
   val enrolments: NonEmptyList[Enrolment] = NonEmptyList.of(enrolment)
   val emailAddress: EmailAddress = EmailAddress("test@test.com")
   val email: EmailPreference = EmailPreference(
