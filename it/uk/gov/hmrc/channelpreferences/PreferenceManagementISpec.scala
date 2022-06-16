@@ -134,14 +134,14 @@ class PreferenceManagementISpec extends AnyFlatSpec with BaseISpec with TestMode
     verificationResult.status mustBe Status.CREATED
     val preferenceContext = verificationResult.json.as[PreferenceContext]
 
-    val id = preferenceContext.context match {
+    val responseId = preferenceContext.context match {
       case ConsentVerificationContext(_, verification, _) => verification.id
       case other                                          => fail(s"expected a consent verification context, but got $other")
     }
 
     val response =
       setup.wsClient
-        .url(setup.resource(s"/channel-preferences/preferences/verify/${id.toString}/confirm"))
+        .url(setup.resource(s"/channel-preferences/preferences/verify/${responseId.id.toString}/confirm"))
         .withHttpHeaders(jsonHeader, setup.authHeader)
         .put(JsObject.empty)
         .futureValue

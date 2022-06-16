@@ -67,7 +67,7 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
 
   def findVerification(verificationId: VerificationId): Future[Option[ContextPayload]] =
     collection
-      .find(equal("context.verification.id", verificationId.id.toString))
+      .find(equal("context.verification.id.id", verificationId.id.toString))
       .headOption()
 
   private def enrolmentKeysQuery(enrolments: NonEmptyList[Enrolment]) =
