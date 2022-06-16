@@ -19,6 +19,7 @@ package uk.gov.hmrc.channelpreferences
 import org.scalatest.flatspec.AnyFlatSpec
 import play.api.http.Status
 import play.api.libs.json.JsObject
+import uk.gov.hmrc.channelpreferences.controllers.model.{ ConsentVerificationContext, PreferenceContext }
 import uk.gov.hmrc.channelpreferences.model.preferences.{ IdentifierValue, PensionsAdministratorGroupId, PensionsPractitionerEnrolment }
 import uk.gov.hmrc.channelpreferences.util.BaseISpec
 import uk.gov.hmrc.channelpreferences.util.Setup.scope
@@ -69,6 +70,13 @@ class PreferenceManagementISpec extends AnyFlatSpec with BaseISpec with TestMode
 
   s"POST to /channel-preferences/preferences/enrolments/${PensionsAdministratorGroupId.name}/channels/email/index/primary/verify" should
     "pass with a valid payload and authentication" in scope(enrolments.toList) { setup =>
+    setup.wsClient
+      .url(setup.resource(s"/channel-preferences/preferences/enrolments/${PensionsAdministratorGroupId.name}/consent"))
+      .withHttpHeaders(jsonHeader, setup.authHeader)
+      .put(consentJson)
+      .futureValue
+      .status mustBe Status.CREATED
+
     val response =
       setup.wsClient
         .url(setup.resource(
@@ -109,25 +117,35 @@ class PreferenceManagementISpec extends AnyFlatSpec with BaseISpec with TestMode
 
   s"PUT to /channel-preferences/preferences/verify/${verificationId.id}/confirm" should
     "pass with authentication" in scope(enrolments.toList) { setup =>
+    setup.wsClient
+      .url(setup.resource(s"/channel-preferences/preferences/enrolments/${PensionsAdministratorGroupId.name}/consent"))
+      .withHttpHeaders(jsonHeader, setup.authHeader)
+      .put(consentJson)
+      .futureValue
+      .status mustBe Status.CREATED
+
+    val verificationResult = setup.wsClient
+      .url(setup.resource(
+        s"/channel-preferences/preferences/enrolments/${PensionsAdministratorGroupId.name}/channels/email/index/primary/verify"))
+      .withHttpHeaders(jsonHeader, setup.authHeader)
+      .post(emailJson)
+      .futureValue
+
+    verificationResult.status mustBe Status.CREATED
+    val preferenceContext = verificationResult.json.as[PreferenceContext]
+
+    val responseId = preferenceContext.context match {
+      case ConsentVerificationContext(_, verification, _) => verification.id
+      case other                                          => fail(s"expected a consent verification context, but got $other")
+    }
+
     val response =
       setup.wsClient
-        .url(setup.resource(s"/channel-preferences/preferences/verify/${verificationId.id}/confirm"))
+        .url(setup.resource(s"/channel-preferences/preferences/verify/${responseId.id.toString}/confirm"))
         .withHttpHeaders(jsonHeader, setup.authHeader)
         .put(JsObject.empty)
         .futureValue
 
     response.status mustBe Status.CREATED
-  }
-
-  s"PUT to /channel-preferences/preferences/verify/${verificationId.id}/confirm" should
-    "fail without authentication" in scope(enrolments.toList) { setup =>
-    val response =
-      setup.wsClient
-        .url(setup.resource(s"/channel-preferences/preferences/verify/${verificationId.id}/confirm"))
-        .withHttpHeaders(jsonHeader)
-        .put(JsObject.empty)
-        .futureValue
-
-    response.status mustBe Status.UNAUTHORIZED
   }
 }
