@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model.preferences
+package uk.gov.hmrc.channelpreferences.controllers.model
 
 import play.api.libs.json.{ Format, Json }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
 
-import java.time.LocalDateTime
+case class Consent(
+  consentType: ConsentType,
+  status: ConsentStatus,
+  updated: Updated,
+  version: Version,
+  purposes: List[Purpose]
+)
 
-case class Updated(value: LocalDateTime) extends AnyVal
-
-object Updated {
-  implicit val format: Format[Updated] = Json.valueFormat[Updated]
+object Consent {
+  implicit val format: Format[Consent] = Json.format[Consent]
 }

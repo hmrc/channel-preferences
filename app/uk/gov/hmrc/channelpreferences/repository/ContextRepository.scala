@@ -19,10 +19,10 @@ package uk.gov.hmrc.channelpreferences.repository
 import cats.data.NonEmptyList
 import com.google.inject.{ Inject, Singleton }
 import com.mongodb.client.model.Indexes.ascending
-import org.mongodb.scala.model.Filters.in
-import org.mongodb.scala.model.{ IndexModel, IndexOptions }
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.{ Filters, IndexModel, IndexOptions }
 import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
-import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
+import uk.gov.hmrc.channelpreferences.controllers.model.{ ContextPayload, VerificationId }
 import uk.gov.hmrc.channelpreferences.model.preferences.Enrolment
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -54,18 +54,24 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
 
   def updateContext(contextPayload: ContextPayload): Future[UpdateResult] =
     collection
-      .replaceOne(in("contextId.enrolments", enrolmentKeys(contextPayload.contextId.enrolments)), contextPayload)
+      .replaceOne(Filters.or(enrolmentKeysQuery(contextPayload.contextId.enrolments): _*), contextPayload)
       .toFuture()
 
   def deleteContext(keys: NonEmptyList[Enrolment]): Future[DeleteResult] =
-    collection.deleteOne(in("contextId.enrolments", enrolmentKeys(keys))).toFuture()
+    collection.deleteOne(Filters.or(enrolmentKeysQuery(keys): _*)).toFuture()
 
   def findContext(keys: NonEmptyList[Enrolment]): Future[Option[ContextPayload]] =
     collection
-      .find(in("contextId.enrolments", enrolmentKeys(keys)))
+      .find(Filters.or(enrolmentKeysQuery(keys): _*))
       .headOption()
 
-  private def enrolmentKeys(enrolments: NonEmptyList[Enrolment]): List[String] =
+  def findVerification(verificationId: VerificationId): Future[Option[ContextPayload]] =
+    collection
+      .find(equal("context.verification.id", verificationId.id.toString))
+      .headOption()
+
+  private def enrolmentKeysQuery(enrolments: NonEmptyList[Enrolment]) =
     enrolments.toList
       .map(_.value)
+      .map(Filters.eq("contextId.enrolments", _))
 }

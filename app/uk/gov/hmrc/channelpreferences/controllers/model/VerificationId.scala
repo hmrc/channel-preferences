@@ -19,12 +19,15 @@ package uk.gov.hmrc.channelpreferences.controllers.model
 import cats.syntax.either._
 import play.api.libs.json.{ Json, OFormat }
 import play.api.mvc.PathBindable
+import uk.gov.hmrc.channelpreferences.utils.Random
 
 import java.util.UUID
 
 case class VerificationId(id: UUID) extends AnyVal
 
 object VerificationId {
+  def apply(random: Random): VerificationId = VerificationId(random.uuid)
+
   implicit val format: OFormat[VerificationId] = Json.format[VerificationId]
 
   implicit def verificationIdBinder(implicit stringBinder: PathBindable[String]): PathBindable[VerificationId] =
