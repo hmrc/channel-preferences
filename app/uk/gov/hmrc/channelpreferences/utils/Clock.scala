@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.model.preferences
-
-import play.api.libs.json.{ Format, Json }
+package uk.gov.hmrc.channelpreferences.utils
 
 import java.time.LocalDateTime
+import javax.inject.Singleton
 
-case class Updated(value: LocalDateTime) extends AnyVal
-
-object Updated {
-  implicit val format: Format[Updated] = Json.valueFormat[Updated]
+@Singleton
+class Clock {
+  def currentDateTime: LocalDateTime = LocalDateTime.now()
 }

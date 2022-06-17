@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.repository.model
+package uk.gov.hmrc.channelpreferences.utils
 
-import play.api.libs.json.{ Format, Json }
-import uk.gov.hmrc.channelpreferences.model.preferences.Preference
+import java.util.UUID
+import javax.inject.Singleton
 
-case class PreferenceDocument(
-  id: PreferenceId,
-  preference: Preference
-)
-
-object PreferenceDocument {
-  implicit val format: Format[PreferenceDocument] = Json.format[PreferenceDocument]
+@Singleton
+class Random {
+  def uuid: UUID = UUID.randomUUID()
 }

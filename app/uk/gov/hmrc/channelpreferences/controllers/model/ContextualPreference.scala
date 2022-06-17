@@ -39,7 +39,7 @@ object PreferenceContext {
 
 case class PreferenceWithContext(
   preference: Preference,
-  contexts: List[Context]
+  context: Context
 ) extends ContextualPreference
 
 object PreferenceWithContext {
@@ -55,14 +55,12 @@ object ContextualPreference {
     }
 
     override def reads(json: JsValue): JsResult[ContextualPreference] = json match {
-      case JsObject(value) =>
-        if (value.contains("contexts")) {
-          PreferenceWithContext.format.reads(json)
-        } else if (value.contains("preference")) {
-          PreferenceWithoutContext.format.reads(json)
-        } else {
-          PreferenceContext.format.reads(json)
-        }
+      case obj: JsObject =>
+        PreferenceWithContext.format
+          .reads(obj)
+          .orElse(PreferenceWithoutContext.format.reads(obj))
+          .orElse(PreferenceContext.format.reads(obj))
+
       case other => JsError(s"expected a json object for contextual preference but got $other")
     }
   }

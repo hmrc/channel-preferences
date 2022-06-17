@@ -17,24 +17,32 @@
 package uk.gov.hmrc.channelpreferences.controllers.model
 
 import play.api.libs.json._
-import uk.gov.hmrc.channelpreferences.model.preferences.{ ConsentStatus, ConsentType, Purpose, Updated }
+import cats.syntax.option._
 
-sealed trait Context
+sealed trait Context {
+  val navigation: Option[Map[String, String]]
+}
 
-case class Consent(
-  consentType: ConsentType,
-  status: ConsentStatus,
-  updated: Updated,
-  version: Version,
-  purposes: List[Purpose]
+case class ConsentContext(
+  consent: Consent,
+  navigation: Option[Map[String, String]]
 ) extends Context
 
-object Consent {
-  implicit val format: OFormat[Consent] = Json.format[Consent]
+object ConsentContext {
+  implicit val format: OFormat[ConsentContext] = Json.format[ConsentContext]
+}
+
+case class NavigationContext(
+  navigation: Option[Map[String, String]]
+) extends Context
+
+object NavigationContext {
+  implicit val format: OFormat[NavigationContext] = Json.format[NavigationContext]
 }
 
 case class VerificationContext(
-  verification: Verification
+  verification: Verification,
+  navigation: Option[Map[String, String]]
 ) extends Context
 
 object VerificationContext {
@@ -43,7 +51,8 @@ object VerificationContext {
 
 case class ConsentVerificationContext(
   consented: Consent,
-  verification: Verification
+  verification: Verification,
+  navigation: Option[Map[String, String]]
 ) extends Context
 
 object ConsentVerificationContext {
@@ -53,7 +62,8 @@ object ConsentVerificationContext {
 case class ConfirmationContext(
   consented: Consent,
   verification: Verification,
-  confirm: Confirm
+  confirm: Confirm,
+  navigation: Option[Map[String, String]]
 ) extends Context
 
 object ConfirmationContext {
@@ -63,10 +73,11 @@ object ConfirmationContext {
 object Context {
   implicit object Format extends Format[Context] {
     override def writes(o: Context): JsValue = o match {
-      case c: Consent                     => Consent.format.writes(c)
       case v: VerificationContext         => VerificationContext.format.writes(v)
       case cv: ConsentVerificationContext => ConsentVerificationContext.format.writes(cv)
       case c: ConfirmationContext         => ConfirmationContext.format.writes(c)
+      case c: ConsentContext              => ConsentContext.format.writes(c)
+      case c: NavigationContext           => NavigationContext.format.writes(c)
     }
 
     override def reads(json: JsValue): JsResult[Context] = json match {
@@ -75,9 +86,42 @@ object Context {
           .reads(json)
           .orElse(ConsentVerificationContext.format.reads(json))
           .orElse(VerificationContext.format.reads(json))
-          .orElse(Consent.format.reads(json))
+          .orElse(ConsentContext.format.reads(json))
+          .orElse(NavigationContext.format.reads(json))
 
       case other => JsError(s"expected json object for Context but got $other")
+    }
+  }
+
+  implicit class ContextOps(val context: Context) extends AnyVal {
+    def updateConsent(consent: Consent): Context = context match {
+      case c: ConsentContext             => c.copy(consent = consent)
+      case NavigationContext(navigation) => ConsentContext(consent, navigation)
+      case VerificationContext(verification, navigation) =>
+        ConsentVerificationContext(consent, verification, navigation)
+      case c: ConsentVerificationContext => c.copy(consented = consent)
+      case c: ConfirmationContext        => c.copy(consented = consent)
+    }
+
+    def updateNavigation(navigation: Map[String, String]): Context = context match {
+      case c: ConsentContext             => c.copy(navigation = updateNavigationMap(c.navigation, navigation))
+      case n: NavigationContext          => n.copy(navigation = updateNavigationMap(n.navigation, navigation))
+      case v: VerificationContext        => v.copy(navigation = updateNavigationMap(v.navigation, navigation))
+      case c: ConsentVerificationContext => c.copy(navigation = updateNavigationMap(c.navigation, navigation))
+      case c: ConfirmationContext        => c.copy(navigation = updateNavigationMap(c.navigation, navigation))
+    }
+
+    private def updateNavigationMap(
+      previous: Option[Map[String, String]],
+      toAdd: Map[String, String]): Option[Map[String, String]] =
+      previous.map(_ ++ toAdd).orElse(toAdd.some)
+
+    def updateVerification(verification: Verification): Context = context match {
+      case ConsentContext(consent, navigation) => ConsentVerificationContext(consent, verification, navigation)
+      case NavigationContext(navigation)       => VerificationContext(verification, navigation)
+      case v: VerificationContext              => v.copy(verification = verification)
+      case c: ConsentVerificationContext       => c.copy(verification = verification)
+      case c: ConfirmationContext              => c.copy(verification = verification)
     }
   }
 }

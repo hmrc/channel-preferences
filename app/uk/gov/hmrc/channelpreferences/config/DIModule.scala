@@ -30,7 +30,7 @@ class DIModule(environment: Environment, configuration: Configuration) extends A
 
   override def configure(): Unit = {
     bind(classOf[PreferenceResolver]).to(classOf[PreferenceResolverImpl]).asEagerSingleton()
-    bind(classOf[PreferenceManagementService]).toInstance(PreferenceManagementService)
+    bind(classOf[PreferenceManagementService]).to(classOf[PreferenceManagementServiceImpl])
     bind(classOf[ContextService]).to(classOf[ContextServiceImpl]).asEagerSingleton()
   }
 
