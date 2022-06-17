@@ -9,7 +9,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % "5.20.0",
     "uk.gov.hmrc"       %% "emailaddress"              % "3.5.0",
     "com.typesafe.play" %% "play-json-joda"            % "2.9.2",
-    "org.typelevel"     %% "cats-core"                 % "2.7.0",
+    "org.typelevel"     %% "cats-core"                 % "2.8.0",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        % "0.65.0"
   )
 
