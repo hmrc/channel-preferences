@@ -43,8 +43,7 @@ case object CustomsServiceQualifier extends EnrolmentQualifier {
 }
 
 object EnrolmentQualifier {
-  implicit def enrolmentQualifierBinder(
-    implicit stringBinder: PathBindable[String]): PathBindable[EnrolmentQualifier] =
+  implicit def enrolmentQualifierBinder(implicit stringBinder: PathBindable[String]): PathBindable[EnrolmentQualifier] =
     new PathBindable[EnrolmentQualifier] {
       override def bind(key: String, value: String): Either[String, EnrolmentQualifier] =
         for {

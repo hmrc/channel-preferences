@@ -84,8 +84,7 @@ object PreferenceError {
         StatusCodes.InternalServerError
       )
 
-  case class StateTransitionError(override val message: String)
-      extends PreferenceError(message, StatusCodes.BadRequest)
+  case class StateTransitionError(override val message: String) extends PreferenceError(message, StatusCodes.BadRequest)
 
   def toResult(preferenceError: PreferenceError): Result =
     Result(
