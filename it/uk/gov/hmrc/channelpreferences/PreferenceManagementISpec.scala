@@ -59,8 +59,8 @@ class PreferenceManagementISpec extends AnyFlatSpec with BaseISpec with TestMode
     setup =>
       val response =
         setup.wsClient
-          .url(setup.resource(
-            s"/channel-preferences/preferences/enrolments/${PensionsAdministratorGroupId.name}/consent"))
+          .url(
+            setup.resource(s"/channel-preferences/preferences/enrolments/${PensionsAdministratorGroupId.name}/consent"))
           .withHttpHeaders(jsonHeader, setup.authHeader)
           .put(consentJson)
           .futureValue

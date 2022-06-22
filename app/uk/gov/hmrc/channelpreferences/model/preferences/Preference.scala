@@ -40,8 +40,8 @@ object Preference {
         .map(_.copy(contactable = Contactable(true)))
         .toRight(StateTransitionError(s"Missing email preference for verification"))
         .map(emailPreference =>
-          preference.copy(emailPreferences = emailPreference :: preference.emailPreferences.filterNot(
-            _.email == verification.email)))
+          preference.copy(
+            emailPreferences = emailPreference :: preference.emailPreferences.filterNot(_.email == verification.email)))
   }
 
   def defaultConfirmedPreference(
