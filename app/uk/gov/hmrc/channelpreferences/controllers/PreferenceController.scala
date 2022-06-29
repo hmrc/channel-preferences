@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
+import cats.data.EitherT
+import cats.syntax.either._
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
@@ -26,11 +28,12 @@ import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
 import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.ParseError
 import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
-import uk.gov.hmrc.channelpreferences.utils.{ CustomHeaders, EntityIdCrypto }
+import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -48,18 +51,25 @@ class PreferenceController @Inject()(
   override val authConnector: AuthConnector,
   override val auditConnector: AuditConnector,
   override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing with EntityIdCrypto {
+    extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing {
 
   private val logger: Logger = Logger(this.getClass)
 
   def channelPreference(
-    enrolmentQualifier: EnrolmentQualifier,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel): Action[AnyContent] =
     Action.async { implicit request =>
-      preferenceService
-        .getChannelPreference(enrolmentQualifier, identifierValue, channel)
-        .map(toResult)
+      val preference = (for {
+        enrolmentQualifier <- EitherT.fromEither[Future](
+                               EnrolmentQualifier
+                                 .fromValues(enrolmentKey.value, identifierKey.value)
+                                 .leftMap(ParseError))
+        result <- EitherT(preferenceService.getChannelPreference(enrolmentQualifier, identifierValue, channel))
+      } yield result).value
+
+      preference.map(toResult)
     }
 
   def toResult(eitherResult: Either[PreferenceError, JsValue]): Result = eitherResult.fold(
@@ -69,14 +79,8 @@ class PreferenceController @Inject()(
 
   def confirm(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Enrolment] { enrolment =>
-      val entityId = decryptString(enrolment.entityId) match {
-        case Left(value) => value
-        case Right(e) =>
-          logger warn s"Unable to decrypt ${enrolment.entityId}, reason: ${e.message}"
-          enrolment.entityId
-      }
       for {
-        resp <- entityResolver.confirm(entityId, enrolment.itsaId)
+        resp <- entityResolver.confirm(enrolment.entityId, enrolment.itsaId)
         _ <- auditConfirm(
               resp.status,
               resp.body,
