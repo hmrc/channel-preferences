@@ -48,6 +48,7 @@ class ProcessBounceISpec extends ISpec {
           .futureValue
 
       response.status mustBe Status.OK
+      response.body mustBe "Bounce processed successfully for 77ed39b7-d5d8-46ed-abab-a5a8ff416dae"
     }
 
     "return UNSUPPORTED MEDIA TYPE (415) when request does not meet the correct media type (application/json)" in {

@@ -13,7 +13,7 @@
 #   502:
 #     description: map all upstream error codes to 502
 ###
-GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.channelPreference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
+GET        /channel-preferences/preferences/enrolments/:enrolmentQualifier/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.channelPreference(enrolmentQualifier: EnrolmentQualifier, value: IdentifierValue, channel: Channel)
 GET        /channel-preferences/preferences/enrolments/:groupId uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.getPreference(groupId: GroupId)
 PUT        /channel-preferences/preferences/enrolments/:groupId/consent uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.consent(groupId: GroupId)
 PUT        /channel-preferences/preferences/enrolments/:groupId/navigation uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.navigation(groupId: GroupId)
