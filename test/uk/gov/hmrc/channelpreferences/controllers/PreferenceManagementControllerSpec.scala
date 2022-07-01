@@ -44,7 +44,7 @@ import play.api.test.Helpers.{ contentAsJson, defaultAwaitTimeout, status }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.controllers.model._
 import uk.gov.hmrc.channelpreferences.model.cds.Email
-import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, PrimaryIndex }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, Enrolment, PrimaryIndex }
 import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceManagementService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,7 +62,7 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
     val payload: JsValue = Json.parse(readContextResource("consent.json"))
     val result: Future[Result] =
       preferenceManagementController
-        .consent(enrolment)
+        .consent(enrolment.enrolmentKey, enrolment.identifierKey, enrolment.identifierValue)
         .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
     status(result) mustBe Status.CREATED
@@ -72,13 +72,13 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   it should "return a preference context when successfully creating a verification" in new Scope {
 
     preferenceManagementService
-      .createVerification(enrolment, Email, PrimaryIndex, emailAddress) returns Future
+      .createVerification(ChannelledEnrolment(enrolment, Email), PrimaryIndex, emailAddress) returns Future
       .successful(Right(contextualPreferenceVerification))
 
-    val payload: JsValue = Json.parse(s"""{ "value": "${emailAddress.value}" }""")
+    val payload: JsValue = Json.parse(s"""{ "email": "${emailAddress.email}" }""")
     val result: Future[Result] =
       preferenceManagementController
-        .verify(enrolment, Email, PrimaryIndex)
+        .verify(enrolment.enrolmentKey, enrolment.identifierKey, enrolment.identifierValue, Email, PrimaryIndex)
         .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
     status(result) mustBe Status.CREATED
@@ -102,7 +102,7 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
 
     val result: Future[Result] =
       preferenceManagementController
-        .getPreference(enrolment)
+        .getPreference(enrolment.enrolmentKey, enrolment.identifierKey, enrolment.identifierValue)
         .apply(FakeRequest())
 
     status(result) mustBe Status.OK

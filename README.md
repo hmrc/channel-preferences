@@ -123,7 +123,7 @@ Responds with status:
 }
 ```
 
-### GET /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789
+### GET /channel-preferences/preferences/enrolments/HMRC-PODS-ORG/identifier-keys/PSAID/identifier-values/GB123456789
 
 Responds with status:
 
@@ -146,7 +146,7 @@ Responds with status:
 }
 ```
 
-### PUT /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/consent
+### PUT /channel-preferences/preferences/enrolments/HMRC-PODS-ORG/identifier-keys/PSAID/identifier-values/GB123456789/consent
 
 Create or update consent for an enrolment
 
@@ -161,21 +161,20 @@ Create or update consent for an enrolment
 
 #### Example request :
 
-```shell
- curl -H "Content-Type: application/json" -XPUT http://localhost:9052/channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/consent -d '{
-"consentType": "Default",
-"status": true,
-"updated": "1987-03-20T14:33:48.000640Z",
-"version": {
-"major": 1,
-"minor": 1,
-"patch": 1
-},
-"purposes": [
-"DigitalCommunications"
-]
-}'
-
+```json
+{
+  "consentType": "Default",
+  "status": true,
+  "updated": "1987-03-20T14:33:48.000640Z",
+  "version": {
+    "major": 1,
+    "minor": 1,
+    "patch": 1
+  },
+  "purposes": [
+    "DigitalCommunications"
+  ]
+}
 ```
 
 Responds with status:
@@ -199,7 +198,7 @@ Responds with status:
 }
 ```
 
-### POST /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/channels/email/index/primary/verify
+### POST /channel-preferences/preferences/enrolments/HMRC-PODS-ORG/identifier-keys/PSAID/identifier-values/GB123456789/channels/email/index/primary/verify
 
 Create a new verification for the target channel (email)
 
@@ -210,10 +209,10 @@ Create a new verification for the target channel (email)
 
 #### Example request :
 
-```shell
-curl -H "Content-Type: application/json" -XPOST http://localhost:9052/channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/channels/email/index/primary/verify -d '{
-  "value": "test@test.com"
-}'
+```json
+{
+  "email": "test@test.com"
+}
 ```
 
 Responds with status:
@@ -247,10 +246,6 @@ Responds with status:
 ### POST /channel-preferences/preferences/verify/7b708a10-4b9b-4971-8073-436d67b39bd8/confirm
 
 Confirms the email verification
-
-```shell
-curl -H "Content-Type: application/json" -XPUT http://localhost:9052/channel-preferences/preferences/verify/7b708a10-4b9b-4971-8073-436d67b39bd8/confirm
-```
 
 Responds with status:
 

@@ -18,8 +18,7 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 
 import cats.data.NonEmptyList
 import cats.syntax.either._
-import uk.gov.hmrc.channelpreferences.controllers.model._
-import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ConsentVerificationContext, ContextualPreference, PreferenceContext, PreferenceWithoutContext, Verification, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
 import java.time.{ Instant, LocalDateTime }
@@ -30,8 +29,7 @@ trait PreferenceManagementService {
   def getPreference(enrolment: Enrolment): Future[Either[PreferenceError, ContextualPreference]]
   def updateConsent(enrolment: Enrolment, consent: Consent): Future[Either[PreferenceError, ContextualPreference]]
   def createVerification(
-    enrolment: Enrolment,
-    channel: Channel,
+    channelledEnrolment: ChannelledEnrolment,
     index: Index,
     emailAddress: EmailAddress
   ): Future[Either[PreferenceError, ContextualPreference]]
@@ -87,8 +85,7 @@ object PreferenceManagementService extends PreferenceManagementService {
     Future.successful(preferenceContext.asRight)
 
   override def createVerification(
-    enrolment: Enrolment,
-    channel: Channel,
+    channelledEnrolment: ChannelledEnrolment,
     index: Index,
     emailAddress: EmailAddress
   ): Future[Either[PreferenceError, ContextualPreference]] =

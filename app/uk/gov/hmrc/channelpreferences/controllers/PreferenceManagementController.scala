@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
+import cats.data.EitherT
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
 import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, VerificationId }
@@ -34,45 +35,76 @@ class PreferenceManagementController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents) {
 
-  def consent(enrolment: Enrolment): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[Consent](handleConsent(enrolment, _).map(toResult(_, Created)))
+  def consent(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue
+  ): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[Consent](handleConsent(enrolmentKey, identifierKey, identifierValue, _).map(toResult(_, Created)))
   }
 
   private def handleConsent(
-    enrolment: Enrolment,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue,
     consent: Consent
   ): Future[Either[PreferenceError, ContextualPreference]] =
-    preferenceManagementService.updateConsent(enrolment, consent)
+    (for {
+      enrolment <- EitherT.fromEither[Future](
+                    PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue))
+      preference <- EitherT(preferenceManagementService.updateConsent(enrolment, consent))
+    } yield preference).value
 
   def verify(
-    enrolment: Enrolment,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue,
     channel: Channel,
     index: Index
   ): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[EmailAddress](
-      handleVerification(enrolment, channel, index, _).map(toResult(_, Created))
+      handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index, _).map(toResult(_, Created))
     )(request, implicitly[Manifest[EmailAddress]], EmailAddress.objectFormat)
   }
 
   private def handleVerification(
-    enrolment: Enrolment,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue,
     channel: Channel,
     index: Index,
     emailAddress: EmailAddress
   ): Future[Either[PreferenceError, ContextualPreference]] =
-    preferenceManagementService.createVerification(enrolment, channel, index, emailAddress)
+    (for {
+      channelledEnrolment <- EitherT.fromEither[Future](
+                              PreferenceResolver
+                                .toChannelledEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
+      preference <- EitherT(preferenceManagementService.createVerification(channelledEnrolment, index, emailAddress))
+    } yield preference).value
 
-  def confirm(verificationId: VerificationId): Action[AnyContent] = Action.async { _ =>
+  def confirm(
+    verificationId: VerificationId
+  ): Action[AnyContent] = Action.async { _ =>
     preferenceManagementService.confirm(verificationId).map(toResult(_, Created))
   }
 
-  def getPreference(enrolment: Enrolment): Action[AnyContent] =
+  def getPreference(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue): Action[AnyContent] =
     Action.async { _ =>
-      handleGetPreference(enrolment).map(toResult(_, Ok))
+      handleGetPreference(enrolmentKey, identifierKey, identifierValue).map(toResult(_, Ok))
     }
 
-  private def handleGetPreference(enrolment: Enrolment): Future[Either[PreferenceError, ContextualPreference]] =
-    preferenceManagementService.getPreference(enrolment)
+  private def handleGetPreference(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
+    identifierValue: IdentifierValue): Future[Either[PreferenceError, ContextualPreference]] =
+    (for {
+      enrolment <- EitherT.fromEither[Future](
+                    PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue))
+      preference <- EitherT(preferenceManagementService.getPreference(enrolment))
+    } yield preference).value
 
   def toResult(eitherResult: Either[PreferenceError, ContextualPreference], status: Status): Result =
     eitherResult.fold(
