@@ -89,7 +89,8 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   }
 
   it should "return a preference context when successfully confirming a verification" in new Scope {
-    preferenceManagementService.confirm(verificationId) returns Future.successful(preferenceWithoutContext.some.asRight)
+    preferenceManagementService.confirm(verificationId) returns Future.successful(
+      preferenceWithoutContext.some.asRight)
 
     val result: Future[Result] =
       preferenceManagementController
