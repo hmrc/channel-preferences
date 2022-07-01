@@ -89,7 +89,6 @@ class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) 
 trait Scope {
   val appBuilder: Application = new GuiceApplicationBuilder()
     .configure("metrics.enabled" -> false)
-    .configure("mongodb.uri" -> "mongodb://localhost:27017/channel-preferences")
     .overrides(bind[PreferenceService].to[PreferenceServiceMock])
     .build()
 }

@@ -17,8 +17,18 @@
 package uk.gov.hmrc.channelpreferences.repository.model
 
 import play.api.libs.json.Json
+
 import java.time.LocalDateTime
 import java.util.UUID
+
+case class Confirm(
+  id: UUID,
+  started: LocalDateTime
+)
+
+object Confirm {
+  implicit val reads = Json.reads[Confirm]
+}
 
 case class Verification(
   id: UUID,
@@ -27,19 +37,10 @@ case class Verification(
 )
 
 object Verification {
-  implicit val verificationFormat = Json.format[Verification]
+  implicit val reads = Json.reads[Verification]
 }
 
-case class Confirm(
-  id: UUID,
-  started: LocalDateTime
-)
-
-object Confirm {
-  implicit val confirmFormat = Json.format[Confirm]
-}
-
-case class Consented(
+case class ContextConsent(
   consentType: String,
   status: Boolean,
   created: LocalDateTime,
@@ -47,27 +48,28 @@ case class Consented(
   purposes: List[Purpose.Value]
 )
 
-object Consented {
-  implicit val consentedFormat = Json.format[Consented]
+object ContextConsent {
+  implicit val reads = Json.reads[ContextConsent]
 }
 
-case class Context(
-  consented: Consented,
+case class ContextPayload(
+  consented: ContextConsent,
   verification: Verification,
   confirm: Confirm
 )
 
-object Context {
-  implicit val contextFormat = Json.format[Context]
+object ContextPayload {
+  implicit val reads = Json.reads[ContextPayload]
 }
 
-case class ContextPayload(
+case class Context(
+  id: UUID,
   key: String,
   resourcePath: String,
   expiry: LocalDateTime,
-  context: Context
+  context: ContextPayload
 )
 
-object ContextPayload {
-  implicit val contextPayloadFormat = Json.format[ContextPayload]
+object Context {
+  implicit val reads = Json.reads[Context]
 }

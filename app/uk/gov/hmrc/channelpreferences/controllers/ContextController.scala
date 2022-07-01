@@ -19,55 +19,44 @@ package uk.gov.hmrc.channelpreferences.controllers
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents }
 import uk.gov.hmrc.channelpreferences.controllers.model._
-import uk.gov.hmrc.channelpreferences.model.context.ContextStoreAcknowledged
-import uk.gov.hmrc.channelpreferences.services.preferences.ContextService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
-class ContextController @Inject()(contextService: ContextService, controllerComponents: ControllerComponents)(
-  implicit ec: ExecutionContext)
+class ContextController @Inject()(controllerComponents: ControllerComponents)
     extends BackendController(controllerComponents) {
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[ContextPayload] { context =>
-      contextService
-        .store(context)
-        .map {
-          case Right(_: ContextStoreAcknowledged) => Created(context.key)
-          case _                                  => BadRequest(s"Context ${context.key} could not be created")
-        }
+      Future.successful(Created(context.key))
     }
   }
 
   def get(key: String): Action[AnyContent] = Action.async { _ =>
-    contextService
-      .retrieve(key)
-      .map {
-        case Right(payload) => Ok(Json.toJson(payload))
-        case _              => NotFound(s"Context $key could not be retrieved")
-      }
+    val context = ContextPayload(
+      key,
+      "path",
+      LocalDateTime.now(),
+      Context(
+        Consented("DEFAULT", true, LocalDateTime.now(), Version(1, 2, 5), List.empty),
+        Verification(UUID.fromString("b25fb7aa-b4d9-11ec-b909-0242ac120002"), "test@test.com", LocalDateTime.now()),
+        Confirm(UUID.fromString("b25fb7aa-b4d9-11ec-b909-0242ac120002"), LocalDateTime.now())
+      )
+    )
+    Future.successful(Ok(Json.toJson(context)))
   }
 
   def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[ContextPayload] { context =>
-      contextService
-        .replace(context)
-        .map {
-          case Right(_: ContextStoreAcknowledged) => Ok(s"${context.key} updated with id $id")
-          case _                                  => BadRequest(s"Context ${context.key} with id: $id could not be updated")
-        }
+    withJsonBody[ContextPayload] { _ =>
+      Future.successful(Ok(s"$id updated"))
     }
   }
 
   def delete(key: String): Action[AnyContent] = Action.async { _ =>
-    contextService
-      .remove(key)
-      .map {
-        case Right(_: ContextStoreAcknowledged) => Accepted(s"$key deleted")
-        case _                                  => BadRequest(s"Context $key could not be deleted")
-      }
+    Future.successful(Accepted(s"$key deleted"))
   }
+
 }
