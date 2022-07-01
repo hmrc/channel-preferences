@@ -43,7 +43,7 @@ class CustomsDataStorePreferenceProviderSpec
 
   it should "return the json representation of a email verification" in new Scope {
     customsDataStorePreferenceProvider
-      .getChannelPreference(customsServiceEnrolment, Email)
+      .getPreference(customsServiceEnrolment)
       .futureValue shouldBe Json.toJson(emailVerification).asRight
 
     auditConnector.sendExplicitAudit(
@@ -55,10 +55,10 @@ class CustomsDataStorePreferenceProviderSpec
   }
 
   it should "return an error for a channel type other than Email" in new Scope {
-    private val unsupportedChannelEnrolment = CustomsServiceEnrolment(identifierValue)
+    private val unsupportedChannelEnrolment = CustomsServiceEnrolment(identifierValue, Phone)
 
     customsDataStorePreferenceProvider
-      .getChannelPreference(unsupportedChannelEnrolment, Phone)
+      .getPreference(unsupportedChannelEnrolment)
       .futureValue shouldBe UnsupportedChannelError(Phone).asLeft
 
     auditConnector.sendExplicitAudit(*[String], *[Map[String, String]]) wasNever called
@@ -70,7 +70,7 @@ class CustomsDataStorePreferenceProviderSpec
 
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
     val identifierValue: IdentifierValue = IdentifierValue("foo")
-    val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(identifierValue)
+    val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(identifierValue, Email)
     val emailVerification: EmailVerification = EmailVerification(EmailAddress("foo@bar.com"), DateTime.now())
 
     cdsEmailConnector

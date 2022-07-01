@@ -36,18 +36,18 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
       contextService
         .store(context)
         .map {
-          case Right(_: ContextStoreAcknowledged) => Created(context.contextId.value)
-          case _                                  => BadRequest(s"Context ${context.contextId.value} could not be created")
+          case Right(_: ContextStoreAcknowledged) => Created(context.key)
+          case _                                  => BadRequest(s"Context ${context.key} could not be created")
         }
     }
   }
 
-  def get(contextId: String): Action[AnyContent] = Action.async { _ =>
+  def get(key: String): Action[AnyContent] = Action.async { _ =>
     contextService
-      .retrieve(contextId)
+      .retrieve(key)
       .map {
         case Right(payload) => Ok(Json.toJson(payload))
-        case _              => NotFound(s"Context $contextId could not be retrieved")
+        case _              => NotFound(s"Context $key could not be retrieved")
       }
   }
 
@@ -56,18 +56,18 @@ class ContextController @Inject()(contextService: ContextService, controllerComp
       contextService
         .replace(context)
         .map {
-          case Right(_: ContextStoreAcknowledged) => Ok(s"${context.contextId.value} updated with id $id")
-          case _                                  => BadRequest(s"Context ${context.contextId.value} with id: $id could not be updated")
+          case Right(_: ContextStoreAcknowledged) => Ok(s"${context.key} updated with id $id")
+          case _                                  => BadRequest(s"Context ${context.key} with id: $id could not be updated")
         }
     }
   }
 
-  def delete(contextId: String): Action[AnyContent] = Action.async { _ =>
+  def delete(key: String): Action[AnyContent] = Action.async { _ =>
     contextService
-      .remove(contextId)
+      .remove(key)
       .map {
-        case Right(_: ContextStoreAcknowledged) => Accepted(s"$contextId deleted")
-        case _                                  => BadRequest(s"Context $contextId could not be deleted")
+        case Right(_: ContextStoreAcknowledged) => Accepted(s"$key deleted")
+        case _                                  => BadRequest(s"Context $key could not be deleted")
       }
   }
 }

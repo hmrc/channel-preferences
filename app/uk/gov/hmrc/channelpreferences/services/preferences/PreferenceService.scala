@@ -37,7 +37,7 @@ class PreferenceService @Inject()(preferenceResolver: PreferenceResolver) {
     executionContext: ExecutionContext): Future[Either[PreferenceError, JsValue]] =
     (for {
       enrolment <- EitherT.fromEither[Future](
-                    PreferenceResolver.toChannelledEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
-      resolution <- EitherT(preferenceResolver.resolveChannelPreference(enrolment))
+                    PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
+      resolution <- EitherT(preferenceResolver.resolvePreferenceForEnrolment(enrolment))
     } yield resolution).value
 }

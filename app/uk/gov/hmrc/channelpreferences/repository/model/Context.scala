@@ -14,45 +14,54 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.channelpreferences.controllers.model
+package uk.gov.hmrc.channelpreferences.repository.model
 
 import play.api.libs.json.Json
-
 import java.time.LocalDateTime
 import java.util.UUID
 
-final case class Version(
-  major: Int,
-  minor: Int,
-  patch: Int
-)
-
-final case class Verification(
+case class Verification(
   id: UUID,
   email: String,
   sent: LocalDateTime
 )
 
-final case class Context(
+object Verification {
+  implicit val verificationFormat = Json.format[Verification]
+}
+
+case class Confirm(
+  id: UUID,
+  started: LocalDateTime
+)
+
+object Confirm {
+  implicit val confirmFormat = Json.format[Confirm]
+}
+
+case class Consented(
+  consentType: String,
+  status: Boolean,
+  created: LocalDateTime,
+  version: Version,
+  purposes: List[Purpose.Value]
+)
+
+object Consented {
+  implicit val consentedFormat = Json.format[Consented]
+}
+
+case class Context(
   consented: Consented,
   verification: Verification,
   confirm: Confirm
 )
 
-final case class Consented(
-  consentType: String,
-  status: Boolean,
-  created: LocalDateTime,
-  version: Version,
-  purposes: List[String]
-)
+object Context {
+  implicit val contextFormat = Json.format[Context]
+}
 
-final case class Confirm(
-  id: UUID,
-  started: LocalDateTime
-)
-
-final case class ContextPayload(
+case class ContextPayload(
   key: String,
   resourcePath: String,
   expiry: LocalDateTime,
@@ -60,10 +69,5 @@ final case class ContextPayload(
 )
 
 object ContextPayload {
-  implicit val versionFormat = Json.format[Version]
-  implicit val consentedFormat = Json.format[Consented]
-  implicit val confirmFormat = Json.format[Confirm]
-  implicit val verificationFormat = Json.format[Verification]
-  implicit val contextReadsFormat = Json.format[Context]
   implicit val contextPayloadFormat = Json.format[ContextPayload]
 }

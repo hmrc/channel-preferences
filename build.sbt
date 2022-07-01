@@ -21,7 +21,6 @@ lazy val microservice = Project(appName, file("."))
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.ChannelBinder._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.cds._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.preferences._",
-    RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.controllers.model.VerificationId",
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions ++= Seq(

@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.channelpreferences.repository.model
 
-import org.mongodb.scala.bson.ObjectId
-import play.api.libs.json.{ Format, Json }
-import uk.gov.hmrc.mongo.play.json.formats.MongoFormats.objectIdFormat
+import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.JsSuccess
 
-case class PreferenceId(value: ObjectId) extends AnyVal
+class ManagementSpec extends PlaySpec with TestModels {
 
-object PreferenceId {
-  implicit val idFormat: Format[ObjectId] = objectIdFormat
-  implicit val format: Format[PreferenceId] = Json.valueFormat[PreferenceId]
+  "read" must {
+    "successfully parse from json" in {
+      managementJson.validate[Management] mustBe JsSuccess(management)
+    }
+  }
 }

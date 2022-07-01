@@ -16,112 +16,142 @@
 
 package uk.gov.hmrc.channelpreferences.repository.model
 
-import cats.data.NonEmptyList
-import org.mongodb.scala.bson.ObjectId
-import org.scalatest.EitherValues
-import play.api.libs.json.{ JsValue, Json }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextPayload, EnrolmentContextId, VerificationId, Version }
-import uk.gov.hmrc.channelpreferences.model.preferences._
+import play.api.libs.json.Json
 
-import java.time.{ LocalDateTime, ZoneOffset }
+import java.time.LocalDateTime
 import java.util.UUID
 
-trait TestModels extends EitherValues {
+trait TestModels {
 
-  val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
-  val version: Version = Version(1, 1, 1)
-  val purposes = List(DigitalCommunicationsPurpose)
-  val enrolmentValue = "HMRC-PODS-ORG~PSAID~GB123456789"
-
-  val email: EmailPreference = EmailPreference(
-    index = PrimaryIndex,
-    email = EmailAddress("test@test.com"),
-    contentType = TextPlain,
-    language = EnglishLanguage,
-    contactable = Contactable(true),
+  val timestamp = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
+  val keyIdentifier = "61ea7c5951d7a42da4fd4608";
+  val managementId = UUID.randomUUID()
+  val version = Version(1, 1, 1)
+  val purposes = List(Purpose.one, Purpose.two)
+  val message = Message(
+    language = Language.en,
+    nudge = true,
+    archive = "3.months"
+  )
+  val email = Email(
+    index = EmailIndex.primary,
+    email = "test@test.com",
+    contentType = "text/plain",
+    language = Language.en,
+    contactable = true,
     purposes = purposes
   )
-  val managementConsent: Consent = Consent(
-    consentType = DefaultConsentType,
-    status = ConsentStatus(true),
-    updated = Updated(timestamp.toInstant(ZoneOffset.UTC)),
+  val managementConsent = ManagementConsent(
+    consentType = "default",
+    status = true,
+    updated = timestamp,
     version = version,
     purposes = purposes
   )
-
-  val preferenceId: PreferenceId = PreferenceId(new ObjectId)
-
-  val preference: Preference = Preference(
-    enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
-    created = Created(timestamp.toInstant(ZoneOffset.UTC)),
-    consents = NonEmptyList.of(managementConsent),
-    emailPreferences = List(email),
-    status = Active
+  val management = Management(
+    id = managementId,
+    key = List("HMRC-MTD-VAT~VRN~GB123456789", "HMRC-CUS-ORG~EORINumber~GB123456789"),
+    created = timestamp,
+    consent = List(managementConsent),
+    email = List(email),
+    message = message,
+    status = Status.ACTIVE
+  )
+  val contextId = UUID.randomUUID()
+  val verificationId = UUID.randomUUID()
+  val confirmId = UUID.randomUUID()
+  val verification = Verification(id = verificationId, sent = timestamp, email = "test@test.com")
+  val confirm = Confirm(id = confirmId, started = timestamp)
+  val consented =
+    Consented(consentType = "default", status = true, created = timestamp, version = version, purposes = purposes)
+  val context = Context(
+    consented = consented,
+    verification = verification,
+    confirm = confirm
+  )
+  val contextPayload = ContextPayload(
+    key = keyIdentifier,
+    resourcePath = "email[index=primary]",
+    expiry = timestamp,
+    context = context
   )
 
-  val preferenceDocument: PreferenceDocument = PreferenceDocument(
-    preferenceId,
-    preference
-  )
+  val contextJson = Json.parse(s"""
+                                  |{
+                                  | "id":"$contextId",
+                                  | "key":"$keyIdentifier",
+                                  | "resourcePath":"email[index=primary]",
+                                  | "expiry":"$timestamp",
+                                  | "context":{
+                                  |   "consented":{
+                                  |     "consentType":"default",
+                                  |     "status":true,
+                                  |     "created":"$timestamp",
+                                  |     "version":{
+                                  |       "major":1,
+                                  |       "minor":1,
+                                  |       "patch":1
+                                  |     },
+                                  |     "purposes":[
+                                  |       "one",
+                                  |       "two"
+                                  |     ]
+                                  |  },
+                                  |  "verification":{
+                                  |     "id":"$verificationId",
+                                  |     "email":"test@test.com",
+                                  |     "sent":"$timestamp"
+                                  |  },
+                                  |  "confirm":{
+                                  |      "id":"$confirmId",
+                                  |      "started":"$timestamp"
+                                  |  }
+                                  | }
+                                  |}""".stripMargin)
 
-  val contextPayload: ContextPayload = ContextPayload(
-    EnrolmentContextId(Enrolment.fromValue(enrolmentValue).right.value),
-    timestamp,
-    managementConsent
-  )
-
-  val verificationId: VerificationId = VerificationId(UUID.randomUUID())
-
-  val contextJson: JsValue = Json.parse("""
-                                          |{
-                                          |  "contextId" : {
-                                          |    "enrolment" : "HMRC-PODS-ORG~PSAID~GB123456789"
-                                          |  },
-                                          |  "expiry" : "1987-03-20T14:33:48.00064",
-                                          |  "context" : {
-                                          |    "consentType" : "Default",
-                                          |    "status" : true,
-                                          |    "updated" : "1987-03-20T14:33:48.000640Z",
-                                          |    "version" : {
-                                          |      "major" : 1,
-                                          |      "minor" : 1,
-                                          |      "patch" : 1
-                                          |    },
-                                          |    "purposes" : [ "DigitalCommunications" ]
-                                          |  }
-                                          |}
-                                          |""".stripMargin)
-
-  val preferenceDocumentJson: JsValue = Json.parse(s"""
-                                                      {
-                                                      |  "id" : {
-                                                      |    "$$oid" : "${preferenceId.value.toString}"
-                                                      |  },
-                                                      |  "preference" : {
-                                                      |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ],
-                                                      |    "created" : "1987-03-20T14:33:48.000640Z",
-                                                      |    "consents" : [ {
-                                                      |      "consentType" : "Default",
-                                                      |      "status" : true,
-                                                      |      "updated" : "1987-03-20T14:33:48.000640Z",
-                                                      |      "version" : {
-                                                      |        "major" : 1,
-                                                      |        "minor" : 1,
-                                                      |        "patch" : 1
-                                                      |      },
-                                                      |      "purposes" : [ "DigitalCommunications" ]
-                                                      |    } ],
-                                                      |    "emailPreferences" : [ {
-                                                      |      "index" : "Primary",
-                                                      |      "email" : "test@test.com",
-                                                      |      "contentType" : "text/plain",
-                                                      |      "language" : "en",
-                                                      |      "contactable" : true,
-                                                      |      "purposes" : [ "DigitalCommunications" ]
-                                                      |    } ],
-                                                      |    "status" : "Active"
-                                                      |  }
-                                                      |}
-                                                      |""".stripMargin)
+  val managementJson = Json.parse(s"""
+                                     |{
+                                     | "id":"$managementId",
+                                     | "key":[
+                                     |  "HMRC-MTD-VAT~VRN~GB123456789",
+                                     |  "HMRC-CUS-ORG~EORINumber~GB123456789"
+                                     | ],
+                                     | "created":"$timestamp",
+                                     | "consent":[
+                                     |  {
+                                     |    "consentType":"default",
+                                     |    "status":true,
+                                     |    "updated":"$timestamp",
+                                     |     "version":{
+                                     |       "major":1,
+                                     |       "minor":1,
+                                     |       "patch":1
+                                     |     },
+                                     |          "purposes":[
+                                     |       "one",
+                                     |       "two"
+                                     |     ]
+                                     |  }
+                                     | ],
+                                     | "email":[
+                                     |  {
+                                     |    "index":"primary",
+                                     |    "email":"test@test.com",
+                                     |    "contentType":"text/plain",
+                                     |    "language":"en",
+                                     |    "contactable":true,
+                                     |     "purposes":[
+                                     |       "one",
+                                     |       "two"
+                                     |     ]
+                                     |  }
+                                     | ],
+                                     | "message":{
+                                     |  "language":"en",
+                                     |  "nudge":true,
+                                     |  "archive":"3.months"
+                                     | },
+                                     | "status":"ACTIVE"
+                                     |}""".stripMargin)
 
 }

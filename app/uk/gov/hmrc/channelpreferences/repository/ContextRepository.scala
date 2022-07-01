@@ -17,14 +17,13 @@
 package uk.gov.hmrc.channelpreferences.repository
 
 import com.google.inject.{ Inject, Singleton }
-
 import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import com.mongodb.client.model.Indexes.ascending
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{ IndexModel, IndexOptions }
 import org.mongodb.scala.result.{ DeleteResult, InsertOneResult, UpdateResult }
-import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
+import uk.gov.hmrc.channelpreferences.repository.model.ContextPayload
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.util.concurrent.TimeUnit
@@ -37,8 +36,8 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
       domainFormat = ContextPayload.contextPayloadFormat,
       indexes = Seq(
         IndexModel(
-          ascending("contextId.enrolment"),
-          IndexOptions().name("contextIdIndex")
+          ascending("key"),
+          IndexOptions().name("keyIndex")
         ),
         IndexModel(
           ascending("expiry"),
@@ -52,13 +51,13 @@ class ContextRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: E
     collection.insertOne(contextPayload).toFuture()
 
   def updateContext(contextPayload: ContextPayload): Future[UpdateResult] =
-    collection.replaceOne(equal("contextId.enrolment", contextPayload.contextId.value), contextPayload).toFuture()
+    collection.replaceOne(equal("key", contextPayload.key), contextPayload).toFuture()
 
   def deleteContext(key: String): Future[DeleteResult] =
-    collection.deleteOne(equal("contextId.enrolment", key)).toFuture()
+    collection.deleteOne(equal("key", key)).toFuture()
 
   def findContext(key: String): Future[Option[ContextPayload]] =
     collection
-      .find(equal("contextId.enrolment", key))
+      .find(equal("key", key))
       .headOption()
 }
