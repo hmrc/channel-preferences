@@ -29,7 +29,7 @@ object AppDependencies {
     "org.mockito"            %% "mockito-scala"            % "1.17.5"        % "test, it",
     "org.mockito"            % "mockito-core"              % "4.4.0"         % "test",
     "com.github.tomakehurst" % "wiremock-jre8"             % "2.32.0"        % "test,it",
-    "org.mock-server"        % "mockserver-netty"          % "5.13.2"        % "it",
+    "org.mock-server"        % "mockserver-netty"          % "5.13.0"        % "it",
     "com.vladsch.flexmark"   % "flexmark-all"              % "0.36.8"        % "test, it"
   )
 }

@@ -16,19 +16,9 @@
 
 package uk.gov.hmrc.channelpreferences.repository.model
 
-import play.api.libs.json.{ Format, Json, Reads, Writes }
+import play.api.libs.json.{ Format, Reads, Writes }
 
 import java.time.LocalDateTime
-import java.util.UUID
-
-sealed trait Purpose
-
-object Purpose extends Enumeration {
-  type Purpose = Value
-  val one, two, three = Value
-
-  implicit val format: Format[Purpose] = Format(Reads.enumNameReads(Purpose), Writes.enumNameWrites)
-}
 
 sealed trait EmailIndex
 
@@ -58,27 +48,19 @@ object Status extends Enumeration {
 }
 
 case class Message(
-  language: Language.Value,
+  language: Language,
   nudge: Boolean,
   archive: String
 )
 
-object Message {
-  implicit val reads = Json.reads[Message]
-}
-
 case class Email(
-  index: EmailIndex.Value,
+  index: EmailIndex,
   email: String,
-  contentType: String,
-  language: Language.Value,
+  `type`: String,
+  language: Language,
   contactable: Boolean,
-  purposes: List[Purpose.Value]
+  purposes: List[Int]
 )
-
-object Email {
-  implicit val reads = Json.reads[Email]
-}
 
 case class Version(
   major: Int,
@@ -86,32 +68,19 @@ case class Version(
   patch: Int
 )
 
-object Version {
-  implicit val reads = Json.reads[Version]
-}
-
 case class ManagementConsent(
-  consentType: String,
+  `type`: String,
   status: Boolean,
   updated: LocalDateTime,
   version: Version,
-  purposes: List[Purpose.Value]
+  purposes: List[Int]
 )
 
-object ManagementConsent {
-  implicit val reads = Json.reads[ManagementConsent]
-}
-
 case class Management(
-  id: UUID,
   key: List[String],
   created: LocalDateTime,
   consent: List[ManagementConsent],
   email: List[Email],
   message: Message,
-  status: Status.Value
+  status: Status
 )
-
-object Management {
-  implicit val reads = Json.reads[Management]
-}
