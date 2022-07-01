@@ -35,8 +35,9 @@ import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class OutboundProxyConnector @Inject()(
-  config: Configuration)(implicit system: ActorSystem, executionContext: ExecutionContext)
+class OutboundProxyConnector @Inject()(config: Configuration)(
+  implicit system: ActorSystem,
+  executionContext: ExecutionContext)
     extends ServicesConfig(config) {
 
   import OutboundProxyConnector._

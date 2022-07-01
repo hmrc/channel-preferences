@@ -734,8 +734,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     when(mockProcessEmail.process(any[Event]))
       .thenReturn(Future.successful(Right("Email bounce processed successfully")))
 
-    val fakeProcessBounce =
-      FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), processBouncePayload)
+    val fakeProcessBounce = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), processBouncePayload)
 
     val updateStatusRequest =
       FakeRequest(

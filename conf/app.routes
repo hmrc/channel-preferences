@@ -20,17 +20,6 @@ POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channel
 POST       /channel-preferences/preference/:key/status      uk.gov.hmrc.channelpreferences.controllers.PreferenceController.update(key: String)
 
 POST       /channel-preferences/confirm                     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
-
-###
-# Context endpoints
-###
-POST         /channel-preferences/context                   uk.gov.hmrc.channelpreferences.controllers.ContextController.create
-GET          /channel-preferences/context/:key              uk.gov.hmrc.channelpreferences.controllers.ContextController.get(key)
-PUT          /channel-preferences/context/:key              uk.gov.hmrc.channelpreferences.controllers.ContextController.update(key)
-DELETE       /channel-preferences/context/:key              uk.gov.hmrc.channelpreferences.controllers.ContextController.delete(key)
-
-
-
 GET        /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
 POST       /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
 PUT        /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
