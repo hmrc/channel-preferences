@@ -16,30 +16,101 @@
 
 package uk.gov.hmrc.channelpreferences.services.preferences
 
-import cats.data.NonEmptySet
+import cats.data.{ NonEmptyList, NonEmptySet }
+import cats.syntax.either._
 import uk.gov.hmrc.channelpreferences.controllers.model._
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
+import java.time.{ Instant, LocalDateTime }
+import java.util.UUID
 import scala.concurrent.Future
 
 trait PreferenceManagementService {
-  def getPreference(enrolments: NonEmptySet[Enrolment]): Future[Option[ContextualPreference]]
-
+  def getPreference(
+    groupId: GroupId,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
   def updateConsent(
+    groupId: GroupId,
     consent: Consent,
     enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
-
-  def updateNavigation(
-    navigationContext: NavigationContext,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, NavigationContext]]
-
   def createVerification(
+    groupId: GroupId,
     channel: Channel,
     index: Index,
     emailAddress: EmailAddress,
     enrolments: NonEmptySet[Enrolment]
   ): Future[Either[PreferenceError, ContextualPreference]]
+  def confirm(
+    verificationId: VerificationId,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
+}
 
-  def confirm(verificationId: VerificationId): Future[Either[PreferenceError, Option[ContextualPreference]]]
+object PreferenceManagementService extends PreferenceManagementService {
+  private val now = Instant.now
+  private val id = UUID.randomUUID()
+
+  val consent: Consent = Consent(
+    DefaultConsentType,
+    ConsentStatus(true),
+    Updated(now),
+    Version(1, 0, 0),
+    List(DigitalCommunicationsPurpose)
+  )
+
+  val preferenceContext: ContextualPreference = PreferenceContext(consent)
+
+  private def consentVerificationContext(emailAddress: EmailAddress) = ConsentVerificationContext(
+    consent,
+    Verification(
+      VerificationId(id),
+      emailAddress,
+      LocalDateTime.now()
+    )
+  )
+
+  val preference: Preference = Preference(
+    enrolments = NonEmptyList.of(
+      Enrolment
+        .fromValue("HMRC-PODS-ORG~PSAID~GB123456789")
+        .valueOr(error => throw new IllegalArgumentException(error.message))),
+    created = Created(Instant.now()),
+    consents = NonEmptyList.of(consent),
+    emailPreferences = List(
+      EmailPreference(
+        index = PrimaryIndex,
+        email = EmailAddress("test@test.com"),
+        contentType = TextPlain,
+        language = EnglishLanguage,
+        contactable = Contactable(true),
+        purposes = List(DigitalCommunicationsPurpose)
+      )
+    ),
+    status = Active
+  )
+
+  override def getPreference(
+    groupId: GroupId,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+    Future.successful(preferenceContext.asRight)
+
+  override def updateConsent(
+    groupId: GroupId,
+    consent: Consent,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+    Future.successful(preferenceContext.asRight)
+
+  override def createVerification(
+    groupId: GroupId,
+    channel: Channel,
+    index: Index,
+    emailAddress: EmailAddress,
+    enrolments: NonEmptySet[Enrolment]
+  ): Future[Either[PreferenceError, ContextualPreference]] =
+    Future.successful(PreferenceContext(consentVerificationContext(emailAddress)).asRight)
+
+  override def confirm(
+    verificationId: VerificationId,
+    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+    Future.successful(PreferenceWithoutContext(preference).asRight)
 }

@@ -20,10 +20,10 @@ import cats.data.NonEmptyList
 import org.mongodb.scala.bson.ObjectId
 import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ConsentContext, ContextId, ContextPayload, EnrolmentContextId, VerificationId, Version }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextId, ContextPayload, EnrolmentContextId, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
-import java.time.LocalDateTime
+import java.time.{ LocalDateTime, ZoneOffset }
 import java.util.UUID
 
 trait TestModels extends EitherValues {
@@ -45,28 +45,30 @@ trait TestModels extends EitherValues {
   val managementConsent: Consent = Consent(
     consentType = DefaultConsentType,
     status = ConsentStatus(true),
-    updated = Updated(timestamp),
+    updated = Updated(timestamp.toInstant(ZoneOffset.UTC)),
     version = version,
     purposes = purposes
   )
-
-  val managementConsentContext: ConsentContext = ConsentContext(managementConsent, None)
-  val navigationContext: ConsentContext = ConsentContext(managementConsent, None)
 
   val preferenceId: PreferenceId = PreferenceId(new ObjectId)
 
   val preference: Preference = Preference(
     enrolments = enrolments,
-    created = Created(timestamp),
+    created = Created(timestamp.toInstant(ZoneOffset.UTC)),
     consents = NonEmptyList.of(managementConsent),
     emailPreferences = List(email),
     status = Active
   )
 
+  val preferenceDocument: PreferenceDocument = PreferenceDocument(
+    preferenceId,
+    preference
+  )
+
   val contextPayload: ContextPayload = ContextPayload(
     EnrolmentContextId(enrolments): ContextId,
     timestamp,
-    managementConsentContext
+    managementConsent
   )
 
   val verificationId: VerificationId = VerificationId(UUID.randomUUID())
@@ -74,50 +76,53 @@ trait TestModels extends EitherValues {
   val contextJson: JsValue = Json.parse("""
                                           |{
                                           |  "contextId" : {
-                                          |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ]
+                                          |    "enrolments" : ["HMRC-PODS-ORG~PSAID~GB123456789"]
                                           |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {
-                                          |    "consent" : {
-                                          |      "consentType" : "Default",
-                                          |      "status" : true,
-                                          |      "updated" : "1987-03-20T14:33:48.000640Z",
-                                          |      "version" : {
-                                          |        "major" : 1,
-                                          |        "minor" : 1,
-                                          |        "patch" : 1
-                                          |      },
-                                          |      "purposes" : [ "DigitalCommunications" ]
-                                          |    }
+                                          |    "consentType" : "Default",
+                                          |    "status" : true,
+                                          |    "updated" : "1987-03-20T14:33:48.000640Z",
+                                          |    "version" : {
+                                          |      "major" : 1,
+                                          |      "minor" : 1,
+                                          |      "patch" : 1
+                                          |    },
+                                          |    "purposes" : [ "DigitalCommunications" ]
                                           |  }
                                           |}
                                           |""".stripMargin)
 
-  val preferenceJson: JsValue = Json.parse(s"""
-                                              | {
-                                              |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ],
-                                              |    "created" : "1987-03-20T14:33:48.000640Z",
-                                              |    "consents" : [ {
-                                              |      "consentType" : "Default",
-                                              |      "status" : true,
-                                              |      "updated" : "1987-03-20T14:33:48.000640Z",
-                                              |      "version" : {
-                                              |        "major" : 1,
-                                              |        "minor" : 1,
-                                              |        "patch" : 1
-                                              |      },
-                                              |      "purposes" : [ "DigitalCommunications" ]
-                                              |    } ],
-                                              |    "emailPreferences" : [ {
-                                              |      "index" : "primary",
-                                              |      "email" : "test@test.com",
-                                              |      "contentType" : "text/plain",
-                                              |      "language" : "en",
-                                              |      "contactable" : true,
-                                              |      "purposes" : [ "DigitalCommunications" ]
-                                              |    } ],
-                                              |    "status" : "Active"
-                                              |}
-                                              |""".stripMargin)
+  val preferenceDocumentJson: JsValue = Json.parse(s"""
+                                                      {
+                                                      |  "id" : {
+                                                      |    "$$oid" : "${preferenceId.value.toString}"
+                                                      |  },
+                                                      |  "preference" : {
+                                                      |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ],
+                                                      |    "created" : "1987-03-20T14:33:48.000640Z",
+                                                      |    "consents" : [ {
+                                                      |      "consentType" : "Default",
+                                                      |      "status" : true,
+                                                      |      "updated" : "1987-03-20T14:33:48.000640Z",
+                                                      |      "version" : {
+                                                      |        "major" : 1,
+                                                      |        "minor" : 1,
+                                                      |        "patch" : 1
+                                                      |      },
+                                                      |      "purposes" : [ "DigitalCommunications" ]
+                                                      |    } ],
+                                                      |    "emailPreferences" : [ {
+                                                      |      "index" : "primary",
+                                                      |      "email" : "test@test.com",
+                                                      |      "contentType" : "text/plain",
+                                                      |      "language" : "en",
+                                                      |      "contactable" : true,
+                                                      |      "purposes" : [ "DigitalCommunications" ]
+                                                      |    } ],
+                                                      |    "status" : "Active"
+                                                      |  }
+                                                      |}
+                                                      |""".stripMargin)
 
 }

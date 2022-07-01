@@ -21,7 +21,7 @@ import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
-import java.time.LocalDateTime
+import java.time.{ LocalDateTime, ZoneOffset }
 import java.util.UUID
 
 trait TestModels extends EitherValues {
@@ -40,7 +40,7 @@ trait TestModels extends EitherValues {
     contactable = Contactable(true),
     purposes = purposes
   )
-  val updated: Updated = Updated(timestamp)
+  val updated: Updated = Updated(timestamp.toInstant(ZoneOffset.UTC))
   val consent: Consent = Consent(
     consentType = DefaultConsentType,
     status = ConsentStatus(true),
@@ -49,16 +49,9 @@ trait TestModels extends EitherValues {
     purposes = purposes
   )
 
-  val consentContext: ConsentContext = ConsentContext(consent, None)
-  val navigationContext: NavigationContext = NavigationContext(
-    Some(
-      Map(
-        "returnUrl"  -> "VYBxyuFWQBQZAGpe5tSgmw%3D%3D",
-        "returnText" -> "+me3pS/cgiyhgR8ZIqlfH1WAccrhVkAUGQBqXubUoJs=")))
-
   val preference: Preference = Preference(
     enrolments = enrolments,
-    created = Created(timestamp),
+    created = Created(timestamp.toInstant(ZoneOffset.UTC)),
     consents = NonEmptyList.of(consent),
     emailPreferences = List(email),
     status = Active
@@ -67,7 +60,7 @@ trait TestModels extends EitherValues {
   val contextPayload: ContextPayload = ContextPayload(
     EnrolmentContextId(enrolments),
     timestamp,
-    consentContext
+    consent
   )
 
   val verificationId: VerificationId = VerificationId(UUID.fromString("e273ce4e-c0b4-4189-8eca-ca6ab58744aa"))

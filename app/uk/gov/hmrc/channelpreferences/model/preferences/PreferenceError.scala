@@ -78,15 +78,6 @@ object PreferenceError {
 
   case object UnauthorisedPreferenceRequest extends PreferenceError(s"unauthorised", StatusCodes.Unauthorized)
 
-  case class PreferenceCreationError(exception: Exception)
-      extends PreferenceError(
-        s"error creating preference: ${exception.getMessage}",
-        StatusCodes.InternalServerError
-      )
-
-  case class StateTransitionError(override val message: String)
-      extends PreferenceError(message, StatusCodes.BadRequest)
-
   def toResult(preferenceError: PreferenceError): Result =
     Result(
       header = ResponseHeader(preferenceError.statusCode.intValue()),

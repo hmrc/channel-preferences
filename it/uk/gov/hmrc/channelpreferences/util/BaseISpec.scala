@@ -22,5 +22,5 @@ import org.scalatest.matchers.must.Matchers
 import uk.gov.hmrc.integration.TestId
 
 trait BaseISpec extends ScalaFutures with OptionValues with Matchers with IntegrationPatience {
-  implicit def testId: TestId = TestId(this.getClass.getSimpleName)
+  implicit val testId: TestId = TestId(this.getClass.getSimpleName)
 }

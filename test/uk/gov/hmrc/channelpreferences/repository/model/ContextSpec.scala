@@ -21,6 +21,7 @@ import play.api.libs.json.{ JsSuccess, Json }
 import uk.gov.hmrc.channelpreferences.controllers.model.ContextPayload
 
 class ContextSpec extends PlaySpec with TestModels {
+
   "it" must {
     "be isomorphic" in {
       val json = Json.toJson(contextPayload)

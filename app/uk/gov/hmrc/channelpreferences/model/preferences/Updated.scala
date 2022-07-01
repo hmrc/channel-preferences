@@ -18,9 +18,9 @@ package uk.gov.hmrc.channelpreferences.model.preferences
 
 import play.api.libs.json.{ Format, Json }
 
-import java.time.LocalDateTime
+import java.time.Instant
 
-case class Updated(value: LocalDateTime) extends AnyVal
+case class Updated(value: Instant) extends AnyVal
 
 object Updated {
   implicit val format: Format[Updated] = Json.valueFormat[Updated]

@@ -17,10 +17,9 @@
 package uk.gov.hmrc.channelpreferences.controllers
 
 import cats.data.{ EitherT, NonEmptySet }
-import cats.syntax.either._
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ Action, AnyContent, ControllerComponents, Result }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ ConsentContext, ContextualPreference, NavigationContext, VerificationId }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextualPreference, VerificationId }
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnauthorisedPreferenceRequest
 import uk.gov.hmrc.channelpreferences.model.preferences._
@@ -41,34 +40,16 @@ class PreferenceManagementController @Inject()(
     extends BackendController(controllerComponents) {
 
   def consent(groupId: GroupId): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[ConsentContext](handleConsent(groupId, _).map(toResult(_, Created)))
-  }
-
-  def navigation(groupId: GroupId): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[NavigationContext](
-      handleNavigation(groupId, _).map(
-        _.fold(
-          PreferenceError.toResult,
-          result => Created(Json.toJson(result))
-        )))
+    withJsonBody[Consent](handleConsent(groupId, _).map(toResult(_, Created)))
   }
 
   private def handleConsent(
     groupId: GroupId,
-    consent: ConsentContext
+    consent: Consent
   )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, ContextualPreference]] =
     (for {
       authorizedEnrolments <- authoriseForGroupId(groupId)
-      verification         <- EitherT(preferenceManagementService.updateConsent(consent.consent, authorizedEnrolments))
-    } yield verification).value
-
-  private def handleNavigation(
-    groupId: GroupId,
-    navigationContext: NavigationContext
-  )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, NavigationContext]] =
-    (for {
-      authorizedEnrolments <- authoriseForGroupId(groupId)
-      verification         <- EitherT(preferenceManagementService.updateNavigation(navigationContext, authorizedEnrolments))
+      verification         <- EitherT(preferenceManagementService.updateConsent(groupId, consent, authorizedEnrolments))
     } yield verification).value
 
   def verify(
@@ -91,36 +72,33 @@ class PreferenceManagementController @Inject()(
       authorizedEnrolments <- authoriseForGroupId(groupId)
       verification <- EitherT(
                        preferenceManagementService
-                         .createVerification(channel, index, emailAddress, authorizedEnrolments))
+                         .createVerification(groupId, channel, index, emailAddress, authorizedEnrolments))
     } yield verification).value
 
-  def confirm(verificationId: VerificationId): Action[AnyContent] = Action.async { _ =>
-    preferenceManagementService
-      .confirm(verificationId)
-      .map(_.fold(
-        PreferenceError.toResult, {
-          case Some(value) => Created(Json.toJson(value))
-          case None        => NotFound
-        }
-      ))
+  def confirm(verificationId: VerificationId): Action[AnyContent] = Action.async { implicit request =>
+    val confirmation = for {
+      enrolments <- EitherT(
+                     authorisationEnrolmentService
+                       .getAuthorisedEnrolments()
+                       .map(nonEmptyEnrolments))
+      confirmation <- EitherT(preferenceManagementService.confirm(verificationId, enrolments))
+    } yield confirmation
+
+    confirmation.value
+      .map(toResult(_, Created))
   }
 
   def getPreference(groupId: GroupId): Action[AnyContent] =
     Action.async { implicit request =>
-      handleGetPreference(groupId).map(
-        _.fold(
-          PreferenceError.toResult, {
-            case Some(value) => Ok(Json.toJson(value))
-            case None        => NotFound
-          }
-        ))
+      handleGetPreference(groupId).map(toResult(_, Ok))
     }
 
   private def handleGetPreference(groupId: GroupId)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, Option[ContextualPreference]]] =
-    authoriseForGroupId(groupId).flatMap { enrolments =>
-      EitherT(preferenceManagementService.getPreference(enrolments).map(_.asRight[PreferenceError]))
-    }.value
+    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, ContextualPreference]] =
+    (for {
+      authorizedEnrolments <- authoriseForGroupId(groupId)
+      verification         <- EitherT(preferenceManagementService.getPreference(groupId, authorizedEnrolments))
+    } yield verification).value
 
   def toResult(eitherResult: Either[PreferenceError, ContextualPreference], status: Status): Result =
     eitherResult.fold(

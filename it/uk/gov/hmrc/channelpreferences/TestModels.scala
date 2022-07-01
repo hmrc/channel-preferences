@@ -19,10 +19,10 @@ package uk.gov.hmrc.channelpreferences
 import cats.data.NonEmptyList
 import org.scalatest.EitherValues
 import play.api.libs.json.{ JsValue, Json }
-import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ConsentContext, ConsentVerificationContext, ContextPayload, EnrolmentContextId, Verification, VerificationId, Version }
+import uk.gov.hmrc.channelpreferences.controllers.model.{ Consent, ContextPayload, EnrolmentContextId, Verification, VerificationId, Version }
 import uk.gov.hmrc.channelpreferences.model.preferences._
 
-import java.time.LocalDateTime
+import java.time.{ LocalDateTime, ZoneOffset }
 import java.util.UUID
 
 trait TestModels extends EitherValues {
@@ -42,7 +42,7 @@ trait TestModels extends EitherValues {
     contactable = Contactable(true),
     purposes = purposes
   )
-  val updated: Updated = Updated(timestamp)
+  val updated: Updated = Updated(timestamp.toInstant(ZoneOffset.UTC))
   val consent: Consent = Consent(
     consentType = DefaultConsentType,
     status = ConsentStatus(true),
@@ -51,11 +51,9 @@ trait TestModels extends EitherValues {
     purposes = purposes
   )
 
-  val consentContext: ConsentContext = ConsentContext(consent, None)
-
   val preference: Preference = Preference(
     enrolments = enrolments,
-    created = Created(timestamp),
+    created = Created(timestamp.toInstant(ZoneOffset.UTC)),
     consents = NonEmptyList.of(consent),
     emailPreferences = List(email),
     status = Active
@@ -64,7 +62,7 @@ trait TestModels extends EitherValues {
   val contextPayload: ContextPayload = ContextPayload(
     EnrolmentContextId(enrolments),
     timestamp,
-    consentContext
+    consent
   )
 
   val verificationId: VerificationId = VerificationId(UUID.fromString("e273ce4e-c0b4-4189-8eca-ca6ab58744aa"))
@@ -74,8 +72,6 @@ trait TestModels extends EitherValues {
     timestamp
   )
 
-  val consentVerificationContext: ConsentVerificationContext = ConsentVerificationContext(consent, verification, None)
-
   val contextJson: JsValue = Json.parse("""
                                           |{
                                           |  "contextId" : {
@@ -83,18 +79,16 @@ trait TestModels extends EitherValues {
                                           |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {
-                                          |   "consent" : {
-                                          |      "consentType" : "Default",
-                                          |      "status" : true,
-                                          |      "updated" : "1987-03-20T14:33:48.000640Z",
-                                          |      "version" : {
-                                          |        "major" : 1,
-                                          |        "minor" : 1,
-                                          |        "patch" : 1
-                                          |      },
-                                          |      "purposes" : [ "DigitalCommunications" ]
-                                          |    }
-                                          | }
+                                          |    "consentType" : "Default",
+                                          |    "status" : true,
+                                          |    "updated" : "1987-03-20T14:33:48.000640Z",
+                                          |    "version" : {
+                                          |      "major" : 1,
+                                          |      "minor" : 1,
+                                          |      "patch" : 1
+                                          |    },
+                                          |    "purposes" : [ "DigitalCommunications" ]
+                                          |  }
                                           |}
                                           |""".stripMargin)
 
@@ -127,19 +121,17 @@ trait TestModels extends EitherValues {
 
   val consentJson: String = s"""
                                |{
-                               |	"consent": {
-                               |		"consentType": "Default",
-                               |		"status": true,
-                               |		"updated": "1987-03-20T14:33:48.000640Z",
-                               |		"version": {
-                               |			"major": 1,
-                               |			"minor": 1,
-                               |			"patch": 1
-                               |		},
-                               |		"purposes": [
-                               |			"DigitalCommunications"
-                               |		]
-                               |	}
+                               |  "consentType": "Default",
+                               |  "status": true,
+                               |  "updated": "1987-03-20T14:33:48.000640Z",
+                               |  "version": {
+                               |    "major": 1,
+                               |    "minor": 1,
+                               |    "patch": 1
+                               |  },
+                               |  "purposes": [
+                               |    "DigitalCommunications"
+                               |  ]
                                |}
       """.stripMargin
 
