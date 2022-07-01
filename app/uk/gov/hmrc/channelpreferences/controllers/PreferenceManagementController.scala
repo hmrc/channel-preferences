@@ -63,8 +63,7 @@ class PreferenceManagementController @Inject()(
     index: Index
   ): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[EmailAddress](
-      handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index, _).map(toResult(_, Created))
-    )(request, implicitly[Manifest[EmailAddress]], EmailAddress.objectFormat)
+      handleVerification(enrolmentKey, identifierKey, identifierValue, channel, index, _).map(toResult(_, Created)))
   }
 
   private def handleVerification(

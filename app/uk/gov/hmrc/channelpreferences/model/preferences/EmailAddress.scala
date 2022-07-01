@@ -22,5 +22,4 @@ case class EmailAddress(email: String) extends AnyVal
 
 object EmailAddress {
   implicit val format: Format[EmailAddress] = Json.valueFormat[EmailAddress]
-  val objectFormat: Format[EmailAddress] = Json.format[EmailAddress]
 }
