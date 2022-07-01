@@ -24,8 +24,10 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.mockito.IdiomaticMockito.StubbingOps
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, Phone }
+import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
+import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
-import uk.gov.hmrc.channelpreferences.model.preferences._
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, EnrolmentKey, IdentifierKey, IdentifierValue }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -37,7 +39,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
 
   it should "return a preference for valid inputs" in new Scope {
     preferenceService
-      .getChannelPreference(CustomsServiceQualifier, identifierValue, channel)
+      .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
       .futureValue shouldBe JsObject.empty.asRight
   }
 
@@ -45,11 +47,11 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
     private val error = UnsupportedChannelError(Phone)
 
     preferenceResolver
-      .resolveChannelPreference(ChannelledEnrolment(CustomsServiceEnrolment(identifierValue), channel))
+      .resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel))
       .returns(Future.successful(error.asLeft))
 
     preferenceService
-      .getChannelPreference(CustomsServiceQualifier, identifierValue, channel)
+      .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
       .futureValue shouldBe error.asLeft
   }
 
@@ -63,7 +65,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
 
     val preferenceResolver: PreferenceResolver = mock[PreferenceResolver]
     preferenceResolver
-      .resolveChannelPreference(ChannelledEnrolment(CustomsServiceEnrolment(identifierValue), channel))
+      .resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel))
       .returns(Future.successful(JsObject.empty.asRight))
 
     val preferenceService: PreferenceService = new PreferenceService(preferenceResolver)

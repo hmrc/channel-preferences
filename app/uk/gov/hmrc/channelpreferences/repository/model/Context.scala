@@ -16,13 +16,25 @@
 
 package uk.gov.hmrc.channelpreferences.repository.model
 
-import org.mongodb.scala.bson.ObjectId
-import play.api.libs.json.{ Format, Json }
-import uk.gov.hmrc.mongo.play.json.formats.MongoFormats.objectIdFormat
+import java.time.LocalDateTime
 
-case class PreferenceId(value: ObjectId) extends AnyVal
+case class Verification(
+  sent: LocalDateTime,
+  email: String,
+  id: String
+)
 
-object PreferenceId {
-  implicit val idFormat: Format[ObjectId] = objectIdFormat
-  implicit val format: Format[PreferenceId] = Json.valueFormat[PreferenceId]
-}
+case class ContextConsent(
+  `type`: String,
+  status: Boolean,
+  created: LocalDateTime,
+  version: Version,
+  purposes: List[Int]
+)
+
+case class Context(
+  keys: String,
+  expiry: LocalDateTime,
+  consented: ContextConsent,
+  verification: Verification
+)

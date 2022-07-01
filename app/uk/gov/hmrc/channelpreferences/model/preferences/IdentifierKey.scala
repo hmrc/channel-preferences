@@ -17,23 +17,10 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
-import play.api.libs.json.{ Format, JsError, JsResult, JsString, JsSuccess, JsValue }
 import play.api.mvc.PathBindable
 
 sealed trait IdentifierKey {
   val value: String
-}
-
-case object EORINumber extends IdentifierKey {
-  override val value: String = "EORINumber"
-}
-
-case object PensionsPractitioner extends IdentifierKey {
-  override val value: String = "PSPID"
-}
-
-case object PensionsAdministrator extends IdentifierKey {
-  override val value: String = "PSAID"
 }
 
 object IdentifierKey {
@@ -49,23 +36,11 @@ object IdentifierKey {
     }
 
   def fromValue(value: String): Either[String, IdentifierKey] = value match {
-    case EORINumber.value            => EORINumber.asRight
-    case PensionsAdministrator.value => PensionsAdministrator.asRight
-    case PensionsPractitioner.value  => PensionsPractitioner.asRight
-    case other                       => s"IdentifierKey: $other, not found".asLeft
+    case EORINumber.value => EORINumber.asRight
+    case other            => s"IdentifierKey: $other, not found".asLeft
   }
 
-  implicit object Format extends Format[IdentifierKey] {
-    override def writes(o: IdentifierKey): JsValue = JsString(o.value)
-    override def reads(json: JsValue): JsResult[IdentifierKey] = json match {
-      case JsString(value) =>
-        IdentifierKey
-          .fromValue(value)
-          .fold(
-            JsError(_),
-            JsSuccess(_)
-          )
-      case other => JsError(s"expected a json string for identifier key but got $other")
-    }
+  case object EORINumber extends IdentifierKey {
+    override val value: String = "EORINumber"
   }
 }

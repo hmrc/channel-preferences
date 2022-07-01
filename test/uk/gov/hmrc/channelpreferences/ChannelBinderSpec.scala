@@ -29,7 +29,9 @@ import play.api.mvc.Call
 import play.api.test.Helpers.{ route, _ }
 import play.api.test._
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceKey, EORINumber, EnrolmentQualifier, IdentifierValue, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
+import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
+import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, IdentifierKey, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceResolver, PreferenceService }
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
@@ -58,8 +60,7 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
 
     "define the unbind" in new Scope {
       val test: Call =
-        controllers.routes.PreferenceController
-          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
+        controllers.routes.PreferenceController.preference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
       test.url mustBe "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
     }
   }
@@ -67,7 +68,8 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
 
 class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) {
   override def getChannelPreference(
-    enrolmentQualifier: EnrolmentQualifier,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel)(
     implicit headerCarrier: HeaderCarrier,
@@ -86,7 +88,6 @@ class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) 
 trait Scope {
   val appBuilder: Application = new GuiceApplicationBuilder()
     .configure("metrics.enabled" -> false)
-    .configure("mongodb.uri" -> "mongodb://localhost:27017/channel-preferences")
     .overrides(bind[PreferenceService].to[PreferenceServiceMock])
     .build()
 }

@@ -19,33 +19,31 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 import cats.syntax.either._
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.preferences._
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, Enrolment, EnrolmentKey, IdentifierKey, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 trait PreferenceResolver {
-  def resolveChannelPreference(channelledEnrolment: ChannelledEnrolment)(
+  def resolvePreferenceForEnrolment(enrolment: Enrolment)(
     implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
 }
 
 object PreferenceResolver {
-  def toChannelledEnrolment(
-    enrolmentQualifier: EnrolmentQualifier,
+  def toEnrolment(
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel
-  ): Either[PreferenceError, ChannelledEnrolment] =
-    toEnrolment(enrolmentQualifier, identifierValue).map(
-      ChannelledEnrolment(_, channel)
-    )
-
-  def toEnrolment(
-    enrolmentQualifier: EnrolmentQualifier,
-    identifierValue: IdentifierValue
   ): Either[PreferenceError, Enrolment] =
-    enrolmentQualifier match {
-      case CustomsServiceQualifier        => CustomsServiceEnrolment(identifierValue).asRight
-      case PensionsAdministratorQualifier => PensionsAdministratorEnrolment(identifierValue).asRight
-      case PensionsPractitionerQualifier  => PensionsPractitionerEnrolment(identifierValue).asRight
+    enrolmentKey match {
+      case EnrolmentKey.CustomsServiceKey =>
+        identifierKey match {
+          case IdentifierKey.EORINumber =>
+            CustomsServiceEnrolment(
+              identifierValue,
+              channel
+            ).asRight
+        }
     }
 }

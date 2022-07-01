@@ -21,7 +21,6 @@ lazy val microservice = Project(appName, file("."))
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.ChannelBinder._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.cds._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.preferences._",
-    RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.controllers.model.VerificationId",
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions ++= Seq(
@@ -60,7 +59,7 @@ lazy val microservice = Project(appName, file("."))
       "-Xlint:unsound-match", // Pattern match may not be typesafe.
       "-Yno-adapted-args", // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
       "-Ypartial-unification", // Enable partial unification in type constructor inference
-//      "-Ywarn-dead-code", // Warn when dead code is identified.
+      "-Ywarn-dead-code", // Warn when dead code is identified.
       "-Ywarn-extra-implicit", // Warn when more than one implicit parameter section is defined.
       "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
       "-Ywarn-infer-any", // Warn when a type argument is inferred to be `Any`.
@@ -72,7 +71,8 @@ lazy val microservice = Project(appName, file("."))
       "-Ywarn-unused:locals", // Warn if a local definition is unused.
       "-Ywarn-unused:params", // Warn if a value parameter is unused.
       "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
-      "-Ywarn-unused:privates" // Warn if a private member is unused.
+      "-Ywarn-unused:privates", // Warn if a private member is unused.
+      "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
     ),
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),

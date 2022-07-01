@@ -22,14 +22,14 @@ import uk.gov.hmrc.crypto.{ Crypted, CryptoWithKeysFromConfig, PlainText }
 trait EntityIdCrypto {
   lazy val currentCrypto = new CryptoWithKeysFromConfig(baseConfigKey = "entityId.encryption", ConfigFactory.load())
 
-  def encryptString(s: String): Either[String, EncryptOrDecryptException] =
-    try Left(currentCrypto.encrypt(PlainText(s)).value)
+  def encryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
+    try Left(currentCrypto.encrypt(PlainText(encryptedString)).value)
     catch {
       case e: Throwable => Right(EncryptOrDecryptException(e.getMessage))
     }
 
-  def decryptString(s: String): Either[String, EncryptOrDecryptException] =
-    try Left(currentCrypto.decrypt(Crypted(s)).value)
+  def decryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
+    try Left(currentCrypto.decrypt(Crypted(encryptedString)).value)
     catch {
       case e: Throwable => Right(EncryptOrDecryptException(e.getMessage))
     }

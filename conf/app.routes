@@ -13,19 +13,13 @@
 #   502:
 #     description: map all upstream error codes to 502
 ###
-GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.channelPreference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
-GET        /channel-preferences/preferences/enrolments/:groupId uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.getPreference(groupId: GroupId)
-PUT        /channel-preferences/preferences/enrolments/:groupId/consent uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.consent(groupId: GroupId)
-PUT        /channel-preferences/preferences/enrolments/:groupId/navigation uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.navigation(groupId: GroupId)
-POST       /channel-preferences/preferences/enrolments/:groupId/channels/:channel/index/:index/verify uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.verify(groupId: GroupId, channel: Channel, index: Index)
-PUT        /channel-preferences/preferences/verify/:verificationId/confirm uk.gov.hmrc.channelpreferences.controllers.PreferenceManagementController.confirm(verificationId: VerificationId)
+GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
 
 POST       /channel-preferences/enrolment                   uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
 POST       /channel-preferences/preference/:key/status      uk.gov.hmrc.channelpreferences.controllers.PreferenceController.update(key: String)
 
 POST       /channel-preferences/confirm                     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
-
 GET        /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
 POST       /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
 PUT        /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
