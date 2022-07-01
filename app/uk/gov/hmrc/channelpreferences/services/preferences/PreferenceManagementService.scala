@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.services.preferences
 
-import cats.data.{ NonEmptyList, NonEmptySet }
+import cats.data.NonEmptyList
 import cats.syntax.either._
 import uk.gov.hmrc.channelpreferences.controllers.model._
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
@@ -27,23 +27,15 @@ import java.util.UUID
 import scala.concurrent.Future
 
 trait PreferenceManagementService {
-  def getPreference(
-    groupId: GroupId,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
-  def updateConsent(
-    groupId: GroupId,
-    consent: Consent,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
+  def getPreference(enrolment: Enrolment): Future[Either[PreferenceError, ContextualPreference]]
+  def updateConsent(enrolment: Enrolment, consent: Consent): Future[Either[PreferenceError, ContextualPreference]]
   def createVerification(
-    groupId: GroupId,
+    enrolment: Enrolment,
     channel: Channel,
     index: Index,
-    emailAddress: EmailAddress,
-    enrolments: NonEmptySet[Enrolment]
+    emailAddress: EmailAddress
   ): Future[Either[PreferenceError, ContextualPreference]]
-  def confirm(
-    verificationId: VerificationId,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]]
+  def confirm(verificationId: VerificationId): Future[Either[PreferenceError, ContextualPreference]]
 }
 
 object PreferenceManagementService extends PreferenceManagementService {
@@ -70,10 +62,7 @@ object PreferenceManagementService extends PreferenceManagementService {
   )
 
   val preference: Preference = Preference(
-    enrolments = NonEmptyList.of(
-      Enrolment
-        .fromValue("HMRC-PODS-ORG~PSAID~GB123456789")
-        .valueOr(error => throw new IllegalArgumentException(error.message))),
+    enrolments = NonEmptyList.of(Enrolment.fromValue("HMRC-PODS-ORG~PSAID~GB123456789").right.get),
     created = Created(Instant.now()),
     consents = NonEmptyList.of(consent),
     emailPreferences = List(
@@ -89,28 +78,22 @@ object PreferenceManagementService extends PreferenceManagementService {
     status = Active
   )
 
-  override def getPreference(
-    groupId: GroupId,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+  override def getPreference(enrolment: Enrolment): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(preferenceContext.asRight)
 
   override def updateConsent(
-    groupId: GroupId,
-    consent: Consent,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+    enrolment: Enrolment,
+    consent: Consent): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(preferenceContext.asRight)
 
   override def createVerification(
-    groupId: GroupId,
+    enrolment: Enrolment,
     channel: Channel,
     index: Index,
-    emailAddress: EmailAddress,
-    enrolments: NonEmptySet[Enrolment]
+    emailAddress: EmailAddress
   ): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(PreferenceContext(consentVerificationContext(emailAddress)).asRight)
 
-  override def confirm(
-    verificationId: VerificationId,
-    enrolments: NonEmptySet[Enrolment]): Future[Either[PreferenceError, ContextualPreference]] =
+  override def confirm(verificationId: VerificationId): Future[Either[PreferenceError, ContextualPreference]] =
     Future.successful(PreferenceWithoutContext(preference).asRight)
 }

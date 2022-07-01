@@ -41,7 +41,7 @@ import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification, Phone }
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UnsupportedChannelError, UpstreamError, UpstreamParseError }
-import uk.gov.hmrc.channelpreferences.model.preferences._
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceKey, EORINumber, EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferencesConnectorError, UnExpectedError }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
@@ -79,14 +79,14 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentQualifier], *[IdentifierValue], *[Channel])(
+        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
           *[HeaderCarrier],
           *[ExecutionContext]))
         .thenReturn(Future.successful(UpstreamParseError("boom").asLeft))
 
       val response =
         controller
-          .channelPreference(CustomsServiceQualifier, IdentifierValue(""), Email)
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
           .apply(FakeRequest("GET", "/"))
       status(response) mustBe BAD_GATEWAY
     }
@@ -103,14 +103,14 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentQualifier], *[IdentifierValue], *[Channel])(
+        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
           *[HeaderCarrier],
           *[ExecutionContext]))
         .thenReturn(Future.successful(UpstreamError("boom", StatusCodes.NotFound).asLeft))
 
       val response =
         controller
-          .channelPreference(CustomsServiceQualifier, IdentifierValue(""), Email)
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
           .apply(FakeRequest("GET", "/"))
       status(response) mustBe NOT_FOUND
     }
@@ -127,14 +127,14 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentQualifier], *[IdentifierValue], *[Channel])(
+        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
           *[HeaderCarrier],
           *[ExecutionContext]))
         .thenReturn(Future.successful(UnsupportedChannelError(Phone).asLeft))
 
       val response =
         controller
-          .channelPreference(CustomsServiceQualifier, IdentifierValue(""), Email)
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
           .apply(FakeRequest("GET", "/"))
       status(response) mustBe NOT_IMPLEMENTED
     }
@@ -151,14 +151,14 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentQualifier], *[IdentifierValue], *[Channel])(
+        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
           *[HeaderCarrier],
           *[ExecutionContext]))
         .thenReturn(Future.successful(Json.toJson(emailVerification).asRight))
 
       val response =
         controller
-          .channelPreference(CustomsServiceQualifier, IdentifierValue(""), Email)
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue(""), Email)
           .apply(FakeRequest("GET", "/"))
       status(response) mustBe OK
       contentAsString(response) mustBe validEmailVerification
@@ -706,7 +706,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     val preferenceService: PreferenceService = mock[PreferenceService]
 
     when(
-      preferenceService.getChannelPreference(*[EnrolmentQualifier], *[IdentifierValue], *[Channel])(
+      preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
         *[HeaderCarrier],
         *[ExecutionContext]))
       .thenReturn(Future.successful(UpstreamError("boom", StatusCodes.ServiceUnavailable).asLeft))

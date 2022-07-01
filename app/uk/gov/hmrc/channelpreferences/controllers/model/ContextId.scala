@@ -16,28 +16,32 @@
 
 package uk.gov.hmrc.channelpreferences.controllers.model
 
-import cats.data.NonEmptyList
 import play.api.libs.json._
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, Index }
 
 sealed trait ContextId {
-  def enrolments: NonEmptyList[Enrolment]
+  def value: String
 }
 
 case class EnrolmentContextId(
-  enrolments: NonEmptyList[Enrolment]
-) extends ContextId
+  enrolment: Enrolment
+) extends ContextId {
+  override def value: String = enrolment.value
+}
 
 object EnrolmentContextId {
   implicit val format: OFormat[EnrolmentContextId] = Json.format[EnrolmentContextId]
 }
 
 case class IndexedEnrolmentContextId(
-  enrolments: NonEmptyList[Enrolment],
+  enrolment: Enrolment,
   channel: Channel,
   index: Index
-) extends ContextId
+) extends ContextId {
+  override def value: String =
+    s"${enrolment.value}${Enrolment.Separator}${channel.name}${Enrolment.Separator}${index.name}"
+}
 
 object IndexedEnrolmentContextId {
   implicit val format: OFormat[IndexedEnrolmentContextId] =

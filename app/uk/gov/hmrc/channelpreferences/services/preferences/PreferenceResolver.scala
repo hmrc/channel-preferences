@@ -19,6 +19,7 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 import cats.syntax.either._
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedIdentifierKey
 import uk.gov.hmrc.channelpreferences.model.preferences._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -31,21 +32,35 @@ trait PreferenceResolver {
 
 object PreferenceResolver {
   def toChannelledEnrolment(
-    enrolmentQualifier: EnrolmentQualifier,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel
   ): Either[PreferenceError, ChannelledEnrolment] =
-    toEnrolment(enrolmentQualifier, identifierValue).map(
+    toEnrolment(enrolmentKey, identifierKey, identifierValue).map(
       ChannelledEnrolment(_, channel)
     )
 
   def toEnrolment(
-    enrolmentQualifier: EnrolmentQualifier,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
     identifierValue: IdentifierValue
   ): Either[PreferenceError, Enrolment] =
-    enrolmentQualifier match {
-      case CustomsServiceQualifier        => CustomsServiceEnrolment(identifierValue).asRight
-      case PensionsAdministratorQualifier => PensionsAdministratorEnrolment(identifierValue).asRight
-      case PensionsPractitionerQualifier  => PensionsPractitionerEnrolment(identifierValue).asRight
+    enrolmentKey match {
+      case CustomsServiceKey =>
+        identifierKey match {
+          case EORINumber => CustomsServiceEnrolment(identifierValue).asRight
+          case other      => UnsupportedIdentifierKey(enrolmentKey, other).asLeft
+        }
+      case PensionsOnlineKey =>
+        identifierKey match {
+          case PensionsAdministrator => PensionsAdministratorEnrolment(identifierValue).asRight
+          case other                 => UnsupportedIdentifierKey(enrolmentKey, other).asLeft
+        }
+      case PensionsSchemePractitionerKey =>
+        identifierKey match {
+          case PensionsPractitioner => PensionsPractitionerEnrolment(identifierValue).asRight
+          case other                => UnsupportedIdentifierKey(enrolmentKey, other).asLeft
+        }
     }
 }

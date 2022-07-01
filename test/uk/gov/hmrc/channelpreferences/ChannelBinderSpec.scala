@@ -29,7 +29,7 @@ import play.api.mvc.Call
 import play.api.test.Helpers.{ route, _ }
 import play.api.test._
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceQualifier, Enrolment, EnrolmentQualifier, IdentifierValue, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceKey, EORINumber, EnrolmentKey, IdentifierKey, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceResolver, PreferenceService }
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
@@ -43,7 +43,7 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
     "define the bind - success" in new Scope {
       private val request = FakeRequest(
         GET,
-        s"/channel-preferences/preferences/enrolments/HMRC-CUS-ORG${Enrolment.Separator}EORINumber/identifier-values/123/channels/email")
+        "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email")
       private val test = route(appBuilder, request).get
       status(test) mustBe OK
     }
@@ -51,7 +51,7 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
     "define the bind - failure" in new Scope {
       private val request = FakeRequest(
         GET,
-        s"/channel-preferences/preferences/enrolments/HMRC-CUS-ORG${Enrolment.Separator}EORINumber/identifier-values/123/channels/badChannel")
+        "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/badChannel")
       private val test = route(appBuilder, request).get
       status(test) mustBe BAD_REQUEST
     }
@@ -59,15 +59,16 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
     "define the unbind" in new Scope {
       val test: Call =
         controllers.routes.PreferenceController
-          .channelPreference(CustomsServiceQualifier, IdentifierValue("123"), Email)
-      test.url mustBe s"/channel-preferences/preferences/enrolments/HMRC-CUS-ORG${Enrolment.Separator}EORINumber/identifier-values/123/channels/email"
+          .channelPreference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
+      test.url mustBe "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
     }
   }
 }
 
 class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) {
   override def getChannelPreference(
-    enrolmentQualifier: EnrolmentQualifier,
+    enrolmentKey: EnrolmentKey,
+    identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel)(
     implicit headerCarrier: HeaderCarrier,

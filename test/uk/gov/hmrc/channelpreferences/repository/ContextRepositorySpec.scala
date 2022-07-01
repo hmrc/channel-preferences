@@ -34,21 +34,26 @@ class ContextRepositorySpec
     extends AnyFlatSpec with BeforeAndAfterEach with DefaultPlayMongoRepositorySupport[ContextPayload] with Matchers
     with IdiomaticMockito with ScalaFutures with TestModels {
 
+//  override def afterAll(): Unit = {
+//    super.afterAll()
+//    repository.collection.deleteOne(Filters.equal("key", keyIdentifier)).toFuture().futureValue
+//  }
+
   behavior of "ContextRepository.addContext"
 
   it should "return a mongo InsertOneResult when the underlying repo adds a new context to the context repo" in {
     val insertOneResult: InsertOneResult = repository.addContext(contextPayload).futureValue
     insertOneResult.wasAcknowledged() should be(true)
-    repository.collection.find(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
-    repository.collection.deleteOne(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
+    repository.collection.find(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
+    repository.collection.deleteOne(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
   }
 
   behavior of "ContextRepository.find"
 
   it should "return a context when the underlying repo successfully finds one for that context ID" in {
     repository.collection.insertOne(contextPayload).toFuture().futureValue
-    repository.findContext(enrolments).futureValue should be(Some(contextPayload))
-    repository.collection.deleteOne(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
+    repository.findContext(enrolmentValue).futureValue should be(Some(contextPayload))
+    repository.collection.deleteOne(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
   }
 
   behavior of "ContextRepository.updateContext"
@@ -60,9 +65,9 @@ class ContextRepositorySpec
     val replaceOneResult: UpdateResult = repository.updateContext(newContextPayload).futureValue
     replaceOneResult.wasAcknowledged() should be(true)
     val existing =
-      repository.collection.find(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
+      repository.collection.find(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
     existing.head should be(newContextPayload)
-    repository.collection.deleteOne(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
+    repository.collection.deleteOne(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
   }
 
   behavior of "ContextRepository.deleteContext"
@@ -70,12 +75,12 @@ class ContextRepositorySpec
   it should "return a context deletion confirmation when the underlying repo successfully deletes a context" in {
     repository.collection.insertOne(contextPayload).toFuture().futureValue
     val firstCount =
-      repository.collection.countDocuments(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
+      repository.collection.countDocuments(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
     firstCount should be(1)
-    val deleteResult: DeleteResult = repository.deleteContext(enrolments).futureValue
+    val deleteResult: DeleteResult = repository.deleteContext(enrolmentValue).futureValue
     deleteResult.wasAcknowledged() should be(true)
     val lastCount =
-      repository.collection.countDocuments(Filters.in("contextId.enrolments", enrolmentValue)).toFuture().futureValue
+      repository.collection.countDocuments(Filters.equal("contextId.enrolment", enrolmentValue)).toFuture().futureValue
     lastCount should be(0)
   }
 

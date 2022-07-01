@@ -26,11 +26,10 @@ import java.util.UUID
 
 trait TestModels extends EitherValues {
 
-  val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000)
+  val timestamp: LocalDateTime = LocalDateTime.of(1987, 3, 20, 14, 33, 48, 640000);
   val version: Version = Version(1, 1, 1)
   val purposes = List(DigitalCommunicationsPurpose)
   val enrolmentValue = "HMRC-PODS-ORG~PSAID~GB123456789"
-  val enrolments: NonEmptyList[Enrolment] = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value)
   val emailAddress: EmailAddress = EmailAddress("test@test.com")
   val email: EmailPreference = EmailPreference(
     index = PrimaryIndex,
@@ -50,7 +49,7 @@ trait TestModels extends EitherValues {
   )
 
   val preference: Preference = Preference(
-    enrolments = enrolments,
+    enrolments = NonEmptyList.of(Enrolment.fromValue(enrolmentValue).right.value),
     created = Created(timestamp.toInstant(ZoneOffset.UTC)),
     consents = NonEmptyList.of(consent),
     emailPreferences = List(email),
@@ -58,7 +57,7 @@ trait TestModels extends EitherValues {
   )
 
   val contextPayload: ContextPayload = ContextPayload(
-    EnrolmentContextId(enrolments),
+    EnrolmentContextId(Enrolment.fromValue(enrolmentValue).right.value),
     timestamp,
     consent
   )
@@ -73,7 +72,7 @@ trait TestModels extends EitherValues {
   val contextJson: JsValue = Json.parse("""
                                           |{
                                           |  "contextId" : {
-                                          |    "enrolments" : [ "HMRC-PODS-ORG~PSAID~GB123456789" ]
+                                          |    "enrolment" : "HMRC-PODS-ORG~PSAID~GB123456789"
                                           |  },
                                           |  "expiry" : "1987-03-20T14:33:48.00064",
                                           |  "context" : {

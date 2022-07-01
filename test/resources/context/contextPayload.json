@@ -1,6 +1,6 @@
 {
   "contextId" : {
-    "enrolments" : ["HMRC-CUS-ORG~EORINumber~GB123456789"]
+    "enrolment" : "HMRC-CUS-ORG~EORINumber~GB123456789"
   },
   "expiry" : "1987-03-20T14:33:48.00064",
   "context" : {

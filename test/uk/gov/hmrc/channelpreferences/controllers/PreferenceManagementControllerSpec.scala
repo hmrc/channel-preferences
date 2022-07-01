@@ -32,7 +32,6 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import org.mockito.ArgumentMatchers.any
 import org.mockito.IdiomaticMockito
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
@@ -45,8 +44,8 @@ import play.api.test.Helpers.{ contentAsJson, defaultAwaitTimeout, status }
 import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.channelpreferences.controllers.model._
 import uk.gov.hmrc.channelpreferences.model.cds.Email
-import uk.gov.hmrc.channelpreferences.model.preferences.{ GroupId, PensionsAdministratorGroupId, PrimaryIndex }
-import uk.gov.hmrc.channelpreferences.services.preferences.{ AuthorisationEnrolmentService, PreferenceManagementService }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Enrolment, PrimaryIndex }
+import uk.gov.hmrc.channelpreferences.services.preferences.PreferenceManagementService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -57,13 +56,13 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   behavior of "PreferenceManagementController.consent"
 
   it should "return a preference context when successfully updating consent" in new Scope {
-    preferenceManagementService.updateConsent(groupId, consent, enrolments.toNes) returns Future.successful(
+    preferenceManagementService.updateConsent(enrolment, consent) returns Future.successful(
       Right(contextualPreferenceConsent))
 
     val payload: JsValue = Json.parse(readContextResource("consent.json"))
     val result: Future[Result] =
       preferenceManagementController
-        .consent(groupId)
+        .consent(enrolment)
         .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
     status(result) mustBe Status.CREATED
@@ -73,13 +72,13 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   it should "return a preference context when successfully creating a verification" in new Scope {
 
     preferenceManagementService
-      .createVerification(groupId, Email, PrimaryIndex, emailAddress, enrolments.toNes) returns Future
+      .createVerification(enrolment, Email, PrimaryIndex, emailAddress) returns Future
       .successful(Right(contextualPreferenceVerification))
 
     val payload: JsValue = Json.parse(s"""{ "value": "${emailAddress.value}" }""")
     val result: Future[Result] =
       preferenceManagementController
-        .verify(groupId, Email, PrimaryIndex)
+        .verify(enrolment, Email, PrimaryIndex)
         .apply(FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), payload))
 
     status(result) mustBe Status.CREATED
@@ -87,8 +86,7 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   }
 
   it should "return a preference context when successfully confirming a verification" in new Scope {
-    preferenceManagementService.confirm(verificationId, enrolments.toNes) returns Future.successful(
-      Right(preferenceWithoutContext))
+    preferenceManagementService.confirm(verificationId) returns Future.successful(Right(preferenceWithoutContext))
 
     val result: Future[Result] =
       preferenceManagementController
@@ -100,14 +98,11 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   }
 
   it should "return a preference context when successfully getting a preference" in new Scope {
-    preferenceManagementService.getPreference(groupId, enrolments.toNes) returns Future.successful(
-      Right(preferenceWithContext))
-    preferenceManagementService.getPreference(groupId, enrolments.toNes) returns Future.successful(
-      Right(preferenceWithContext))
+    preferenceManagementService.getPreference(enrolment) returns Future.successful(Right(preferenceWithContext))
 
     val result: Future[Result] =
       preferenceManagementController
-        .getPreference(groupId)
+        .getPreference(enrolment)
         .apply(FakeRequest())
 
     status(result) mustBe Status.OK
@@ -115,7 +110,7 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
   }
 
   trait Scope extends TestModels {
-    val groupId: GroupId = PensionsAdministratorGroupId
+    val enrolment: Enrolment = Enrolment.fromValue(enrolmentValue).right.value
     val contextualPreferenceConsent: ContextualPreference = PreferenceContext(consent)
     val verificationConsent: ConsentVerificationContext = ConsentVerificationContext(
       consent,
@@ -126,12 +121,8 @@ class PreferenceManagementControllerSpec extends AnyFlatSpec with Matchers with 
     val verificationContext: Context = VerificationContext(verification)
     val preferenceWithContext: ContextualPreference = PreferenceWithContext(preference, List(verificationContext))
 
-    val authorisationEnrolmentService: AuthorisationEnrolmentService = mock[AuthorisationEnrolmentService]
-    authorisationEnrolmentService.getAuthorisedEnrolments()(any()).returns(Future.successful(enrolments.toList.toSet))
-
     val preferenceManagementService: PreferenceManagementService = mock[PreferenceManagementService]
     val preferenceManagementController = new PreferenceManagementController(
-      authorisationEnrolmentService,
       preferenceManagementService,
       Helpers.stubControllerComponents()
     )

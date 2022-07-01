@@ -146,7 +146,7 @@ Responds with status:
 }
 ```
 
-### PUT /channel-preferences/preferences/enrolments/PODSAdmin/consent
+### PUT /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/consent
 
 Create or update consent for an enrolment
 
@@ -162,7 +162,7 @@ Create or update consent for an enrolment
 #### Example request :
 
 ```shell
- curl -H "Content-Type: application/json" -XPUT http://localhost:9052/channel-preferences/preferences/enrolments/PODSAdmin/consent -d '{
+ curl -H "Content-Type: application/json" -XPUT http://localhost:9052/channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/consent -d '{
 "consentType": "Default",
 "status": true,
 "updated": "1987-03-20T14:33:48.000640Z",
@@ -199,13 +199,13 @@ Responds with status:
 }
 ```
 
-### POST /channel-preferences/preferences/enrolments/PODSAdmin/channels/email/index/primary/verify
+### POST /channel-preferences/preferences/enrolments/HMRC-PODS-ORG~PSAID~GB123456789/channels/email/index/primary/verify
 
 Create a new verification for the target channel (email)
 
 | Name           | Description                                                                    |
 | -------------- | ------------------------------------------------------------------------------ |
-| `value`        |  the email address to create the verification for              |
+| `email`        |  the email address to create the verification for              |
 
 
 #### Example request :

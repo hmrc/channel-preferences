@@ -25,7 +25,7 @@ import org.mockito.IdiomaticMockito.StubbingOps
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, Phone }
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
-import uk.gov.hmrc.channelpreferences.model.preferences._
+import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelledEnrolment, CustomsServiceEnrolment, CustomsServiceKey, EORINumber, EnrolmentKey, IdentifierKey, IdentifierValue }
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -37,7 +37,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
 
   it should "return a preference for valid inputs" in new Scope {
     preferenceService
-      .getChannelPreference(CustomsServiceQualifier, identifierValue, channel)
+      .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
       .futureValue shouldBe JsObject.empty.asRight
   }
 
@@ -49,7 +49,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
       .returns(Future.successful(error.asLeft))
 
     preferenceService
-      .getChannelPreference(CustomsServiceQualifier, identifierValue, channel)
+      .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
       .futureValue shouldBe error.asLeft
   }
 

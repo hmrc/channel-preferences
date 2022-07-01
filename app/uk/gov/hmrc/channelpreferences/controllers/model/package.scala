@@ -16,24 +16,12 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import cats.data.NonEmptyList
 import play.api.libs.json.JsonConfiguration.Aux
-import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, JsonConfiguration, JsonNaming }
+import play.api.libs.json.{ Json, JsonConfiguration, JsonNaming }
 
 package object model {
   implicit val jsonConfiguration: Aux[Json.MacroOptions] = JsonConfiguration(
     discriminator = "type",
     typeNaming = JsonNaming(_.split("\\.").last)
   )
-  implicit def nonEmptyListFormat[A: Format]: Format[NonEmptyList[A]] = new Format[NonEmptyList[A]] {
-    override def writes(o: NonEmptyList[A]): JsValue = Json.toJson(o.toList)
-
-    override def reads(json: JsValue): JsResult[NonEmptyList[A]] =
-      Json.fromJson[List[A]](json).flatMap { values =>
-        NonEmptyList
-          .fromList(values)
-          .map(JsSuccess(_))
-          .getOrElse(JsError(s"non-empty list cannot be empty"))
-      }
-  }
 }

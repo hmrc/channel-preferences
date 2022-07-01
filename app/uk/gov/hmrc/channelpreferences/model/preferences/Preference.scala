@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.data.NonEmptyList
-import play.api.libs.json.{ Json, OFormat }
+import play.api.libs.json.{ Format, JsError, JsResult, JsSuccess, JsValue, Json, OFormat }
 import uk.gov.hmrc.channelpreferences.controllers.model.Consent
 
 case class Preference(
@@ -29,5 +29,16 @@ case class Preference(
 )
 
 object Preference {
+  implicit def nonEmptyListFormat[A: Format]: Format[NonEmptyList[A]] = new Format[NonEmptyList[A]] {
+    override def writes(o: NonEmptyList[A]): JsValue = Json.toJson(o.toList)
+
+    override def reads(json: JsValue): JsResult[NonEmptyList[A]] =
+      Json.fromJson[List[A]](json).flatMap { values =>
+        NonEmptyList
+          .fromList(values)
+          .map(JsSuccess(_))
+          .getOrElse(JsError(s"non-empty list cannot be empty"))
+      }
+  }
   implicit val format: OFormat[Preference] = Json.format[Preference]
 }
