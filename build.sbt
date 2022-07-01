@@ -87,9 +87,9 @@ lazy val microservice = Project(appName, file("."))
     resolvers += Resolver.jcenterRepo,
     inConfig(IntegrationTest)(
       scalafmtCoreSettings ++
-        Seq(compileInputs in compile := Def.taskDyn {
-          val task = test in (resolvedScoped.value.scope in scalafmt.key)
-          val previousInputs = (compileInputs in compile).value
+        Seq(compile / compileInputs := Def.taskDyn {
+          val task = (resolvedScoped.value.scope in scalafmt.key) / test
+          val previousInputs = (compile / compileInputs).value
           task.map(_ => previousInputs)
         }.value)
     )
@@ -101,8 +101,8 @@ lazy val microservice = Project(appName, file("."))
   .settings(ScoverageSettings())
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
-compileScalastyle := scalastyle.in(Compile).toTask("").value
-(compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value
+compileScalastyle := (Compile / scalastyle).toTask("").value
+(Compile / compile) := ((Compile / compile) dependsOn compileScalastyle).value
 
 bobbyRulesURL := Some(new URL("https://webstore.tax.service.gov.uk/bobby-config/deprecated-dependencies.json"))
 scalafmtOnCompile := true
@@ -117,15 +117,16 @@ lazy val silencerSettings: Seq[Setting[_]] = {
 }
 
 dependencyUpdatesFailBuild := true
-(compile in Compile) := ((compile in Compile) dependsOn dependencyUpdates).value
+(Compile / compile) := ((Compile / compile) dependsOn dependencyUpdates).value
 dependencyUpdatesFilter -= moduleFilter(organization = "uk.gov.hmrc")
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scala-lang")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.github.ghik")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.typesafe.play")
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatestplus.play")
+dependencyUpdatesFilter -= moduleFilter(organization = "com.lucidchart")
 dependencyUpdatesFilter -= moduleFilter(name = "flexmark-all")
 
-sources in (Compile, doc) := Seq.empty
+Compile / doc / sources := Seq.empty
 
 swaggerDomainNameSpaces := Seq("uk.gov.hmrc.channelpreferences.controllers.models.generic")
 swaggerTarget := baseDirectory.value / "public"
