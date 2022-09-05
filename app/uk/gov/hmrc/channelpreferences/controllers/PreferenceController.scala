@@ -137,7 +137,7 @@ class PreferenceController @Inject()(
         .map {
           case Right(content) => Ok(content)
           case Left(error) =>
-            logger.error(s"Failed to update email bounce $error")
+            logger.error(s"Failed to update email bounce for eventId ${event.eventId}: $error")
             NotModified
         }
         .recover {
