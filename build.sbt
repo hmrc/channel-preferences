@@ -129,6 +129,7 @@ dependencyUpdatesFilter -= moduleFilter(organization = "com.typesafe.play")
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatestplus.play")
 dependencyUpdatesFilter -= moduleFilter(organization = "com.lucidchart")
 dependencyUpdatesFilter -= moduleFilter(name = "flexmark-all")
+dependencyUpdatesFilter -= moduleFilter(name = "sbt-scoverage")
 
 Compile / doc / sources := Seq.empty
 
