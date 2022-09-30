@@ -32,6 +32,6 @@ trait Auditing {
 
   def sendAuditEvent(auditType: String, details: Map[String, String])(
     implicit hc: HeaderCarrier,
-    ec: ExecutionContext) =
+    ec: ExecutionContext): Unit =
     auditConnector.sendExplicitAudit(auditType, details)
 }
