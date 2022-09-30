@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.{ Http, HttpExt }
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.stream.scaladsl.Source
@@ -46,15 +46,13 @@ class OutboundProxyConnector @Inject()(config: Configuration)(
 
   val log: LoggerLike = Logger(this.getClass)
 
-  val http: HttpExt = Http(system)
-
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result] = {
     val request: HttpRequest = buildOutboundRequest(inboundRequest)
 
     logRequest(request)
 
     preservingMdc(
-      http
+      Http()
         .singleRequest(request = request)
     ).map { response =>
       val flattenedHeaders = processResponseHeaders(response.headers)
