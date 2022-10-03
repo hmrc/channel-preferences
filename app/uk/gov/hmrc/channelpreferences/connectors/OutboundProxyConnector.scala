@@ -34,6 +34,7 @@ import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 import scala.concurrent.{ ExecutionContext, Future }
 
+// $COVERAGE-OFF$Disabling temporarily while testing fix
 @Singleton
 class OutboundProxyConnector @Inject()(config: Configuration)(
   implicit system: ActorSystem,
@@ -148,3 +149,4 @@ object OutboundProxyConnector {
   private def expandToMap(headers: Seq[HttpHeader]): Map[String, String] =
     headers.map(h => (h.name(), h.value())).groupBy(_._1).mapValues(_.map(_._2).mkString(","))
 }
+// $COVERAGE-ON$
