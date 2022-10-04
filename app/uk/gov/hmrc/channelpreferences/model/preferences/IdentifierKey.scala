@@ -28,7 +28,7 @@ object IdentifierKey {
     new PathBindable[IdentifierKey] {
       override def bind(key: String, value: String): Either[String, IdentifierKey] =
         for {
-          name <- stringBinder.bind(key, value).right
+          name <- stringBinder.bind(key, value)
           ch   <- IdentifierKey.fromValue(name)
         } yield ch
 

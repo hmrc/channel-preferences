@@ -17,10 +17,11 @@
 package uk.gov.hmrc.channelpreferences.utils
 
 import com.typesafe.config.ConfigFactory
-import uk.gov.hmrc.crypto.{ Crypted, CryptoWithKeysFromConfig, PlainText }
+import uk.gov.hmrc.crypto.{ Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory }
 
 trait EntityIdCrypto {
-  lazy val currentCrypto = new CryptoWithKeysFromConfig(baseConfigKey = "entityId.encryption", ConfigFactory.load())
+  lazy val currentCrypto: Encrypter with Decrypter =
+    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "entityId.encryption", ConfigFactory.load())
 
   def encryptString(encryptedString: String): Either[String, EncryptOrDecryptException] =
     try Left(currentCrypto.encrypt(PlainText(encryptedString)).value)

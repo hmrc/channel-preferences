@@ -33,7 +33,7 @@ import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, I
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
-import uk.gov.hmrc.channelpreferences.utils.{ CustomHeaders, EntityIdCrypto }
+import uk.gov.hmrc.channelpreferences.utils.EntityIdCrypto
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
