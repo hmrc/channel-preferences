@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
+import akka.http.scaladsl.{ Http, HttpExt }
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.stream.scaladsl.Source
@@ -32,6 +32,7 @@ import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
+import scala.collection.immutable
 import scala.concurrent.{ ExecutionContext, Future }
 
 // $COVERAGE-OFF$Disabling temporarily while testing fix
@@ -47,13 +48,15 @@ class OutboundProxyConnector @Inject()(config: Configuration)(
 
   val log: LoggerLike = Logger(this.getClass)
 
+  def http(): HttpExt = Http(system)
+
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result] = {
     val request: HttpRequest = buildOutboundRequest(inboundRequest)
 
     logRequest(request)
 
     preservingMdc(
-      Http()
+      http()
         .singleRequest(request = request)
     ).map { response =>
       val flattenedHeaders = processResponseHeaders(response.headers)
@@ -75,7 +78,7 @@ class OutboundProxyConnector @Inject()(config: Configuration)(
     val method = HttpMethod.custom(inboundRequest.method)
     val contentType = inboundRequest.headers.toSimpleMap
       .get(CONTENT_TYPE)
-      .flatMap(ContentType.parse(_).right.toOption)
+      .flatMap(ContentType.parse(_).toOption)
       .getOrElse(ContentTypes.`text/plain(UTF-8)`)
     val contentLength = inboundRequest.headers.toSimpleMap.get(CONTENT_LENGTH).map(_.toLong)
 
@@ -84,7 +87,8 @@ class OutboundProxyConnector @Inject()(config: Configuration)(
       case None     => HttpEntity(contentType, inboundRequest.body)
     }
 
-    HttpRequest().withMethod(method).withUri(uri).withHeaders(headers: _*).withEntity(entity)
+    val a: immutable.Seq[HttpHeader] = Vector[HttpHeader](headers: _*)
+    HttpRequest().withMethod(method).withUri(uri).withHeaders(a).withEntity(entity)
   }
 
   private def logRequest(request: HttpRequest): Unit =
@@ -146,7 +150,9 @@ object OutboundProxyConnector {
   private[connectors] def loggedHeaders(headers: Seq[HttpHeader]): Map[String, String] =
     expandToMap(headers).filter(loggedHeadersFilter)
 
-  private def expandToMap(headers: Seq[HttpHeader]): Map[String, String] =
-    headers.map(h => (h.name(), h.value())).groupBy(_._1).mapValues(_.map(_._2).mkString(","))
+  private def expandToMap(headers: Seq[HttpHeader]): Map[String, String] = {
+    val a = headers.map(h => (h.name(), h.value())).groupBy(_._1)
+    a.view.mapValues(_.map(_._2).mkString(",")).toMap
+  }
 }
 // $COVERAGE-ON$

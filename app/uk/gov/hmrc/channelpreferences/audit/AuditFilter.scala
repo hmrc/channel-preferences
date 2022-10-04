@@ -18,13 +18,12 @@ package uk.gov.hmrc.channelpreferences.audit
 
 import akka.stream.Materializer
 import play.api.Configuration
-import play.api.http.HeaderNames
-import play.api.mvc.{ RequestHeader, ResponseHeader, Result }
+import play.api.mvc.{ RequestHeader, ResponseHeader }
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.EventKeys
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
+import uk.gov.hmrc.play.audit.model.{ DataEvent, ExtendedDataEvent, RedactionLog, TruncationLog }
+import uk.gov.hmrc.play.bootstrap.filters.{ CommonAuditFilter, Details }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.{ ControllerConfigs, HttpAuditEvent }
 
@@ -36,27 +35,12 @@ trait AuditFilter extends CommonAuditFilter with BackendHeaderCarrierProvider {
 
   def applicationPort: Option[Int]
 
-  private val textHtml = ".*(text/html).*".r
+  //private val textHtml = ".*(text/html).*".r
 
-  override protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String) =
-    result.body.contentType
-      .collect { case textHtml(_) => "<HTML>...</HTML>" }
-      .getOrElse(responseBody)
-
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
-    Map(
-      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
-      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-      "host"                -> getHost(requestHeader),
-      "port"                -> getPort,
-      "queryString"         -> getQueryString(requestHeader.queryString)
-    )
-
-  override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
-    response.headers
-      .get(HeaderNames.LOCATION)
-      .map(HeaderNames.LOCATION -> _)
-      .toMap
+//  override protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String) =
+//    result.body.contentType
+//      .collect { case textHtml(_) => "<HTML>...</HTML>" }
+//      .getOrElse(responseBody)
 
   private[audit] def getQueryString(queryString: Map[String, Seq[String]]): String =
     cleanQueryStringForDatastream(
@@ -102,14 +86,44 @@ class DefaultFrontendAuditFilter @Inject()(
 
   override val applicationPort: Option[Int] = None
 
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Data[String]): Details =
+    Details.empty
+//    Map(
+//      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
+//      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+//      "host"                -> getHost(requestHeader),
+//      "port"                -> getPort,
+//      "queryString"         -> getQueryString(requestHeader.queryString)
+//    )
+
+  protected def buildResponseDetails(
+    responseHeader: ResponseHeader,
+    responseBody: Data[String],
+    contentType: Option[String]): Details =
+    Details.empty
+//    responseHeader.headers
+//      .get(HeaderNames.LOCATION)
+//      .map(HeaderNames.LOCATION -> _)
+//      .toMap
+
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)
 
-  override def dataEvent(
+  def dataEvent(
     eventType: String,
     transactionName: String,
     request: RequestHeader,
     detail: Map[String, String]
   )(implicit hc: HeaderCarrier): DataEvent =
     httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
+
+  // TODO:
+  override def extendedDataEvent(
+    eventType: String,
+    transactionName: String,
+    request: play.api.mvc.RequestHeader,
+    detail: play.api.libs.json.JsObject,
+    truncationLog: TruncationLog,
+    redaction: RedactionLog)(implicit hc: HeaderCarrier): ExtendedDataEvent =
+    ExtendedDataEvent("", "")
 }
