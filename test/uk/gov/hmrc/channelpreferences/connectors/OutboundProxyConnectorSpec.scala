@@ -98,7 +98,7 @@ class OutboundProxyConnectorSpec extends PlaySpec with ScalaFutures with Mockito
     val ec = scala.concurrent.ExecutionContext.Implicits.global
     val actorsystem = ActorSystem("system")
     val connector = new OutboundProxyConnector(configuration)(actorsystem, ec) {
-      override val http: HttpExt = mockHttp
+      override def http(): HttpExt = mockHttp
     }
     def request(inboundHeaders: Headers, requestTarget: RequestTarget): Request[Source[ByteString, _]] =
       new Request[Source[ByteString, _]] {

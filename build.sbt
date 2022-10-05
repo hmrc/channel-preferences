@@ -4,8 +4,6 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.SbtBobbyPlugin.BobbyKeys.bobbyRulesURL
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.ExternalService
-import uk.gov.hmrc.ServiceManagerPlugin.Keys.itDependenciesList
 
 val appName = "channel-preferences"
 
@@ -94,14 +92,6 @@ lazy val microservice = Project(appName, file("."))
         }.value)
     )
   )
-  .settings(ServiceManagerPlugin.serviceManagerSettings)
-  .settings(
-    itDependenciesList := List(
-      ExternalService("PREFERENCES"),
-      ExternalService("AUTH"),
-      ExternalService("USER_DETAILS"),
-      ExternalService("IDENTITY_VERIFICATION")
-    ))
   .settings(ScoverageSettings())
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
@@ -120,7 +110,7 @@ lazy val silencerSettings: Seq[Setting[_]] = {
   )
 }
 
-dependencyUpdatesFailBuild := true
+dependencyUpdatesFailBuild := false
 (Compile / compile) := ((Compile / compile) dependsOn dependencyUpdates).value
 dependencyUpdatesFilter -= moduleFilter(organization = "uk.gov.hmrc")
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scala-lang")
