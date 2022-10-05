@@ -26,7 +26,6 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatest.Ignore
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -43,7 +42,7 @@ import scala.collection.immutable
 import scala.concurrent.Future
 
 // "DC-4474: Temporarily disabled to see if a fix works"
-@Ignore
+
 class OutboundProxyConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
   implicit val hc: HeaderCarrier =
     HeaderCarrier(authorization = Some(Authorization("bearer")), requestId = Some(RequestId("Id")))

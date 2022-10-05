@@ -33,7 +33,7 @@ import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServ
 import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
 import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, IdentifierKey, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceResolver, PreferenceService }
-import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpVerbs.GET
 

@@ -24,13 +24,13 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-import uk.gov.hmrc.emailaddress.EmailAddress
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import play.api.http.Status.{ NOT_FOUND, OK }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

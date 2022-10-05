@@ -48,7 +48,7 @@ class OutboundProxyConnector @Inject()(config: Configuration)(
 
   val log: LoggerLike = Logger(this.getClass)
 
-  def http(): HttpExt = Http(system)
+  val http: HttpExt = Http(system)
 
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result] = {
     val request: HttpRequest = buildOutboundRequest(inboundRequest)
@@ -56,7 +56,7 @@ class OutboundProxyConnector @Inject()(config: Configuration)(
     logRequest(request)
 
     preservingMdc(
-      http()
+      http
         .singleRequest(request = request)
     ).map { response =>
       val flattenedHeaders = processResponseHeaders(response.headers)

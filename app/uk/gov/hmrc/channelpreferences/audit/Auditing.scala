@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.channelpreferences.audit
 
-import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.EventTypes
+
 import scala.concurrent.ExecutionContext
 
 trait Auditing {

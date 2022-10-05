@@ -9,7 +9,7 @@ import uk.gov.hmrc.ServiceManagerPlugin.Keys.itDependenciesList
 
 val appName = "channel-preferences"
 
-val silencerVersion = "1.7.11"
+ThisBuild / scalaVersion := "2.13.8"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SwaggerPlugin)
@@ -24,9 +24,10 @@ lazy val microservice = Project(appName, file("."))
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions ++= Seq(
-      "-P:silencer:pathFilters=target/.*",
-      s"-P:silencer:sourceRoots=${baseDirectory.value.getCanonicalPath}",
-      "-P:silencer:pathFilters=app.routes",
+//      "-P:silencer:pathFilters=target/.*",
+//      s"-P:silencer:sourceRoots=${baseDirectory.value.getCanonicalPath}",
+//      "-P:silencer:pathFilters=app.routes",
+      "-Wconf:src=routes/.*:s",
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-encoding",
       "utf-8", // Specify character encoding used by source files.
@@ -39,7 +40,7 @@ lazy val microservice = Project(appName, file("."))
       "-unchecked", // Enable additional warnings where generated code depends on assumptions.
       "-Xcheckinit", // Wrap field accessors to throw an exception on uninitialized access.
       "-Xfatal-warnings", // Fail the compilation if there are any warnings.
-      "-Xfuture", // Turn on future language features.
+//      "-Xfuture", // Turn on future language features.
       "-Xlint:adapted-args", // Warn if an argument list is modified to match the receiver.
       //"-Xlint:by-name-right-associative", // By-name parameter of right associative operator.
       "-Xlint:constant", // Evaluation of a constant arithmetic expression results in an error.
@@ -73,13 +74,14 @@ lazy val microservice = Project(appName, file("."))
       "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
       "-Ywarn-unused:privates", // Warn if a private member is unused.
       "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
-    ),
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     )
-    // ***************
   )
+//    libraryDependencies ++= Seq(
+//      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
+//      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+//    )
+  // ***************
+//  )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
@@ -112,13 +114,13 @@ bobbyRulesURL := Some(new URL("https://webstore.tax.service.gov.uk/bobby-config/
 scalafmtOnCompile := true
 PlayKeys.playDefaultPort := 9052
 
-lazy val silencerSettings: Seq[Setting[_]] = {
+//lazy val silencerSettings: Seq[Setting[_]] = {
 //  val silencerVersion = "1.7.0"
-  Seq(
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full))
-  )
-}
+//  Seq(
+//    libraryDependencies ++= Seq(
+//      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full))
+//  )
+//}
 
 dependencyUpdatesFailBuild := true
 (Compile / compile) := ((Compile / compile) dependsOn dependencyUpdates).value
