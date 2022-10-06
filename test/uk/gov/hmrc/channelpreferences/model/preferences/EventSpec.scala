@@ -20,6 +20,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{ JsSuccess, Json }
 
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class EventSpec extends PlaySpec {
@@ -32,7 +33,7 @@ class EventSpec extends PlaySpec {
                                 |"eventId":"$eventId",
                                 |"subject":"subject",
                                 |"groupId":"groupId",
-                                |"timestamp":"$timestamp",
+                                |"timestamp":"${timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}",
                                 |"event":{}
                                 |}
                                 |""".stripMargin)
