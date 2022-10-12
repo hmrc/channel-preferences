@@ -93,7 +93,7 @@ bobbyRulesURL := Some(new URL("https://webstore.tax.service.gov.uk/bobby-config/
 scalafmtOnCompile := true
 PlayKeys.playDefaultPort := 9052
 
-dependencyUpdatesFailBuild := true
+dependencyUpdatesFailBuild := false
 (Compile / compile) := ((Compile / compile) dependsOn dependencyUpdates).value
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scala-lang")
 
