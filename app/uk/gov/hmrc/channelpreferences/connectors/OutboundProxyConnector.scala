@@ -17,25 +17,24 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.{Http, HttpExt}
+import akka.http.scaladsl.{ Http, HttpExt }
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import play.api.http.HeaderNames.CONTENT_TYPE
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 import play.api.http.HeaderNames._
 import play.api.http.HttpEntity.Streamed
 import play.api.mvc._
-import play.api.{Configuration, Logger, LoggerLike}
+import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.collection.immutable
 
-// $COVERAGE-OFF$Disabling temporarily while testing fix
 @Singleton
 class OutboundProxyConnector @Inject()(config: Configuration)(
   implicit system: ActorSystem,
@@ -155,4 +154,3 @@ object OutboundProxyConnector {
     a.view.mapValues(_.map(_._2).mkString(",")).toMap
   }
 }
-// $COVERAGE-ON$
