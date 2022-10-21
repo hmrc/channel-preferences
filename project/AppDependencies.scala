@@ -11,9 +11,10 @@ object AppDependencies {
     "org.typelevel"     %% "cats-core"                 % "2.8.0",
   )
 
-  // The fork of swagger-play requires a version of jackson-databind version >= 2.9.0 and < 2.10.0
-  // Other libraries pulling in later jackson-databind include http-verbs and logback-json-logger
-  val dependencyOverrides: Seq[ModuleID] = Seq()
+  // Several dependencies require a lower major version of Scala 2.13 xml library
+  val dependencyOverrides: Seq[ModuleID] = Seq(
+    "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
+  )
 
   val test = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % "7.8.0"         % Test,
