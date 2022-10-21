@@ -27,7 +27,7 @@ object AppDependencies {
     "uk.gov.hmrc"            %% "service-integration-test" % "1.3.0-play-28" % "test, it",
     "org.mockito"            %% "mockito-scala"            % "1.17.12"       % "test, it",
     "com.github.tomakehurst" % "wiremock"                  % "2.33.2"        % "test, it",
-    "org.mock-server"        % "mockserver-netty"          % "5.14.0"        % "it",
+    "org.mock-server"        % "mockserver-netty"          % "5.14.0"        % "test, it",
     "com.vladsch.flexmark"   % "flexmark-all"              % "0.64.0"        % "test, it",
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4"      % "test, it",
   )
