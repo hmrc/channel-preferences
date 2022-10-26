@@ -28,7 +28,7 @@ import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
 import uk.gov.hmrc.channelpreferences.model.cds.{ Email, EmailVerification, Phone }
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
 import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, IdentifierValue }
-import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.EventTypes

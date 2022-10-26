@@ -47,7 +47,7 @@ import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, I
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
-import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 

@@ -20,7 +20,7 @@ import org.joda.time.DateTime
 import play.api.libs.json.JodaReads.DefaultJodaDateTimeReads
 import play.api.libs.json.JodaWrites.JodaDateTimeWrites
 import play.api.libs.json._
-import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
 import scala.util.{ Failure, Success, Try }
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.model.cds
 import org.joda.time.DateTime
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{ JsError, JsSuccess, Json }
-import uk.gov.hmrc.emailaddress.EmailAddress
+import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
 class EmailVerificationSpec extends PlaySpec {
 

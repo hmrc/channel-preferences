@@ -19,12 +19,14 @@ package uk.gov.hmrc.channelpreferences.audit
 import akka.stream.Materializer
 import play.api.Configuration
 import play.api.http.HeaderNames
-import play.api.mvc.{ RequestHeader, ResponseHeader, Result }
+import play.api.libs.json.{ JsObject, JsString }
+import play.api.mvc.{ RequestHeader, ResponseHeader }
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
+import uk.gov.hmrc.play.audit.model.{ ExtendedDataEvent, RedactionLog, TruncationLog }
+import uk.gov.hmrc.play.bootstrap.filters.{ CommonAuditFilter, Details }
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.{ ControllerConfigs, HttpAuditEvent }
 
@@ -35,28 +37,6 @@ trait AuditFilter extends CommonAuditFilter with BackendHeaderCarrierProvider {
   def maskedFormFields: Seq[String]
 
   def applicationPort: Option[Int]
-
-  private val textHtml = ".*(text/html).*".r
-
-  override protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String) =
-    result.body.contentType
-      .collect { case textHtml(_) => "<HTML>...</HTML>" }
-      .getOrElse(responseBody)
-
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
-    Map(
-      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
-      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-      "host"                -> getHost(requestHeader),
-      "port"                -> getPort,
-      "queryString"         -> getQueryString(requestHeader.queryString)
-    )
-
-  override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
-    response.headers
-      .get(HeaderNames.LOCATION)
-      .map(HeaderNames.LOCATION -> _)
-      .toMap
 
   private[audit] def getQueryString(queryString: Map[String, Seq[String]]): String =
     cleanQueryStringForDatastream(
@@ -102,14 +82,49 @@ class DefaultFrontendAuditFilter @Inject()(
 
   override val applicationPort: Option[Int] = None
 
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Data[String]): Details = {
+    val detailsMap = Map(
+      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody.value, maskedFormFields),
+      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+      "host"                -> getHost(requestHeader),
+      "port"                -> getPort,
+      "queryString"         -> getQueryString(requestHeader.queryString)
+    )
+
+    Details(
+      details = JsObject(detailsMap.map(item => (item._1, JsString(item._2))).toSeq),
+      TruncationLog.Empty,
+      RedactionLog.of(List.empty)
+    )
+  }
+
+  override protected def buildResponseDetails(
+    responseHeader: ResponseHeader,
+    responseBody: Data[String],
+    contentType: Option[String]): Details = {
+    val detailsMap =
+      responseHeader.headers
+        .get(HeaderNames.LOCATION)
+        .map(HeaderNames.LOCATION -> _)
+        .iterator
+        .toMap
+
+    Details(
+      details = JsObject(detailsMap.map(item => (item._1, JsString(item._2))).toSeq),
+      TruncationLog.Empty,
+      RedactionLog.of(List.empty)
+    )
+  }
+
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)
 
-  override def dataEvent(
+  override def extendedDataEvent(
     eventType: String,
     transactionName: String,
-    request: RequestHeader,
-    detail: Map[String, String]
-  )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
+    request: play.api.mvc.RequestHeader,
+    detail: play.api.libs.json.JsObject,
+    truncationLog: TruncationLog,
+    redaction: RedactionLog)(implicit hc: HeaderCarrier): ExtendedDataEvent =
+    httpAuditEvent.extendedEvent(eventType, transactionName, request, detail)
 }

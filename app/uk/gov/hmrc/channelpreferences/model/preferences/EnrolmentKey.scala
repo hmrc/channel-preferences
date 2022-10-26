@@ -28,7 +28,7 @@ object EnrolmentKey {
     new PathBindable[EnrolmentKey] {
       override def bind(key: String, value: String): Either[String, EnrolmentKey] =
         for {
-          name <- stringBinder.bind(key, value).right
+          name <- stringBinder.bind(key, value)
           ch   <- EnrolmentKey.fromValue(name)
         } yield ch
 

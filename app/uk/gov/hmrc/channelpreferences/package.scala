@@ -25,7 +25,7 @@ package object channelpreferences {
       new PathBindable[Channel] {
         override def bind(key: String, value: String): Either[String, Channel] =
           for {
-            name <- stringBinder.bind(key, value).right
+            name <- stringBinder.bind(key, value)
             ch   <- Channel.channelFromName(name)
           } yield ch
 
