@@ -1,7 +1,6 @@
 import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
 import sbt.Resolver
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.SbtBobbyPlugin.BobbyKeys.bobbyRulesURL
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.ExternalService
@@ -89,7 +88,6 @@ lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 compileScalastyle := (Compile / scalastyle).toTask("").value
 (Compile / compile) := ((Compile / compile) dependsOn compileScalastyle).value
 
-bobbyRulesURL := Some(new URL("https://webstore.tax.service.gov.uk/bobby-config/deprecated-dependencies.json"))
 scalafmtOnCompile := true
 PlayKeys.playDefaultPort := 9052
 
