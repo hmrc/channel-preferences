@@ -29,6 +29,6 @@ object AppDependencies {
     "org.mockito"            %% "mockito-scala"            % "1.17.12"       % "test, it",
     "com.github.tomakehurst" % "wiremock"                  % "2.33.2"        % "test, it",
     "com.vladsch.flexmark"   % "flexmark-all"              % "0.64.0"        % "test, it",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4"      % "test, it",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.1"      % "test, it",
   )
 }
