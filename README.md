@@ -153,7 +153,9 @@ If your build fails due to poor test coverage, *DO NOT* lower the test coverage 
 
 Then run the integration tests:
 
+`sm --start DC_CHANNEL_PREFERENCES_IT`
 `sbt it:test`
+`sm --stop DC_CHANNEL_PREFERENCES_IT`
 
 ## Swagger endpoint
 

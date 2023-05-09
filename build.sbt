@@ -3,8 +3,6 @@ import sbt.Resolver
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.ExternalService
-import uk.gov.hmrc.ServiceManagerPlugin.Keys.itDependenciesList
 
 val appName = "channel-preferences"
 
@@ -68,20 +66,12 @@ lazy val microservice = Project(appName, file("."))
     inConfig(IntegrationTest)(
       scalafmtCoreSettings ++
         Seq(compile / compileInputs := Def.taskDyn {
-          val task = (resolvedScoped.value.scope in scalafmt.key) / test
+          val task = resolvedScoped.value.scope / scalafmt.key / test
           val previousInputs = (compile / compileInputs).value
           task.map(_ => previousInputs)
         }.value)
     )
   )
-  .settings(ServiceManagerPlugin.serviceManagerSettings)
-  .settings(itDependenciesList := List(
-    ExternalService("PREFERENCES"),
-    ExternalService("AUTH"),
-    ExternalService("USER_DETAILS"),
-    ExternalService("IDENTITY_VERIFICATION"),
-    ExternalService("DATASTREAM")
-  ))
   .settings(ScoverageSettings())
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
