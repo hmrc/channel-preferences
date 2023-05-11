@@ -8,7 +8,7 @@ val appName = "channel-preferences"
 ThisBuild / scalaVersion := "2.13.8"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SwaggerPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SwaggerPlugin)
   .settings(
     majorVersion := 0,
     scalaVersion := "2.13.8",
