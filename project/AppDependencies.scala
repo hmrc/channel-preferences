@@ -27,7 +27,6 @@ object AppDependencies {
     "org.scalatestplus.play"       %% "scalatestplus-play"        % "5.1.0"          % "test, it",
     "org.scalatestplus"            %% "scalacheck-1-15"           % "3.2.11.0"       % "test, it",
     "org.scalatestplus"            %% "mockito-3-4"               % "3.2.10.0"       % "test, it",
-    "uk.gov.hmrc"                  %% "service-integration-test"  % "1.3.0-play-28"  % "test, it",
     "org.mockito"                  %% "mockito-scala"             % "1.17.14"        % "test, it",
     "com.github.tomakehurst"       %  "wiremock"                  % "2.33.2"         % "test, it",
     "com.vladsch.flexmark"         %  "flexmark-all"              % "0.64.4"         % "test, it",

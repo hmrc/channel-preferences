@@ -17,18 +17,25 @@
 package uk.gov.hmrc.channelpreferences
 
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.integration.ServiceSpec
+import uk.gov.hmrc.channelpreferences.UrlHelper.-/
 import scala.concurrent.ExecutionContext
 
-trait ISpec extends PlaySpec with ServiceSpec with BeforeAndAfterEach {
+trait ISpec
+    extends PlaySpec with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
 
-  override def externalServices: Seq[String] = Seq.empty
-
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-  override def additionalConfig: Map[String, _] = Map("metrics.jvm" -> false)
+  def resource(path: String): String =
+    s"http://localhost:$port/${-/(path)}"
+}
+
+object UrlHelper {
+  def -/(uri: String): String =
+    if (uri.startsWith("/")) uri.drop(1) else uri
 }
