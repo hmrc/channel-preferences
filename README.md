@@ -125,21 +125,17 @@ Responds with status:
 
 ## Run the project locally
 
-Ensure you have service-manager python environment setup:
+Ensure you have sm2 environment setup:
 
-`source ../servicemanager/bin/activate`
+`sm2 --start DC_TWSM_ALL`
 
-`sm --start DC_TWSM_ALL`
-
-`sm --stop CHANNEL_PREFERENCES`
+`sm2 --stop CHANNEL_PREFERENCES`
 
 `sbt "run 9052 -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes"`
 
 ## Run the tests and sbt fmt before raising a PR
 
-Ensure you have service-manager python environment setup:
-
-`source ../servicemanager/bin/activate`
+Ensure you have sm2 environment setup:
 
 Format:
 
@@ -153,9 +149,9 @@ If your build fails due to poor test coverage, *DO NOT* lower the test coverage 
 
 Then run the integration tests:
 
-`sm --start DC_CHANNEL_PREFERENCES_IT`
+`sm2 --start DC_CHANNEL_PREFERENCES_IT`
 `sbt it:test`
-`sm --stop DC_CHANNEL_PREFERENCES_IT`
+`sm2 --stop DC_CHANNEL_PREFERENCES_IT`
 
 ## Swagger endpoint
 
