@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package uk.gov.hmrc.channelpreferences.services.preferences
 
 import cats.syntax.either._
-import org.joda.time.DateTime
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -33,6 +32,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.EventTypes
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -70,7 +70,7 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
     val identifierValue: IdentifierValue = IdentifierValue("foo")
     val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(identifierValue, Email)
-    val emailVerification: EmailVerification = EmailVerification(EmailAddress("foo@bar.com"), DateTime.now())
+    val emailVerification: EmailVerification = EmailVerification(EmailAddress("foo@bar.com"), Instant.now())
 
     cdsEmailConnector
       .getVerifiedEmail(customsServiceEnrolment.identifierValue.value)

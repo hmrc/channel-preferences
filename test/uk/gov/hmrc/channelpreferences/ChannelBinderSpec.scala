@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package uk.gov.hmrc.channelpreferences
 
 import cats.syntax.either._
-import org.joda.time.DateTime
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
@@ -37,6 +36,7 @@ import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpVerbs.GET
 
+import java.time.Instant
 import scala.concurrent.{ ExecutionContext, Future }
 
 class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
@@ -79,7 +79,7 @@ class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) 
         .toJson(
           EmailVerification(
             EmailAddress("test@email.com"),
-            new DateTime(2022, 3, 20, 1, 1)
+            Instant.parse("2022-03-20T01:01:00Z")
           ))
         .asRight
     )

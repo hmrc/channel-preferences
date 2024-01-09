@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@
 package uk.gov.hmrc.channelpreferences.controllers
 
 import cats.syntax.either._
-import akka.http.scaladsl.model.StatusCodes
-import akka.stream.Materializer
-import akka.stream.testkit.NoMaterializer
-import org.joda.time.DateTime
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.testkit.NoMaterializer
 import org.mockito.ArgumentMatchers.{ any, anyString }
 import org.mockito.ArgumentMatchersSugar.*
 import org.mockito.Mockito._
@@ -51,6 +50,7 @@ import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -58,7 +58,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
   implicit val mat: Materializer = NoMaterializer
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val emailVerification = EmailVerification(EmailAddress("some@email.com"), new DateTime(1987, 3, 20, 1, 2, 3))
+
+  private val emailVerification =
+    EmailVerification(EmailAddress("some@email.com"), Instant.parse("1987-03-20T01:02:03Z"))
+
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
@@ -66,9 +69,10 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   val mockEISContactPreference: EISContactPreference = mock[EISContactPreference]
   val mockProcessEmail: ProcessEmail = mock[ProcessEmail]
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
-  val preferenceService: PreferenceService = mock[PreferenceService]
 
   "Calling preference" should {
+    val preferenceService: PreferenceService = mock[PreferenceService]
+
     "return a BAD GATEWAY (502) when get preference returns an unexpected error status" in {
       val controller = new PreferenceController(
         preferenceService,

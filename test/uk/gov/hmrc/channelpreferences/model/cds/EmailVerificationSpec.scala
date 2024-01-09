@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.channelpreferences.model.cds
 
-import org.joda.time.DateTime
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{ JsError, JsSuccess, Json }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
+import java.time.Instant
+
 class EmailVerificationSpec extends PlaySpec {
 
-  private val dateTime = new DateTime(1987, 3, 20, 1, 2, 3)
+  private val dateTime = Instant.parse("1987-03-20T01:02:03.000Z")
   private val emailVerificationJson =
     Json.parse("""{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}""")
 
