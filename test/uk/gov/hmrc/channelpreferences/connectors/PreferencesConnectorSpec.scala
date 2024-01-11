@@ -41,13 +41,16 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with MockitoSu
       connector.update(event).futureValue mustBe Right("bounce processed for 4ebbc776-a4ce-11ee-a3ad-2822aa445514")
     }
     "return PreferencesConnectorError if response is BAD_REQUEST" in new TestCase {
-      when(httpClientMock
-        .doPost[Event](any[String], any[Event], any[Seq[(String, String)]])(any[Writes[Event]], any[ExecutionContext]))
+      when(
+        httpClientMock
+          .doPost[Event](any[String], any[Event], any[Seq[(String, String)]])(any[Writes[Event]], any[ExecutionContext])
+      )
         .thenReturn(Future.successful(httpUnhappyResponseMock))
       val connector = new PreferencesConnector(configuration, httpClientMock)
 
       connector.update(event).futureValue mustBe Left(
-        PreferencesConnectorError("Error getting success code from preferences 400"))
+        PreferencesConnectorError("Error getting success code from preferences 400")
+      )
     }
   }
 
@@ -59,7 +62,8 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with MockitoSu
 
     when(
       httpClientMock
-        .doPost[Event](any[String], any[Event], any[Seq[(String, String)]])(any[Writes[Event]], any[ExecutionContext]))
+        .doPost[Event](any[String], any[Event], any[Seq[(String, String)]])(any[Writes[Event]], any[ExecutionContext])
+    )
       .thenReturn(Future.successful(httpResponseMock))
     val configuration: Configuration = Configuration(
       "microservice.services.preferences.host"     -> "localhost",

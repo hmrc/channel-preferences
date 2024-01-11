@@ -31,11 +31,12 @@ trait EntityResolver {
   def enrolment(requestBody: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
-class EntityResolverService @Inject()(entityResolverConnector: EntityResolverConnector) extends EntityResolver {
+class EntityResolverService @Inject() (entityResolverConnector: EntityResolverConnector) extends EntityResolver {
 
-  def confirm(entityId: String, itsaId: String)(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext): Future[HttpResponse] =
+  def confirm(entityId: String, itsaId: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[HttpResponse] =
     entityResolverConnector.confirm(entityId, itsaId)
 
   def enrolment(requestBody: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =

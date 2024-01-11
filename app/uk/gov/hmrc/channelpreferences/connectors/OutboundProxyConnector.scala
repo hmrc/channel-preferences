@@ -36,10 +36,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.collection.immutable
 
 @Singleton
-class OutboundProxyConnector @Inject()(config: Configuration)(
-  implicit system: ActorSystem,
-  executionContext: ExecutionContext)
-    extends ServicesConfig(config) {
+class OutboundProxyConnector @Inject() (config: Configuration)(implicit
+  system: ActorSystem,
+  executionContext: ExecutionContext
+) extends ServicesConfig(config) {
 
   import OutboundProxyConnector._
 
@@ -119,14 +119,14 @@ object OutboundProxyConnector {
       USER_AGENT
     )
 
-  val outboundHeadersFilter: ((String, String)) => Boolean = {
-    case (key, _) => !outboundHeaderBlackList.contains(key)
+  val outboundHeadersFilter: ((String, String)) => Boolean = { case (key, _) =>
+    !outboundHeaderBlackList.contains(key)
   }
 
   val loggedHeaderBlacklist: Set[String] = Set("Ocp-Apim-Subscription-Key", AUTHORIZATION)
 
-  val loggedHeadersFilter: ((String, String)) => Boolean = {
-    case (key, _) => !loggedHeaderBlacklist.contains(key)
+  val loggedHeadersFilter: ((String, String)) => Boolean = { case (key, _) =>
+    !loggedHeaderBlacklist.contains(key)
   }
 
   private def processInboundHeaders(inboundHeaders: Headers): Seq[RawHeader] = {
@@ -134,7 +134,7 @@ object OutboundProxyConnector {
       flattenToSeq(inboundHeaders.toMap).filter(outboundHeadersFilter)
 
     filteredInboundHeaders
-      .map({ case (name, value) => RawHeader(name, value) })
+      .map { case (name, value) => RawHeader(name, value) }
   }
 
   private def flattenToSeq(map: Map[String, Seq[String]]): Seq[(String, String)] =

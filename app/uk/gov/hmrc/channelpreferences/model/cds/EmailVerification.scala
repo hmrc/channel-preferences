@@ -46,9 +46,8 @@ object EmailVerification {
   val dateTimeWithMillis: DateTimeFormatter =
     DateTimeFormatter.ofPattern(dateFormat).withZone(ZoneOffset.UTC)
 
-  implicit val instantWrites: Format[Instant] = {
+  implicit val instantWrites: Format[Instant] =
     Format(Reads.DefaultInstantReads, Writes.temporalWrites[Instant, DateTimeFormatter](dateTimeWithMillis))
-  }
 
   implicit val emailAddressFormat: Format[EmailAddress] = Format(EmailAddressReads, EmailAddressWrites)
 //  implicit val dateTimeFormat: Format[Instant] = Format[Instant](DefaultInstantReads, instantWrites)

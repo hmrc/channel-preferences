@@ -33,7 +33,7 @@ trait EISContactPreference {
   ): Future[HttpResponse]
 }
 
-class EISContactPreferenceService @Inject()(eisConnector: EISConnector) extends EISContactPreference {
+class EISContactPreferenceService @Inject() (eisConnector: EISConnector) extends EISContactPreference {
   def updateContactPreference(
     regime: String,
     itsaEnrolment: ItsaETMPUpdate,

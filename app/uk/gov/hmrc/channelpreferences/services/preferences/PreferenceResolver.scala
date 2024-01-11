@@ -25,8 +25,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 
 trait PreferenceResolver {
-  def resolvePreferenceForEnrolment(enrolment: Enrolment)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
+  def resolvePreferenceForEnrolment(enrolment: Enrolment)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Either[PreferenceError, JsValue]]
 }
 
 object PreferenceResolver {

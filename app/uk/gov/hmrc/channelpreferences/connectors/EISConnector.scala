@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
-class EISConnector @Inject()(config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
+class EISConnector @Inject() (config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
 
   private val serviceUrl: String = baseUrl("eis")

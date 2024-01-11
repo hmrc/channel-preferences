@@ -28,7 +28,7 @@ trait ProcessEmail {
   def process(event: Event): Future[Either[ChannelPreferencesError, String]]
 }
 
-class ProcessBounceService @Inject()(preferencesConnector: PreferencesConnector) extends ProcessEmail {
+class ProcessBounceService @Inject() (preferencesConnector: PreferencesConnector) extends ProcessEmail {
   def process(event: Event): Future[Either[ChannelPreferencesError, String]] =
     preferencesConnector.update(event)
 }

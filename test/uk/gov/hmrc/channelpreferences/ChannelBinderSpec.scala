@@ -45,7 +45,8 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
     "define the bind - success" in new Scope {
       private val request = FakeRequest(
         GET,
-        "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email")
+        "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
+      )
       private val test = route(appBuilder, request).get
       status(test) mustBe OK
     }
@@ -53,7 +54,8 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
     "define the bind - failure" in new Scope {
       private val request = FakeRequest(
         GET,
-        "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/badChannel")
+        "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/badChannel"
+      )
       private val test = route(appBuilder, request).get
       status(test) mustBe BAD_REQUEST
     }
@@ -71,16 +73,19 @@ class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) 
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
-    channel: Channel)(
-    implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[PreferenceError, JsValue]] =
+    channel: Channel
+  )(implicit
+    headerCarrier: HeaderCarrier,
+    executionContext: ExecutionContext
+  ): Future[Either[PreferenceError, JsValue]] =
     Future.successful(
       Json
         .toJson(
           EmailVerification(
             EmailAddress("test@email.com"),
             Instant.parse("2022-03-20T01:01:00Z")
-          ))
+          )
+        )
         .asRight
     )
 }

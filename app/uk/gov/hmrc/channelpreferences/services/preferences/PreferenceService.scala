@@ -26,18 +26,20 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class PreferenceService @Inject()(preferenceResolver: PreferenceResolver) {
+class PreferenceService @Inject() (preferenceResolver: PreferenceResolver) {
   def getChannelPreference(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
     channel: Channel
-  )(
-    implicit headerCarrier: HeaderCarrier,
-    executionContext: ExecutionContext): Future[Either[PreferenceError, JsValue]] =
+  )(implicit
+    headerCarrier: HeaderCarrier,
+    executionContext: ExecutionContext
+  ): Future[Either[PreferenceError, JsValue]] =
     (for {
       enrolment <- EitherT.fromEither[Future](
-                    PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue, channel))
+                     PreferenceResolver.toEnrolment(enrolmentKey, identifierKey, identifierValue, channel)
+                   )
       resolution <- EitherT(preferenceResolver.resolvePreferenceForEnrolment(enrolment))
     } yield resolution).value
 }

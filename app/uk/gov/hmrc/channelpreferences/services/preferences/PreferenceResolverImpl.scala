@@ -24,11 +24,12 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.Future
 
 @Singleton
-class PreferenceResolverImpl @Inject()(
+class PreferenceResolverImpl @Inject() (
   customerDataStorePreferenceProvider: CustomsDataStorePreferenceProvider
 ) extends PreferenceResolver {
-  override def resolvePreferenceForEnrolment(enrolment: Enrolment)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] = enrolment match {
+  override def resolvePreferenceForEnrolment(
+    enrolment: Enrolment
+  )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] = enrolment match {
     case customsServiceEnrolment: CustomsServiceEnrolment =>
       customerDataStorePreferenceProvider.getPreference(customsServiceEnrolment)
   }

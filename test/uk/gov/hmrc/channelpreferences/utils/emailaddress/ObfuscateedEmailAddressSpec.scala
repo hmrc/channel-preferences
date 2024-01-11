@@ -51,11 +51,11 @@ class ObfuscateedEmailAddressSpec
     }
 
     "generate an exception for an invalid email address" in {
-      an[IllegalArgumentException] should be thrownBy { ObfuscatedEmailAddress("sausages") }
+      an[IllegalArgumentException] should be thrownBy ObfuscatedEmailAddress("sausages")
     }
 
     "generate an exception for empty" in {
-      an[IllegalArgumentException] should be thrownBy { ObfuscatedEmailAddress("") }
+      an[IllegalArgumentException] should be thrownBy ObfuscatedEmailAddress("")
     }
   }
   "An ObfuscatedEmailAddress class" - {

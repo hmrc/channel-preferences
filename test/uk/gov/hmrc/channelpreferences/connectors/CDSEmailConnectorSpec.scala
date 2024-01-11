@@ -50,7 +50,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
         mockHttpClient
           .doGet(
             "https://host:443/customs-data-store/eori/123/verified-email",
-            Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+            Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+          )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(validEmailVerification)
@@ -62,7 +64,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(
         mockHttpClient.doGet(
           "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+        )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(NOT_FOUND)
       connector.getVerifiedEmail("123").futureValue mustBe
@@ -74,7 +78,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(
         mockHttpClient.doGet(
           "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+        )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(inValidEmailVerification)
@@ -87,7 +93,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(
         mockHttpClient.doGet(
           "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+        )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn("NonJsonResponse")

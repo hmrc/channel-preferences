@@ -56,7 +56,8 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
     customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment) returns Future.successful(
-      JsObject.empty.asRight)
+      JsObject.empty.asRight
+    )
 
     val preferenceResolverImpl: PreferenceResolverImpl = new PreferenceResolverImpl(
       customsDataStorePreferenceProvider

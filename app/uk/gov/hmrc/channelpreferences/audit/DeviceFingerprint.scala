@@ -38,7 +38,8 @@ trait DeviceFingerprint {
         }
         decodeAttempt.failed.foreach { e =>
           logger.info(
-            s"Failed to decode device fingerprint '${cookie.value}' caused by '${e.getClass.getSimpleName}:${e.getMessage}'")
+            s"Failed to decode device fingerprint '${cookie.value}' caused by '${e.getClass.getSimpleName}:${e.getMessage}'"
+          )
         }
         decodeAttempt
           .map {

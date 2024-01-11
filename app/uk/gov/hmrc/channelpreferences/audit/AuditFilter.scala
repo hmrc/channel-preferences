@@ -57,7 +57,8 @@ trait AuditFilter extends CommonAuditFilter with BackendHeaderCarrierProvider {
     contentType match {
       case Some("application/x-www-form-urlencoded") =>
         maskedFormFields.foldLeft(requestBody)((maskedBody, field) =>
-          maskedBody.replaceAll(field + """=.*?(?=&|$|\s)""", field + "=#########"))
+          maskedBody.replaceAll(field + """=.*?(?=&|$|\s)""", field + "=#########")
+        )
       case _ => requestBody
     }
 
@@ -69,7 +70,7 @@ trait AuditFilter extends CommonAuditFilter with BackendHeaderCarrierProvider {
     }
 }
 
-class DefaultFrontendAuditFilter @Inject()(
+class DefaultFrontendAuditFilter @Inject() (
   override val config: Configuration,
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
@@ -101,7 +102,8 @@ class DefaultFrontendAuditFilter @Inject()(
   override protected def buildResponseDetails(
     responseHeader: ResponseHeader,
     responseBody: Data[String],
-    contentType: Option[String]): Details = {
+    contentType: Option[String]
+  ): Details = {
     val detailsMap =
       responseHeader.headers
         .get(HeaderNames.LOCATION)
@@ -125,6 +127,7 @@ class DefaultFrontendAuditFilter @Inject()(
     request: play.api.mvc.RequestHeader,
     detail: play.api.libs.json.JsObject,
     truncationLog: TruncationLog,
-    redaction: RedactionLog)(implicit hc: HeaderCarrier): ExtendedDataEvent =
+    redaction: RedactionLog
+  )(implicit hc: HeaderCarrier): ExtendedDataEvent =
     httpAuditEvent.extendedEvent(eventType, transactionName, request, detail)
 }

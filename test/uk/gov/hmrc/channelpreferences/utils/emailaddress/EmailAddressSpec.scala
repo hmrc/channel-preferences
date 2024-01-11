@@ -23,43 +23,43 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress.{ Domain, Mailbox }
 
 class EmailAddressSpec extends AnyFreeSpec with ScalaCheckPropertyChecks with EmailAddressGenerators {
-  //with AnyFreeSpecLike with Matchers with ScalaCheckPropertyChecks with EmailAddressGenerators {
+  // with AnyFreeSpecLike with Matchers with ScalaCheckPropertyChecks with EmailAddressGenerators {
 
   "Creating an EmailAddress class" - {
     "work for a valid email" in {
       forAll(validEmailAddresses()) { address =>
-        EmailAddress(address).value shouldBe (address)
+        EmailAddress(address).value shouldBe address
       }
     }
 
     "throw an exception for an invalid email" in {
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress("sausages") }
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress("sausages"))
     }
 
     "throw an exception for an valid email starting with invalid characters" in {
       forAll(validEmailAddresses()) { address =>
-        an[IllegalArgumentException] shouldBe thrownBy { EmailAddress("§" + address) }
+        an[IllegalArgumentException] shouldBe thrownBy(EmailAddress("§" + address))
       }
     }
 
     "throw an exception for an valid email ending with invalid characters" in {
       forAll(validEmailAddresses()) { address =>
-        an[IllegalArgumentException] shouldBe thrownBy { EmailAddress(address + "§") }
+        an[IllegalArgumentException] shouldBe thrownBy(EmailAddress(address + "§"))
       }
     }
 
     "throw an exception for an empty email" in {
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress("") }
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress(""))
     }
 
     "throw an exception for a repeated email" in {
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress("test@domain.comtest@domain.com") }
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress("test@domain.comtest@domain.com"))
     }
 
     "throw an exception when the '@' is missing" in {
       forAll { s: String =>
         whenever(!s.contains("@")) {
-          an[IllegalArgumentException] shouldBe thrownBy { EmailAddress(s) }
+          an[IllegalArgumentException] shouldBe thrownBy(EmailAddress(s))
         }
       }
     }
@@ -68,11 +68,11 @@ class EmailAddressSpec extends AnyFreeSpec with ScalaCheckPropertyChecks with Em
   "An EmailAddress class" - {
     "implicitly convert to a String of the address" in {
       val e: String = EmailAddress("test@domain.com")
-      e shouldBe ("test@domain.com")
+      e shouldBe "test@domain.com"
     }
     "toString to a String of the address" in {
       val e = EmailAddress("test@domain.com")
-      e.toString shouldBe ("test@domain.com")
+      e.toString shouldBe "test@domain.com"
     }
     "be obfuscatable" in {
       EmailAddress("abcdef@example.com").obfuscated.value should be("a****f@example.com")
@@ -92,11 +92,11 @@ class EmailAddressSpec extends AnyFreeSpec with ScalaCheckPropertyChecks with Em
       EmailAddress.Domain(domain) should be(a[Domain])
     }
     "not create for invalid domains" in {
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress.Domain("") }
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress.Domain("e.") }
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress.Domain(".uk") }
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress.Domain(".com") }
-      an[IllegalArgumentException] shouldBe thrownBy { EmailAddress.Domain("*domain") }
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress.Domain(""))
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress.Domain("e."))
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress.Domain(".uk"))
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress.Domain(".com"))
+      an[IllegalArgumentException] shouldBe thrownBy(EmailAddress.Domain("*domain"))
     }
     "compare equal if identical" in forAll(validDomain, validMailbox, validMailbox) { (domain, mailboxA, mailboxB) =>
       val exampleA = EmailAddress(s"$mailboxA@$domain")

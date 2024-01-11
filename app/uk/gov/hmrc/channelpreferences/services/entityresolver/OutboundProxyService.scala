@@ -30,7 +30,7 @@ trait OutboundProxy {
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result]
 }
 
-class OutboundProxyService @Inject()(outboundProxyConnector: OutboundProxyConnector) extends OutboundProxy {
+class OutboundProxyService @Inject() (outboundProxyConnector: OutboundProxyConnector) extends OutboundProxy {
 
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result] =
     outboundProxyConnector.proxy(inboundRequest)

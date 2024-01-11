@@ -49,7 +49,8 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
       EventTypes.Succeeded,
       Map(
         "transactionName" -> "Retrieve Email Address from customs-data-store",
-        "email"           -> emailVerification.address.value)
+        "email"           -> emailVerification.address.value
+      )
     ) wasCalled once
   }
 
