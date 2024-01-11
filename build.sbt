@@ -1,14 +1,11 @@
 import play.sbt.PlayImport.PlayKeys
-import uk.gov.hmrc.DefaultBuildSettings
-//import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport.*
 import sbt.Resolver
 import play.sbt.routes.RoutesKeys
 
 val appName = "channel-preferences"
 
-ThisProject / majorVersion := 0
-ThisProject / scalaVersion := "2.13.12"
-ThisBuild / scalaVersion := "2.13.12"
+Global / majorVersion := 0
+Global / scalaVersion := "2.13.12"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SwaggerPlugin)
@@ -31,10 +28,7 @@ lazy val it = (project in file("it"))
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.12",
-    libraryDependencies ++= AppDependencies.itDependencies,
-    DefaultBuildSettings.integrationTestSettings()
+    libraryDependencies ++= AppDependencies.itDependencies
   )
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
