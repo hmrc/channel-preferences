@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.model.eis
 
-import play.api.libs.json.Json
+import play.api.libs.json.{ Json, Reads }
 
 final case class StatusUpdate(enrolment: String, status: Boolean) {
   def getItsaETMPUpdate: Either[String, ItsaETMPUpdate] =
@@ -37,5 +37,5 @@ final case class StatusUpdate(enrolment: String, status: Boolean) {
 case class ItsaETMPUpdate(identifierType: String, identifier: String, status: Boolean)
 
 object StatusUpdate {
-  implicit val reads = Json.reads[StatusUpdate]
+  implicit val reads: Reads[StatusUpdate] = Json.reads[StatusUpdate]
 }

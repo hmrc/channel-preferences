@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,8 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
             any[String],
             any[UpdateContactPreferenceRequest],
             any[Seq[(String, String)]]
-          )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext]))
+          )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext])
+      )
         .thenReturn(Future.successful(httpUnhappyResponseMock))
       val connector = new EISConnector(configuration, httpClientMock)
 
@@ -95,7 +96,8 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
           any[String],
           any[UpdateContactPreferenceRequest],
           any[Seq[(String, String)]]
-        )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext]))
+        )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext])
+    )
       .thenReturn(Future.successful(httpResponseMock))
     val configuration: Configuration = Configuration(
       "appName"                                -> "channel-preferences",

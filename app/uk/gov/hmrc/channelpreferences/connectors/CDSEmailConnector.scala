@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
 @Singleton
-class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
+class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
   private val log: LoggerLike = Logger(this.getClass)
   val serviceUrl: String = baseUrl("customs-data-store")
@@ -39,7 +39,8 @@ class CDSEmailConnector @Inject()(config: Configuration, httpClient: HttpClient)
     httpClient
       .doGet(
         s"$serviceUrl/customs-data-store/eori/$taxId/verified-email",
-        hc.headers(Seq("Authorization", "X-Request-Id")))
+        hc.headers(Seq("Authorization", "X-Request-Id"))
+      )
       .map { resp =>
         resp.status match {
           case OK     => parseCDSVerifiedEmailResp(resp.body)

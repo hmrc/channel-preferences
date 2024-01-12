@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,12 @@ trait EntityResolver {
   def enrolment(requestBody: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
-class EntityResolverService @Inject()(entityResolverConnector: EntityResolverConnector) extends EntityResolver {
+class EntityResolverService @Inject() (entityResolverConnector: EntityResolverConnector) extends EntityResolver {
 
-  def confirm(entityId: String, itsaId: String)(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext): Future[HttpResponse] =
+  def confirm(entityId: String, itsaId: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[HttpResponse] =
     entityResolverConnector.confirm(entityId, itsaId)
 
   def enrolment(requestBody: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =

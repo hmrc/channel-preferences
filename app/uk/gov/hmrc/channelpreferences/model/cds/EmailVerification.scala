@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.channelpreferences.model.cds
 
-import org.joda.time.DateTime
-import play.api.libs.json.JodaReads.DefaultJodaDateTimeReads
-import play.api.libs.json.JodaWrites.JodaDateTimeWrites
 import play.api.libs.json._
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
+import java.time.{ Instant, ZoneOffset }
+import java.time.format.DateTimeFormatter
 import scala.util.{ Failure, Success, Try }
 
-final case class EmailVerification(address: EmailAddress, timestamp: DateTime)
+final case class EmailVerification(address: EmailAddress, timestamp: Instant)
 
 object EmailVerification {
-  val dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+  val dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
   implicit object EmailAddressReads extends Reads[EmailAddress] {
     def reads(json: JsValue): JsResult[EmailAddress] = json match {
@@ -44,9 +43,15 @@ object EmailVerification {
     def writes(e: EmailAddress): JsString = JsString(e.value)
   }
 
-  implicit val emailAddressFormat = Format(EmailAddressReads, EmailAddressWrites)
-  implicit val dateTimeFormat = Format[DateTime](DefaultJodaDateTimeReads, JodaDateTimeWrites)
+  val dateTimeWithMillis: DateTimeFormatter =
+    DateTimeFormatter.ofPattern(dateFormat).withZone(ZoneOffset.UTC)
 
-  implicit val emailVerificationFormat = Json.format[EmailVerification]
+  implicit val instantWrites: Format[Instant] =
+    Format(Reads.DefaultInstantReads, Writes.temporalWrites[Instant, DateTimeFormatter](dateTimeWithMillis))
+
+  implicit val emailAddressFormat: Format[EmailAddress] = Format(EmailAddressReads, EmailAddressWrites)
+//  implicit val dateTimeFormat: Format[Instant] = Format[Instant](DefaultInstantReads, instantWrites)
+
+  implicit val emailVerificationFormat: OFormat[EmailVerification] = Json.format[EmailVerification]
 
 }

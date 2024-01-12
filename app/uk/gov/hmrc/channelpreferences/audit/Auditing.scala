@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,9 @@ trait Auditing {
   def auditRetrieveEmail(emailAddress: EmailAddress)(implicit hc: HeaderCarrier, ec: ExecutionContext): Unit =
     auditConnector.sendExplicitAudit(EventTypes.Succeeded, Map(retrieveEmailTxnName, "email" -> emailAddress.value))
 
-  def sendAuditEvent(auditType: String, details: Map[String, String])(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext): Unit =
+  def sendAuditEvent(auditType: String, details: Map[String, String])(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit =
     auditConnector.sendExplicitAudit(auditType, details)
 }

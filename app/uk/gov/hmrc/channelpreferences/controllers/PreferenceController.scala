@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import akka.util.ByteString
+import org.apache.pekko.util.ByteString
 import play.api.Logger
 import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
@@ -43,14 +43,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 @Singleton
-class PreferenceController @Inject()(
+class PreferenceController @Inject() (
   preferenceService: PreferenceService,
   entityResolver: EntityResolver,
   eisContactPreference: EISContactPreference,
   processEmail: ProcessEmail,
   override val authConnector: AuthConnector,
   override val auditConnector: AuditConnector,
-  override val controllerComponents: ControllerComponents)(implicit ec: ExecutionContext)
+  override val controllerComponents: ControllerComponents
+)(implicit ec: ExecutionContext)
     extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing with EntityIdCrypto {
 
   private val logger: Logger = Logger(this.getClass)
@@ -59,7 +60,8 @@ class PreferenceController @Inject()(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
-    channel: Channel): Action[AnyContent] =
+    channel: Channel
+  ): Action[AnyContent] =
     Action.async { implicit request =>
       preferenceService
         .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
@@ -71,7 +73,7 @@ class PreferenceController @Inject()(
       Result(
         header = ResponseHeader(preferenceError.statusCode.intValue()),
         body = HttpEntity.Strict(ByteString.apply(preferenceError.message), Some(ContentTypes.TEXT))
-    ),
+      ),
     json => Ok(json)
   )
 
@@ -86,12 +88,12 @@ class PreferenceController @Inject()(
       for {
         resp <- entityResolver.confirm(entityId, enrolment.itsaId)
         _ <- auditConfirm(
-              resp.status,
-              resp.body,
-              enrolment,
-              authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
-                .retrieve(Retrievals.saUtr and Retrievals.nino)
-            )
+               resp.status,
+               resp.body,
+               enrolment,
+               authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
+                 .retrieve(Retrievals.saUtr and Retrievals.nino)
+             )
       } yield Status(resp.status)(resp.json)
     }
   }
@@ -140,10 +142,9 @@ class PreferenceController @Inject()(
             logger.error(s"Failed to update email bounce for eventId ${event.eventId}: $error")
             NotModified
         }
-        .recover {
-          case error =>
-            logger.error(s"Failed to update email bounce ${error.getMessage}")
-            InternalServerError
+        .recover { case error =>
+          logger.error(s"Failed to update email bounce ${error.getMessage}")
+          InternalServerError
         }
     }
   }
@@ -174,13 +175,10 @@ class PreferenceController @Inject()(
     responseStatus: Int,
     responseBody: String,
     e: Enrolment,
-    auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]])(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext): Future[Unit] = {
+    auth: AuthorisedFunctionWithResult[Option[String] ~ Option[String]]
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] = {
     def getIds: Future[Map[String, String]] =
-      auth(
-        r => Future.successful(r.a.map(("SAUTR", _)).toMap ++ r.b.map(("NINO", _)).toMap)
-      ).recover {
+      auth(r => Future.successful(r.a.map(("SAUTR", _)).toMap ++ r.b.map(("NINO", _)).toMap)).recover {
         case e: AuthorisationException =>
           logger.error("Authorisation error", e)
           Map.empty[String, String]
@@ -192,7 +190,8 @@ class PreferenceController @Inject()(
       case _ =>
         (
           "ItsaIdConfirmError",
-          details ++ Map("errorCode" -> responseStatus.toString, "errorDescription" -> responseBody))
+          details ++ Map("errorCode" -> responseStatus.toString, "errorDescription" -> responseBody)
+        )
     }
 
     getIds.map { ids =>

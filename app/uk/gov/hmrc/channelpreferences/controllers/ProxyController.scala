@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
 import org.slf4j.MDC
 import play.api.Logging
 import play.api.libs.streams.Accumulator
@@ -29,7 +29,7 @@ import java.util.UUID.randomUUID
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class ProxyController @Inject()(
+class ProxyController @Inject() (
   controllerComponents: ControllerComponents,
   outboundProxy: OutboundProxy
 )(implicit ec: ExecutionContext)
@@ -45,20 +45,19 @@ class ProxyController @Inject()(
 
       logger.debug(s"Inbound Request: ${request.method} ${request.uri}")
 
-      outboundProxy.proxy(request).recover {
-        case ex: Exception =>
-          logger.error(s"An error occurred proxying $path , error: ${ex.getMessage}")
-          InternalServerError(ex.getMessage)
+      outboundProxy.proxy(request).recover { case ex: Exception =>
+        logger.error(s"An error occurred proxying $path , error: ${ex.getMessage}")
+        InternalServerError(ex.getMessage)
       }
     }
 
   private[this] def populateMdc(implicit request: Request[Source[ByteString, _]]): Unit = {
     val extraDiagnosticContext = Map(
-      "transaction_id"                                         -> randomUUID.toString
+      "transaction_id" -> randomUUID.toString
     ) ++ request.headers.get(USER_AGENT).toList.map(USER_AGENT -> _)
 
-    (hc.mdcData ++ extraDiagnosticContext).foreach {
-      case (k, v) => MDC.put(k, v)
+    (hc.mdcData ++ extraDiagnosticContext).foreach { case (k, v) =>
+      MDC.put(k, v)
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,11 +51,11 @@ class ObfuscateedEmailAddressSpec
     }
 
     "generate an exception for an invalid email address" in {
-      an[IllegalArgumentException] should be thrownBy { ObfuscatedEmailAddress("sausages") }
+      an[IllegalArgumentException] should be thrownBy ObfuscatedEmailAddress("sausages")
     }
 
     "generate an exception for empty" in {
-      an[IllegalArgumentException] should be thrownBy { ObfuscatedEmailAddress("") }
+      an[IllegalArgumentException] should be thrownBy ObfuscatedEmailAddress("")
     }
   }
   "An ObfuscatedEmailAddress class" - {

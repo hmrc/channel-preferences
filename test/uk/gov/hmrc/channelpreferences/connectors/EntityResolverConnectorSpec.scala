@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,9 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with Mockit
       when(
         mockHttpClient
           .doEmptyPost(meq("https://host:443/preferences/confirm/123/1234"), meq(Seq("Authorization" -> "bearer")))(
-            any[ExecutionContext]()))
+            any[ExecutionContext]()
+          )
+      )
         .thenReturn(Future.successful(successResponse))
       Await.result(connector.confirm("123", "1234"), Duration.Inf) mustBe successResponse
     }
@@ -51,7 +53,9 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with Mockit
           .doPost(
             meq("https://host:443/preferences/enrolment"),
             meq(requestBody),
-            meq(Seq("Authorization" -> "bearer")))(any[Writes[JsValue]](), any[ExecutionContext]()))
+            meq(Seq("Authorization" -> "bearer"))
+          )(any[Writes[JsValue]](), any[ExecutionContext]())
+      )
         .thenReturn(Future.successful(successResponse))
       Await.result(connector.enrolment(requestBody), Duration.Inf) mustBe successResponse
     }

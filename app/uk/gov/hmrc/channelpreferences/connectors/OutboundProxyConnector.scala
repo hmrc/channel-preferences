@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.{ Http, HttpExt }
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.RawHeader
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.{ Http, HttpExt }
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
 import play.api.http.HeaderNames.CONTENT_TYPE
 
 import javax.inject.{ Inject, Singleton }
@@ -36,10 +36,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.collection.immutable
 
 @Singleton
-class OutboundProxyConnector @Inject()(config: Configuration)(
-  implicit system: ActorSystem,
-  executionContext: ExecutionContext)
-    extends ServicesConfig(config) {
+class OutboundProxyConnector @Inject() (config: Configuration)(implicit
+  system: ActorSystem,
+  executionContext: ExecutionContext
+) extends ServicesConfig(config) {
 
   import OutboundProxyConnector._
 
@@ -119,14 +119,14 @@ object OutboundProxyConnector {
       USER_AGENT
     )
 
-  val outboundHeadersFilter: ((String, String)) => Boolean = {
-    case (key, _) => !outboundHeaderBlackList.contains(key)
+  val outboundHeadersFilter: ((String, String)) => Boolean = { case (key, _) =>
+    !outboundHeaderBlackList.contains(key)
   }
 
   val loggedHeaderBlacklist: Set[String] = Set("Ocp-Apim-Subscription-Key", AUTHORIZATION)
 
-  val loggedHeadersFilter: ((String, String)) => Boolean = {
-    case (key, _) => !loggedHeaderBlacklist.contains(key)
+  val loggedHeadersFilter: ((String, String)) => Boolean = { case (key, _) =>
+    !loggedHeaderBlacklist.contains(key)
   }
 
   private def processInboundHeaders(inboundHeaders: Headers): Seq[RawHeader] = {
@@ -134,7 +134,7 @@ object OutboundProxyConnector {
       flattenToSeq(inboundHeaders.toMap).filter(outboundHeadersFilter)
 
     filteredInboundHeaders
-      .map({ case (name, value) => RawHeader(name, value) })
+      .map { case (name, value) => RawHeader(name, value) }
   }
 
   private def flattenToSeq(map: Map[String, Seq[String]]): Seq[(String, String)] =

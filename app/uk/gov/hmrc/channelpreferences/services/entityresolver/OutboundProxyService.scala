@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.channelpreferences.services.entityresolver
 
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
 import com.google.inject.ImplementedBy
 import play.api.mvc.{ Request, Result }
 import uk.gov.hmrc.channelpreferences.connectors.OutboundProxyConnector
@@ -30,7 +30,7 @@ trait OutboundProxy {
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result]
 }
 
-class OutboundProxyService @Inject()(outboundProxyConnector: OutboundProxyConnector) extends OutboundProxy {
+class OutboundProxyService @Inject() (outboundProxyConnector: OutboundProxyConnector) extends OutboundProxy {
 
   def proxy(inboundRequest: Request[Source[ByteString, _]]): Future[Result] =
     outboundProxyConnector.proxy(inboundRequest)

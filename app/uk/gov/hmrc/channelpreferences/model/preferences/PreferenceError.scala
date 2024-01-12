@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import akka.http.scaladsl.model.{ StatusCode, StatusCodes }
+import org.apache.pekko.http.scaladsl.model.{ StatusCode, StatusCodes }
 import cats.Semigroup
 import cats.data.NonEmptyList
 import uk.gov.hmrc.channelpreferences.model.cds.Channel

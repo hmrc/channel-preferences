@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 
 trait PreferenceResolver {
-  def resolvePreferenceForEnrolment(enrolment: Enrolment)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
+  def resolvePreferenceForEnrolment(enrolment: Enrolment)(implicit
+    headerCarrier: HeaderCarrier
+  ): Future[Either[PreferenceError, JsValue]]
 }
 
 object PreferenceResolver {

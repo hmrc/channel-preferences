@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-import akka.http.scaladsl.model.StatusCodes
-import org.joda.time.DateTime
+import org.apache.pekko.http.scaladsl.model.StatusCodes
 import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpClient, HttpResponse, RequestId }
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
@@ -32,13 +31,15 @@ import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
   implicit val hc: HeaderCarrier =
     HeaderCarrier(authorization = Some(Authorization("bearer")), requestId = Some(RequestId("Id")))
-  private val emailVerification = EmailVerification(EmailAddress("some@email.com"), new DateTime(1987, 3, 20, 1, 2, 3))
+  private val emailVerification =
+    EmailVerification(EmailAddress("some@email.com"), Instant.parse("1987-03-20T01:02:03Z"))
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
   private val inValidEmailVerification = """{"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
@@ -49,7 +50,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
         mockHttpClient
           .doGet(
             "https://host:443/customs-data-store/eori/123/verified-email",
-            Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+            Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+          )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(validEmailVerification)
@@ -61,7 +64,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(
         mockHttpClient.doGet(
           "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+        )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(NOT_FOUND)
       connector.getVerifiedEmail("123").futureValue mustBe
@@ -73,7 +78,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(
         mockHttpClient.doGet(
           "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+        )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(inValidEmailVerification)
@@ -86,7 +93,9 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
       when(
         mockHttpClient.doGet(
           "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer"))(global))
+          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
+        )(global)
+      )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn("NonJsonResponse")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class CustomsDataStorePreferenceProvider @Inject()(
+class CustomsDataStorePreferenceProvider @Inject() (
   cdsEmailConnector: CDSEmailConnector,
   override val auditConnector: AuditConnector
 )(implicit executionContext: ExecutionContext)
@@ -40,8 +40,9 @@ class CustomsDataStorePreferenceProvider @Inject()(
 
   private val logger = Logger(this.getClass)
 
-  override def getPreference(enrolment: CustomsServiceEnrolment)(
-    implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] =
+  override def getPreference(
+    enrolment: CustomsServiceEnrolment
+  )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] =
     enrolment.channel match {
       case Email =>
         EitherT(cdsEmailConnector.getVerifiedEmail(enrolment.identifierValue.value))

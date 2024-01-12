@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class PreferencesConnector @Inject()(configuration: Configuration, httpClient: HttpClient)(
-  implicit ec: ExecutionContext)
-    extends ServicesConfig(configuration) {
+class PreferencesConnector @Inject() (configuration: Configuration, httpClient: HttpClient)(implicit
+  ec: ExecutionContext
+) extends ServicesConfig(configuration) {
   val serviceUrl = baseUrl("preferences")
 
   def update(event: Event): Future[Either[ChannelPreferencesError, String]] =
@@ -38,5 +38,6 @@ class PreferencesConnector @Inject()(configuration: Configuration, httpClient: H
         response.status match {
           case Status.OK => Right(response.body)
           case e         => Left(PreferencesConnectorError(s"Error getting success code from preferences $e"))
-      })
+        }
+      )
 }
