@@ -22,7 +22,7 @@ import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{ Inject, Singleton }
@@ -37,7 +37,7 @@ class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClient
 
   def getVerifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[PreferenceError, EmailVerification]] =
     httpClient
-      .doGet(
+      .GET[HttpResponse](
         s"$serviceUrl/customs-data-store/eori/$taxId/verified-email",
         hc.headers(Seq("Authorization", "X-Request-Id"))
       )

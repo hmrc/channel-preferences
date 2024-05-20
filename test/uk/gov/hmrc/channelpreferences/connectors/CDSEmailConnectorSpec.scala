@@ -17,14 +17,16 @@
 package uk.gov.hmrc.channelpreferences.connectors
 
 import org.apache.pekko.http.scaladsl.model.StatusCodes
-import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpClient, HttpResponse, RequestId }
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
+import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpClient, HttpReads, HttpResponse, RequestId }
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 
-import scala.concurrent.Await
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.concurrent.duration.Duration
 import play.api.http.Status.{ NOT_FOUND, OK }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
@@ -33,7 +35,6 @@ import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
   implicit val hc: HeaderCarrier =
@@ -45,13 +46,14 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
 
   "getVerifiedEmail" should {
     "return the email verification if found by CDS" in new TestCase {
+
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
       when(
-        mockHttpClient
-          .doGet(
-            "https://host:443/customs-data-store/eori/123/verified-email",
-            Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
-          )(global)
+        mockHttpClient.GET[HttpResponse](
+          ArgumentMatchers.eq("https://host:443/customs-data-store/eori/123/verified-email"),
+          any[Seq[(String, String)]],
+          any[Seq[(String, String)]]
+        )(any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])
       )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
@@ -62,10 +64,11 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
     "return the status from CDS if the email verification not found" in new TestCase {
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
       when(
-        mockHttpClient.doGet(
-          "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
-        )(global)
+        mockHttpClient.GET[HttpResponse](
+          ArgumentMatchers.eq("https://host:443/customs-data-store/eori/123/verified-email"),
+          any[Seq[(String, String)]],
+          any[Seq[(String, String)]]
+        )(any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])
       )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(NOT_FOUND)
@@ -76,10 +79,11 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
     "return Bad Gateway if CDS returns invalid Json response" in new TestCase {
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
       when(
-        mockHttpClient.doGet(
-          "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
-        )(global)
+        mockHttpClient.GET[HttpResponse](
+          ArgumentMatchers.eq("https://host:443/customs-data-store/eori/123/verified-email"),
+          any[Seq[(String, String)]],
+          any[Seq[(String, String)]]
+        )(any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])
       )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
@@ -91,10 +95,11 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
     "return Bad Gateway if CDS returns non Json response" in new TestCase {
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
       when(
-        mockHttpClient.doGet(
-          "https://host:443/customs-data-store/eori/123/verified-email",
-          Seq("X-Request-ID" -> "Id", "Authorization" -> "bearer")
-        )(global)
+        mockHttpClient.GET[HttpResponse](
+          ArgumentMatchers.eq("https://host:443/customs-data-store/eori/123/verified-email"),
+          any[Seq[(String, String)]],
+          any[Seq[(String, String)]]
+        )(any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])
       )
         .thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(OK)
@@ -107,7 +112,6 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar
   trait TestCase {
     val mockHttpClient: HttpClient = mock[HttpClient]
     val mockHttpResponse: HttpResponse = mock[HttpResponse]
-
   }
 
   val configuration: Configuration = Configuration(
