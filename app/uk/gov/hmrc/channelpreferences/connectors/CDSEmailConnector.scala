@@ -22,25 +22,27 @@ import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpClient, HttpResponse }
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 
+import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
 @Singleton
-class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
+class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClientV2)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
   private val log: LoggerLike = Logger(this.getClass)
   val serviceUrl: String = baseUrl("customs-data-store")
 
   def getVerifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[PreferenceError, EmailVerification]] =
     httpClient
-      .GET[HttpResponse](
-        s"$serviceUrl/customs-data-store/eori/$taxId/verified-email",
-        hc.headers(Seq("Authorization", "X-Request-Id"))
-      )
+      .get(new URI(s"$serviceUrl/customs-data-store/eori/$taxId/verified-email").toURL)
+      .setHeader("Authorization" -> "X-Request-Id")
+      .execute[HttpResponse]
       .map { resp =>
         resp.status match {
           case OK     => parseCDSVerifiedEmailResp(resp.body)

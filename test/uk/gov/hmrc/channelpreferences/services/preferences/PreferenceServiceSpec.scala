@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.channelpreferences.services.preferences
 
-import cats.syntax.either._
+import cats.syntax.either.*
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar.mock
-import org.mockito.IdiomaticMockito.StubbingOps
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, Phone }
 import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
@@ -46,9 +46,8 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
   it should "return a preference error provided from resolution" in new Scope {
     private val error = UnsupportedChannelError(Phone)
 
-    preferenceResolver
-      .resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel))
-      .returns(Future.successful(error.asLeft))
+    when(preferenceResolver.resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel)))
+      .thenReturn(Future.successful(error.asLeft))
 
     preferenceService
       .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
@@ -64,9 +63,8 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
     val channel: Channel = Email
 
     val preferenceResolver: PreferenceResolver = mock[PreferenceResolver]
-    preferenceResolver
-      .resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel))
-      .returns(Future.successful(JsObject.empty.asRight))
+    when(preferenceResolver.resolvePreferenceForEnrolment(CustomsServiceEnrolment(identifierValue, channel)))
+      .thenReturn(Future.successful(JsObject.empty.asRight))
 
     val preferenceService: PreferenceService = new PreferenceService(preferenceResolver)
   }

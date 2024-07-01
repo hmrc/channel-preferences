@@ -23,12 +23,14 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.channelpreferences.connectors.PreferencesConnector
 import uk.gov.hmrc.channelpreferences.model.preferences.Event
+import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.Future
 
 class ProcessEmailServiceSpec extends PlaySpec with ScalaFutures with MockitoSugar {
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "send" must {
     "return response as returned from preferences connector" in new TestClass {

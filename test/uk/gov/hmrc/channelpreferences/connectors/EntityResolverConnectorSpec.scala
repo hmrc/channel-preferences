@@ -16,53 +16,51 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
-import org.mockito.ArgumentMatchers.{ any, eq => meq }
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status
-import play.api.libs.json.{ JsValue, Json, Writes }
-import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpClient, HttpResponse, RequestId }
+import play.api.libs.json.{ JsValue, Json }
+import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpResponse, RequestId }
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
+import java.net.URL
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future }
 
 class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
   implicit val hc: HeaderCarrier =
     HeaderCarrier(authorization = Some(Authorization("bearer")), requestId = Some(RequestId("Id")))
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   "confirm" should {
     "return the response from entity resolver for given entityId & itsaId" in new TestCase {
-      when(
-        mockHttpClient
-          .doEmptyPost(meq("https://host:443/preferences/confirm/123/1234"), meq(Seq("Authorization" -> "bearer")))(
-            any[ExecutionContext]()
-          )
-      )
-        .thenReturn(Future.successful(successResponse))
+      when(mockHttpClient.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(successResponse))
+
       Await.result(connector.confirm("123", "1234"), Duration.Inf) mustBe successResponse
     }
   }
 
   "enrolment" should {
     "post the enrolment request to entity resolver" in new TestCase {
-      when(
-        mockHttpClient
-          .doPost(
-            meq("https://host:443/preferences/enrolment"),
-            meq(requestBody),
-            meq(Seq("Authorization" -> "bearer"))
-          )(any[Writes[JsValue]](), any[ExecutionContext]())
-      )
-        .thenReturn(Future.successful(successResponse))
+      when(mockHttpClient.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(successResponse))
+
       Await.result(connector.enrolment(requestBody), Duration.Inf) mustBe successResponse
     }
   }
 
   trait TestCase {
-    val mockHttpClient: HttpClient = mock[HttpClient]
+    val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
+    val requestBuilder = mock[RequestBuilder]
     val ec = scala.concurrent.ExecutionContext.Implicits.global
     val connector = new EntityResolverConnector(configuration, mockHttpClient)(ec)
     val requestBody: JsValue = Json.parse("{}")

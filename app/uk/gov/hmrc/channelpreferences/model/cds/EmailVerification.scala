@@ -28,7 +28,7 @@ final case class EmailVerification(address: EmailAddress, timestamp: Instant)
 object EmailVerification {
   val dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
-  implicit object EmailAddressReads extends Reads[EmailAddress] {
+  private object EmailAddressReads extends Reads[EmailAddress] {
     def reads(json: JsValue): JsResult[EmailAddress] = json match {
       case JsString(s) =>
         Try(EmailAddress(s)) match {
@@ -39,7 +39,7 @@ object EmailVerification {
     }
   }
 
-  implicit object EmailAddressWrites extends Writes[EmailAddress] {
+  private object EmailAddressWrites extends Writes[EmailAddress] {
     def writes(e: EmailAddress): JsString = JsString(e.value)
   }
 
@@ -49,8 +49,8 @@ object EmailVerification {
   implicit val instantWrites: Format[Instant] =
     Format(Reads.DefaultInstantReads, Writes.temporalWrites[Instant, DateTimeFormatter](dateTimeWithMillis))
 
+  implicit val emailReads: Reads[EmailAddress] = EmailAddressReads
   implicit val emailAddressFormat: Format[EmailAddress] = Format(EmailAddressReads, EmailAddressWrites)
-//  implicit val dateTimeFormat: Format[Instant] = Format[Instant](DefaultInstantReads, instantWrites)
 
   implicit val emailVerificationFormat: OFormat[EmailVerification] = Json.format[EmailVerification]
 

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.channelpreferences.services.preferences
 
-import cats.syntax.either._
-import org.mockito.IdiomaticMockito.StubbingOps
+import cats.syntax.either.*
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -42,7 +42,8 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
 
   it should "return a preferences error from a provider" in new Scope {
     private val error = UnsupportedChannelError(Phone)
-    customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment) returns Future.successful(error.asLeft)
+    when(customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment))
+      .thenReturn(Future.successful(error.asLeft))
 
     preferenceResolverImpl
       .resolvePreferenceForEnrolment(customsServiceEnrolment)
@@ -55,9 +56,8 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
     val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(IdentifierValue("foo"), Email)
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-    customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment) returns Future.successful(
-      JsObject.empty.asRight
-    )
+    when(customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment))
+      .thenReturn(Future.successful(JsObject.empty.asRight))
 
     val preferenceResolverImpl: PreferenceResolverImpl = new PreferenceResolverImpl(
       customsDataStorePreferenceProvider

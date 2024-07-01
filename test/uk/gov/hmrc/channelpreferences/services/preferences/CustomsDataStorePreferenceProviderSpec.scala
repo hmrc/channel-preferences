@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.channelpreferences.services.preferences
 
-import cats.syntax.either._
+import cats.syntax.either.*
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
+import org.mockito.Mockito.{ never, verify, when }
+import org.scalatestplus.mockito.MockitoSugar.*
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.mockito.ArgumentMatchersSugar.*
-import org.mockito.IdiomaticMockito
 import play.api.libs.json.Json
 import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
 import uk.gov.hmrc.channelpreferences.model.cds.{ Email, EmailVerification, Phone }
@@ -36,7 +38,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers with ScalaFutures with IdiomaticMockito {
+class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers with ScalaFutures {
 
   behavior of "CustomsDataStorePreferenceProvider.getPreference"
 
@@ -45,13 +47,13 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
       .getPreference(customsServiceEnrolment)
       .futureValue shouldBe Json.toJson(emailVerification).asRight
 
-    auditConnector.sendExplicitAudit(
+    verify(auditConnector).sendExplicitAudit(
       EventTypes.Succeeded,
       Map(
         "transactionName" -> "Retrieve Email Address from customs-data-store",
         "email"           -> emailVerification.address.value
       )
-    ) wasCalled once
+    ) // wasCalled once
   }
 
   it should "return an error for a channel type other than Email" in new Scope {
@@ -61,7 +63,7 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
       .getPreference(unsupportedChannelEnrolment)
       .futureValue shouldBe UnsupportedChannelError(Phone).asLeft
 
-    auditConnector.sendExplicitAudit(*[String], *[Map[String, String]]) wasNever called
+    verify(auditConnector, never()).sendExplicitAudit(any[String], any[Map[String, String]])(any, any)
   }
 
   trait Scope {
@@ -73,9 +75,8 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
     val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(identifierValue, Email)
     val emailVerification: EmailVerification = EmailVerification(EmailAddress("foo@bar.com"), Instant.now())
 
-    cdsEmailConnector
-      .getVerifiedEmail(customsServiceEnrolment.identifierValue.value)
-      .returns(Future.successful(emailVerification.asRight))
+    when(cdsEmailConnector.getVerifiedEmail(customsServiceEnrolment.identifierValue.value))
+      .thenReturn(Future.successful(emailVerification.asRight))
 
     val customsDataStorePreferenceProvider = new CustomsDataStorePreferenceProvider(
       cdsEmailConnector,

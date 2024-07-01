@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.channelpreferences
 
-import cats.syntax.either._
+import cats.syntax.either.*
 import org.scalatestplus.mockito.MockitoSugar.mock
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice._
+import org.scalatestplus.play.*
+import org.scalatestplus.play.guice.*
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.Call
-import play.api.test.Helpers.{ route, _ }
-import play.api.test._
+import play.api.test.Helpers.*
+import play.api.test.{ FakeRequest, Injecting }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification }
 import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
 import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
@@ -41,26 +41,34 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure("metrics.enabled" -> false, "auditing.enabled" -> false)
+      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
+      .overrides(bind[PreferenceService].to[PreferenceServiceMock])
+      .build()
+
   "ChannelBinder" must {
-    "define the bind - success" in new Scope {
-      private val request = FakeRequest(
+
+    "define the bind - success" in {
+      val request = FakeRequest(
         GET,
         "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
       )
-      private val test = route(appBuilder, request).get
+      val test = route(fakeApplication(), request).get
       status(test) mustBe OK
     }
 
-    "define the bind - failure" in new Scope {
-      private val request = FakeRequest(
+    "define the bind - failure" in {
+      val request = FakeRequest(
         GET,
         "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/badChannel"
       )
-      private val test = route(appBuilder, request).get
+      val test = route(fakeApplication(), request).get
       status(test) mustBe BAD_REQUEST
     }
 
-    "define the unbind" in new Scope {
+    "define the unbind" in {
       val test: Call =
         controllers.routes.PreferenceController.preference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
       test.url mustBe "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
@@ -69,6 +77,8 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
 }
 
 class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) {
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   override def getChannelPreference(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
@@ -88,11 +98,4 @@ class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) 
         )
         .asRight
     )
-}
-
-trait Scope {
-  val appBuilder: Application = new GuiceApplicationBuilder()
-    .configure("metrics.enabled" -> false)
-    .overrides(bind[PreferenceService].to[PreferenceServiceMock])
-    .build()
 }
