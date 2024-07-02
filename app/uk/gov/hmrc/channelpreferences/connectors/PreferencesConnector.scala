@@ -18,22 +18,29 @@ package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
 import play.api.http.Status
+import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelPreferencesError, Event, PreferencesConnectorError }
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 
+import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class PreferencesConnector @Inject() (configuration: Configuration, httpClient: HttpClient)(implicit
+class PreferencesConnector @Inject() (configuration: Configuration, httpClient: HttpClientV2)(implicit
   ec: ExecutionContext
 ) extends ServicesConfig(configuration) {
-  val serviceUrl = baseUrl("preferences")
+  val serviceUrl: String = baseUrl("preferences")
 
-  def update(event: Event): Future[Either[ChannelPreferencesError, String]] =
+  def update(event: Event)(implicit hc: HeaderCarrier): Future[Either[ChannelPreferencesError, String]] =
     httpClient
-      .doPost(s"$serviceUrl/preferences/email/bounce", event)
+      .post(new URI(s"$serviceUrl/preferences/email/bounce").toURL)
+      .withBody(Json.toJson(event))
+      .execute[HttpResponse]
       .map(response =>
         response.status match {
           case Status.OK => Right(response.body)

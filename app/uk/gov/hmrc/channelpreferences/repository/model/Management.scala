@@ -26,7 +26,8 @@ object EmailIndex extends Enumeration {
   type EmailIndex = Value
   val primary, secondary, notification = Value
 
-  implicit val format: Format[EmailIndex] = Format(Reads.enumNameReads(EmailIndex), Writes.enumNameWrites)
+  implicit val format: Format[EmailIndex] =
+    Format(Reads.enumNameReads(EmailIndex), Writes.enumNameWrites[EmailIndex.type])
 }
 
 sealed trait Language
@@ -35,7 +36,7 @@ object Language extends Enumeration {
   type Language = Value
   val en, cy = Value
 
-  implicit val format: Format[Language] = Format(Reads.enumNameReads(Language), Writes.enumNameWrites)
+  implicit val format: Format[Language] = Format(Reads.enumNameReads(Language), Writes.enumNameWrites[Language.type])
 }
 
 sealed trait Status
@@ -44,7 +45,7 @@ object Status extends Enumeration {
   type Status = Value
   val ACTIVE, PENDING, INACTIVE, SUSPENDED, ARCHIVED = Value
 
-  implicit val format: Format[Status] = Format(Reads.enumNameReads(Status), Writes.enumNameWrites)
+  implicit val format: Format[Status] = Format(Reads.enumNameReads(Status), Writes.enumNameWrites[Status.type])
 }
 
 case class Message(

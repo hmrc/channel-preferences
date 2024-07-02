@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.channelpreferences.controllers
 
-import cats.syntax.either._
+import cats.syntax.either.*
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
 import org.mockito.ArgumentMatchers.{ any, anyString }
-import org.mockito.ArgumentMatchersSugar.*
-import org.mockito.Mockito._
+import org.mockito.Mockito.{ reset, when }
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
@@ -85,10 +84,11 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
-          *[HeaderCarrier],
-          *[ExecutionContext]
-        )
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
       )
         .thenReturn(Future.successful(ParseError("boom").asLeft))
 
@@ -109,10 +109,11 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
-          *[HeaderCarrier],
-          *[ExecutionContext]
-        )
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
       )
         .thenReturn(Future.successful(UpstreamError("boom", StatusCodes.NotFound).asLeft))
 
@@ -133,10 +134,11 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
-          *[HeaderCarrier],
-          *[ExecutionContext]
-        )
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
       )
         .thenReturn(Future.successful(UnsupportedChannelError(Phone).asLeft))
 
@@ -157,10 +159,11 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       )
 
       when(
-        preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
-          *[HeaderCarrier],
-          *[ExecutionContext]
-        )
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
       )
         .thenReturn(Future.successful(Json.toJson(emailVerification).asRight))
 
@@ -238,7 +241,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
@@ -277,7 +280,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         .thenReturn(Future.successful(httpResponse))
       private val failureBody: JsObject = Json.obj("failure" -> "some error")
       private val etmpHttpResponse: HttpResponse = HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(etmpHttpResponse))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -312,7 +315,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
@@ -348,7 +351,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
@@ -379,7 +382,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
@@ -414,7 +417,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(httpResponse))
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
@@ -469,7 +472,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    }
                                             |}
     """.stripMargin)
-      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
+      when(mockProcessEmail.process(any[Event])(any)).thenReturn(Future.successful(Right("")))
 
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
@@ -493,7 +496,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    }
                                             |}
     """.stripMargin)
-      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
+      when(mockProcessEmail.process(any[Event])(any)).thenReturn(Future.successful(Right("")))
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
@@ -516,7 +519,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    }
                                             |}
     """.stripMargin)
-      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
+      when(mockProcessEmail.process(any[Event])(any)).thenReturn(Future.successful(Right("")))
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
@@ -532,7 +535,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                             |    "event" : ""
                                             |}
     """.stripMargin)
-      when(mockProcessEmail.process(any[Event])).thenReturn(Future.successful(Right("")))
+      when(mockProcessEmail.process(any[Event])(any)).thenReturn(Future.successful(Right("")))
       val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
       val response = controller.processBounce().apply(fakePostRequest)
       status(response) mustBe BAD_REQUEST
@@ -603,7 +606,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     )
 
     "return OK(200) when processEmail returns success" in new TestSetup {
-      when(mockProcessEmail.process(any[Event]))
+      when(mockProcessEmail.process(any[Event])(any))
         .thenReturn(Future.successful(Right("Email bounce processed successfully")))
       val preferenceController =
         new PreferenceController(
@@ -621,7 +624,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     }
 
     "return NotModified when processEmail returns error" in new TestSetup {
-      when(mockProcessEmail.process(any[Event]))
+      when(mockProcessEmail.process(any[Event])(any))
         .thenReturn(Future.successful(Left(PreferencesConnectorError("error from preferences"))))
       val preferenceController =
         new PreferenceController(
@@ -639,7 +642,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     }
 
     "return InternalServerError when processEmail returns unexpected error" in new TestSetup {
-      when(mockProcessEmail.process(any[Event])).thenReturn(Future.failed(UnExpectedError()))
+      when(mockProcessEmail.process(any[Event])(any)).thenReturn(Future.failed(UnExpectedError()))
       val preferenceController =
         new PreferenceController(
           preferenceService,
@@ -660,7 +663,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   "Calling update contact" should {
     "return OK when the call to EIS succeed" in new TestSetup {
       private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
       val result = controller.update("itsa").apply(updateStatusRequest)
@@ -677,7 +680,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
               }
           ]
           }""")
-      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]]()))
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())))
 
       val result = controller.update("itsa").apply(updateStatusRequest)
@@ -713,12 +716,15 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
   }
 
   trait TestSetup {
+    reset(mockProcessEmail)
+    reset(mockEISContactPreference)
+
     val preferenceService: PreferenceService = mock[PreferenceService]
 
     when(
-      preferenceService.getChannelPreference(*[EnrolmentKey], *[IdentifierKey], *[IdentifierValue], *[Channel])(
-        *[HeaderCarrier],
-        *[ExecutionContext]
+      preferenceService.getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+        any[HeaderCarrier],
+        any[ExecutionContext]
       )
     )
       .thenReturn(Future.successful(UpstreamError("boom", StatusCodes.ServiceUnavailable).asLeft))
@@ -749,7 +755,8 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
                                                       |    }
                                                       |}
           """.stripMargin)
-    when(mockProcessEmail.process(any[Event]))
+
+    when(mockProcessEmail.process(any[Event])(any))
       .thenReturn(Future.successful(Right("Email bounce processed successfully")))
 
     val fakeProcessBounce = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), processBouncePayload)

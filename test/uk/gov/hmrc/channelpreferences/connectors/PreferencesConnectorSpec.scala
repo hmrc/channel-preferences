@@ -23,29 +23,31 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status
-import play.api.libs.json.{ Json, Writes }
+import play.api.libs.json.Json
 import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, PreferencesConnectorError }
-import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 
+import java.net.URL
 import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
 class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "processBounce" must {
     "return response with eventId" in new TestCase {
       val connector = new PreferencesConnector(configuration, httpClientMock)
-
       connector.update(event).futureValue mustBe Right("bounce processed for 4ebbc776-a4ce-11ee-a3ad-2822aa445514")
     }
+
     "return PreferencesConnectorError if response is BAD_REQUEST" in new TestCase {
-      when(
-        httpClientMock
-          .doPost[Event](any[String], any[Event], any[Seq[(String, String)]])(any[Writes[Event]], any[ExecutionContext])
-      )
-        .thenReturn(Future.successful(httpUnhappyResponseMock))
+      when(httpClientMock.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpUnhappyResponseMock))
+
       val connector = new PreferencesConnector(configuration, httpClientMock)
 
       connector.update(event).futureValue mustBe Left(
@@ -55,16 +57,16 @@ class PreferencesConnectorSpec extends PlaySpec with ScalaFutures with MockitoSu
   }
 
   class TestCase {
-    val httpClientMock = mock[HttpClient]
+    val httpClientMock = mock[HttpClientV2]
+    val requestBuilder = mock[RequestBuilder]
     val httpResponseMock: HttpResponse =
       HttpResponse(Status.OK, "bounce processed for 4ebbc776-a4ce-11ee-a3ad-2822aa445514")
     val httpUnhappyResponseMock: HttpResponse = HttpResponse(Status.BAD_REQUEST, "")
 
-    when(
-      httpClientMock
-        .doPost[Event](any[String], any[Event], any[Seq[(String, String)]])(any[Writes[Event]], any[ExecutionContext])
-    )
-      .thenReturn(Future.successful(httpResponseMock))
+    when(httpClientMock.post(any)(any)).thenReturn(requestBuilder)
+    when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+    when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(httpResponseMock))
+
     val configuration: Configuration = Configuration(
       "microservice.services.preferences.host"     -> "localhost",
       "microservice.services.preferences.port"     -> 8025,

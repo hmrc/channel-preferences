@@ -51,7 +51,7 @@ class PreferenceController @Inject() (
   override val authConnector: AuthConnector,
   override val auditConnector: AuditConnector,
   override val controllerComponents: ControllerComponents
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, hc: HeaderCarrier)
     extends BackendController(controllerComponents) with AuthorisedFunctions with Auditing with EntityIdCrypto {
 
   private val logger: Logger = Logger(this.getClass)

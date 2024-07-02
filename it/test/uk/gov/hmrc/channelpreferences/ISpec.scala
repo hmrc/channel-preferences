@@ -17,18 +17,30 @@
 package uk.gov.hmrc.channelpreferences
 
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
+import play.api.inject.bind
 import uk.gov.hmrc.channelpreferences.UrlHelper.-/
+import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.ExecutionContext
 
 trait ISpec
     extends PlaySpec with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
+  implicit val hc: HeaderCarrier    = app.injector.instanceOf[HeaderCarrier]
 
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure("metrics.enabled" -> false, "auditing.enabled" -> false)
+      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
+      .build()
+    
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   def resource(path: String): String =

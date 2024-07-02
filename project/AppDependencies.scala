@@ -5,7 +5,7 @@ import sbt._
 
 object AppDependencies {
 
-  val bootstrapVersion = "8.5.0"
+  val bootstrapVersion = "9.0.0"
 
   val compile = Seq(
     "uk.gov.hmrc"   %% "bootstrap-backend-play-30" % bootstrapVersion,
@@ -17,8 +17,7 @@ object AppDependencies {
     "org.scalatest"                %% "scalatest"              % "3.2.17"         % Test,
     "org.scalatestplus.play"       %% "scalatestplus-play"     % "7.0.1"          % Test,
     "org.scalatestplus"            %% "scalacheck-1-15"        % "3.2.11.0"       % Test,
-    "org.scalatestplus"            %% "mockito-3-4"            % "3.2.10.0"       % Test,
-    "org.mockito"                  %% "mockito-scala"          % "1.17.30"        % Test,
+    "org.scalatestplus"            %% "mockito-4-11"           % "3.2.17.0"       % Test,
     "com.github.tomakehurst"        % "wiremock"               % "2.33.2"         % Test,
     "com.fasterxml.jackson.module" %% "jackson-module-scala"   % "2.16.1"         % Test
   )

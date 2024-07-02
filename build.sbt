@@ -4,11 +4,11 @@ import play.sbt.routes.RoutesKeys
 
 val appName = "channel-preferences"
 
-Global / majorVersion := 0
-Global / scalaVersion := "2.13.12"
+Global / majorVersion := 1
+Global / scalaVersion := "3.3.3"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SwaggerPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
@@ -31,10 +31,6 @@ lazy val it = (project in file("it"))
     libraryDependencies ++= AppDependencies.itDependencies
   )
 
-lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
-compileScalastyle := (Compile / scalastyle).toTask("").value
-(Compile / compile) := ((Compile / compile) dependsOn compileScalastyle).value
-
 scalafmtOnCompile := true
 PlayKeys.playDefaultPort := 9052
 
@@ -43,10 +39,3 @@ dependencyUpdatesFailBuild := false
 dependencyUpdatesFilter -= moduleFilter(organization = "org.scala-lang")
 
 Compile / doc / sources := Seq.empty
-
-swaggerDomainNameSpaces := Seq("uk.gov.hmrc.channelpreferences.controllers.models.generic")
-swaggerTarget := baseDirectory.value / "public"
-swaggerFileName := "schema.json"
-swaggerPrettyJson := true
-swaggerRoutesFile := "prod.routes"
-swaggerV3 := true

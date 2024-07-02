@@ -18,12 +18,11 @@ package uk.gov.hmrc.channelpreferences.utils.emailaddress
 
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers._
-import org.scalatest.matchers.should.Matchers.{ a, an, convertToAnyShouldWrapper, equal, thrownBy }
+import org.scalatest.matchers.should.Matchers.{ a, an, equal, thrownBy }
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress.{ Domain, Mailbox }
 
 class EmailAddressSpec extends AnyFreeSpec with ScalaCheckPropertyChecks with EmailAddressGenerators {
-  // with AnyFreeSpecLike with Matchers with ScalaCheckPropertyChecks with EmailAddressGenerators {
 
   "Creating an EmailAddress class" - {
     "work for a valid email" in {
@@ -57,7 +56,7 @@ class EmailAddressSpec extends AnyFreeSpec with ScalaCheckPropertyChecks with Em
     }
 
     "throw an exception when the '@' is missing" in {
-      forAll { s: String =>
+      forAll { (s: String) =>
         whenever(!s.contains("@")) {
           an[IllegalArgumentException] shouldBe thrownBy(EmailAddress(s))
         }

@@ -19,16 +19,17 @@ package uk.gov.hmrc.channelpreferences.services.preferences
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.channelpreferences.connectors.PreferencesConnector
 import uk.gov.hmrc.channelpreferences.model.preferences.{ ChannelPreferencesError, Event }
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[ProcessBounceService])
 trait ProcessEmail {
-  def process(event: Event): Future[Either[ChannelPreferencesError, String]]
+  def process(event: Event)(implicit hc: HeaderCarrier): Future[Either[ChannelPreferencesError, String]]
 }
 
 class ProcessBounceService @Inject() (preferencesConnector: PreferencesConnector) extends ProcessEmail {
-  def process(event: Event): Future[Either[ChannelPreferencesError, String]] =
+  def process(event: Event)(implicit hc: HeaderCarrier): Future[Either[ChannelPreferencesError, String]] =
     preferencesConnector.update(event)
 }

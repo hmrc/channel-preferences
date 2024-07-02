@@ -18,6 +18,7 @@ package uk.gov.hmrc.channelpreferences
 
 import play.api.http.Status
 import play.api.http.Status.UNSUPPORTED_MEDIA_TYPE
+import play.api.libs.ws.writeableOf_String
 
 class ProcessBounceISpec extends ISpec {
 

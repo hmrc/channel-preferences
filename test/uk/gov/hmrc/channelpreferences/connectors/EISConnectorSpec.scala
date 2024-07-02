@@ -24,17 +24,21 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.libs.json.{ JsObject, Json, Writes }
-import uk.gov.hmrc.http.{ HttpClient, HttpResponse }
-import play.api.test.Helpers._
-import uk.gov.hmrc.channelpreferences.model.eis.{ ItsaETMPUpdate, UpdateContactPreferenceRequest }
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import play.api.test.Helpers.*
+import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
 import uk.gov.hmrc.channelpreferences.model.preferences.Event
+import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 
+import java.net.URL
 import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
 class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with EitherValues {
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "EISConnector.updateContactPreference" must {
     "return forward the response of the httpCall when succeed" in new TestCase {
@@ -48,15 +52,7 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
     }
 
     "return INTERNAL_SERVER_ERROR when the call to EIS fails" in new TestCase {
-      when(
-        httpClientMock
-          .doPut[UpdateContactPreferenceRequest](
-            any[String],
-            any[UpdateContactPreferenceRequest],
-            any[Seq[(String, String)]]
-          )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext])
-      )
-        .thenReturn(Future.successful(httpUnhappyResponseMock))
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(httpUnhappyResponseMock))
       val connector = new EISConnector(configuration, httpClientMock)
 
       val itsaETMPUpdate = ItsaETMPUpdate("MTDBSA", "XMIT00000064424", true)
@@ -70,7 +66,8 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
   }
 
   class TestCase {
-    val httpClientMock = mock[HttpClient]
+    val httpClientMock = mock[HttpClientV2]
+    val requestBuilder = mock[RequestBuilder]
     val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
     val httpResponseMock: HttpResponse =
       HttpResponse(OK, successBody, Map[String, Seq[String]]())
@@ -90,15 +87,11 @@ class EISConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar with
     val httpUnhappyResponseMock: HttpResponse =
       HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())
 
-    when(
-      httpClientMock
-        .doPut[UpdateContactPreferenceRequest](
-          any[String],
-          any[UpdateContactPreferenceRequest],
-          any[Seq[(String, String)]]
-        )(any[Writes[UpdateContactPreferenceRequest]], any[ExecutionContext])
-    )
-      .thenReturn(Future.successful(httpResponseMock))
+    when(httpClientMock.put(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+    when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+    when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+    when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(httpResponseMock))
+
     val configuration: Configuration = Configuration(
       "appName"                                -> "channel-preferences",
       "microservice.services.eis.host"         -> "localhost",

@@ -18,27 +18,31 @@ package uk.gov.hmrc.channelpreferences.connectors
 
 import play.api.Configuration
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{ HeaderCarrier, HeaderNames, HttpClient, HttpResponse }
+import play.api.libs.ws.writeableOf_JsValue
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{ HeaderCarrier, HeaderNames, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 
+import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class EntityResolverConnector @Inject() (config: Configuration, httpClient: HttpClient)(implicit ec: ExecutionContext)
+class EntityResolverConnector @Inject() (config: Configuration, httpClient: HttpClientV2)(implicit ec: ExecutionContext)
     extends ServicesConfig(config) {
   val serviceUrl: String = baseUrl("entity-resolver")
 
   def confirm(entityId: String, itsaId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.doEmptyPost(
-      s"$serviceUrl/preferences/confirm/$entityId/$itsaId",
-      hc.headers(Seq(HeaderNames.authorisation))
-    )
+    httpClient
+      .post(new URI(s"$serviceUrl/preferences/confirm/$entityId/$itsaId").toURL)
+      .setHeader(hc.headers(Seq(HeaderNames.authorisation)): _*)
+      .execute[HttpResponse]
 
   def enrolment(requestBody: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.doPost(
-      s"$serviceUrl/preferences/enrolment",
-      requestBody,
-      hc.headers(Seq(HeaderNames.authorisation))
-    )
+    httpClient
+      .post(new URI(s"$serviceUrl/preferences/enrolment").toURL)
+      .withBody(requestBody)
+      .setHeader(hc.headers(Seq(HeaderNames.authorisation)): _*)
+      .execute[HttpResponse]
 }

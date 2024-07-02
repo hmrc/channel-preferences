@@ -21,20 +21,22 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import org.scalatest.matchers.should.Matchers._
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.*
+import org.scalatest.matchers.should.Matchers.*
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
-import play.api.test.Helpers._
-import play.api.test._
+import play.api.test.Helpers.*
+import play.api.test.*
 import uk.gov.hmrc.channelpreferences.controllers.ProxyController
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class ProxyITSpec extends PlaySpec with BeforeAndAfterEach with BeforeAndAfterAll {
 
@@ -68,6 +70,7 @@ class ProxyITSpec extends PlaySpec with BeforeAndAfterEach with BeforeAndAfterAl
       .configure("microservice.services.entity-resolver.protocol" -> "http")
       .configure("microservice.services.entity-resolver.port" -> mockServer.port)
       .configure("metrics.enabled" -> false)
+      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
       .build()
 
     val proxyController = application.injector.instanceOf[ProxyController]

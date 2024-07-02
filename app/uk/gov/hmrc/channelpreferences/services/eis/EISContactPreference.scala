@@ -19,7 +19,7 @@ package uk.gov.hmrc.channelpreferences.services.eis
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.channelpreferences.connectors.EISConnector
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 
 import javax.inject.Inject
 import scala.concurrent.Future
@@ -30,7 +30,7 @@ trait EISContactPreference {
     regime: String,
     itsaEnrolment: ItsaETMPUpdate,
     correlationId: Option[String]
-  ): Future[HttpResponse]
+  )(implicit hc: HeaderCarrier): Future[HttpResponse]
 }
 
 class EISContactPreferenceService @Inject() (eisConnector: EISConnector) extends EISContactPreference {
@@ -38,6 +38,6 @@ class EISContactPreferenceService @Inject() (eisConnector: EISConnector) extends
     regime: String,
     itsaEnrolment: ItsaETMPUpdate,
     correlationId: Option[String]
-  ): Future[HttpResponse] =
+  )(implicit hc: HeaderCarrier): Future[HttpResponse] =
     eisConnector.updateContactPreference(regime, itsaEnrolment, correlationId)
 }
