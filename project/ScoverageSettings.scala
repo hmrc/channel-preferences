@@ -21,13 +21,11 @@ import scoverage.ScoverageKeys
 object ScoverageSettings {
   def apply(): Seq[Def.Setting[_ >: String with Double with Boolean]] =
     Seq( // Semicolon-separated list of regexes matching classes to exclude
-      ScoverageKeys.coverageEnabled          := false, // does not yet support Scala 3
+      ScoverageKeys.coverageEnabled          := true, // does not yet support Scala 3
       ScoverageKeys.coverageExcludedPackages := "<empty>;.*Reverse.*;.*(config|testonly).*;.*(BuildInfo|Routes).*",
       ScoverageKeys.coverageMinimumStmtTotal := 91,
-      ScoverageKeys.coverageFailOnMinimum    := true,
+      ScoverageKeys.coverageFailOnMinimum    := false,
       ScoverageKeys.coverageHighlighting     := true,
-      ScoverageKeys.coverageOutputXML        := false,
-      ScoverageKeys.coverageOutputHTML       := false,
       ConfigKey.configurationToKey(Test) / parallelExecution := false
     )
 }
