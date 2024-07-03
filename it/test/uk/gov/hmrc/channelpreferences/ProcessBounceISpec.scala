@@ -44,7 +44,7 @@ class ProcessBounceISpec extends ISpec {
       val response =
         wsClient
           .url(resource("/channel-preferences/process/bounce"))
-          .withHttpHeaders(("Content-Type" -> "application/json"))
+          .withHttpHeaders("Content-Type" -> "application/json")
           .post(postData)
           .futureValue
 
@@ -71,11 +71,11 @@ class ProcessBounceISpec extends ISpec {
       val responseWithInvalidContentType =
         wsClient
           .url(resource("/channel-preferences/process/bounce"))
-          .withHttpHeaders(("Content-Type" -> "invalid/json"))
+          .withHttpHeaders("Content-Type" -> "invalid/json")
           .post(postData)
           .futureValue
 
-      responseWithInvalidContentType.status mustBe (UNSUPPORTED_MEDIA_TYPE)
+      responseWithInvalidContentType.status mustBe UNSUPPORTED_MEDIA_TYPE
 
       val responseWithMissingContentType =
         wsClient
@@ -83,7 +83,7 @@ class ProcessBounceISpec extends ISpec {
           .post(postData)
           .futureValue
 
-      responseWithMissingContentType.status mustBe (UNSUPPORTED_MEDIA_TYPE)
+      responseWithMissingContentType.status mustBe UNSUPPORTED_MEDIA_TYPE
     }
   }
 }
