@@ -25,7 +25,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.*
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -70,7 +70,6 @@ class ProxyITSpec extends PlaySpec with BeforeAndAfterEach with BeforeAndAfterAl
       .configure("microservice.services.entity-resolver.protocol" -> "http")
       .configure("microservice.services.entity-resolver.port" -> mockServer.port)
       .configure("metrics.enabled" -> false)
-      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
       .build()
 
     val proxyController = application.injector.instanceOf[ProxyController]
