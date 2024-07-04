@@ -33,12 +33,10 @@ trait ISpec
     extends PlaySpec with ScalaFutures with IntegrationPatience with GuiceOneServerPerSuite with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
-  implicit val hc: HeaderCarrier = app.injector.instanceOf[HeaderCarrier]
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false, "auditing.enabled" -> false)
-      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
       .build()
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]

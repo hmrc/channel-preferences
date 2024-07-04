@@ -70,7 +70,6 @@ class ProxyITSpec extends PlaySpec with BeforeAndAfterEach with BeforeAndAfterAl
       .configure("microservice.services.entity-resolver.protocol" -> "http")
       .configure("microservice.services.entity-resolver.port" -> mockServer.port)
       .configure("metrics.enabled" -> false)
-      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
       .build()
 
     val proxyController = application.injector.instanceOf[ProxyController]

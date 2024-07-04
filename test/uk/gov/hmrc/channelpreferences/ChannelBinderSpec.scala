@@ -44,7 +44,6 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false, "auditing.enabled" -> false)
-      .overrides(bind[HeaderCarrier].toInstance(HeaderCarrier()))
       .overrides(bind[PreferenceService].to[PreferenceServiceMock])
       .build()
 
