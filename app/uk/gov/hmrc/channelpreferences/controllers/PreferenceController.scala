@@ -98,7 +98,7 @@ class PreferenceController @Inject() (
     }
   }
 
-  def update(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def process(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger warn s"Request received with headers ${request.headers.headers} "
     Future.successful(Ok("Request reached successfully to channel preferences"))
   }
