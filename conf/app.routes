@@ -15,7 +15,7 @@
 ###
 GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
 
-POST       /channel-preferences/process                     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.process()
+POST       /mdtp/channel-preferences/process                uk.gov.hmrc.channelpreferences.controllers.PreferenceController.process()
 
 POST       /channel-preferences/enrolment                   uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
