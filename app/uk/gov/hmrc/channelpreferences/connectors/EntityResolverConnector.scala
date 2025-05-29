@@ -45,4 +45,11 @@ class EntityResolverConnector @Inject() (config: Configuration, httpClient: Http
       .withBody(requestBody)
       .setHeader(hc.headers(Seq(HeaderNames.authorisation)): _*)
       .execute[HttpResponse]
+
+  def processItsa(requestBody: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    httpClient
+      .post(new URI(s"$serviceUrl/preferences/process-itsa").toURL)
+      .withBody(requestBody)
+      .setHeader(hc.headers(Seq(HeaderNames.authorisation)): _*)
+      .execute[HttpResponse]
 }

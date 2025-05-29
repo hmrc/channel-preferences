@@ -100,7 +100,15 @@ class PreferenceController @Inject() (
 
   def process(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger warn s"Request received with headers ${request.headers.headers}; Body ${request.body} "
-    Future.successful(Ok("Request reached successfully to channel preferences"))
+    entityResolver.processItsa(request.body).flatMap { resp =>
+      val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
+      (resp.status, resultBody) match {
+        case (OK, Some(result)) =>
+          updateEtmp(result.isDigitalStatus)
+        case _ =>
+          Future.successful(Status(resp.status)(resp.body))
+      }
+    }
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
