@@ -20,7 +20,7 @@ import org.apache.pekko.util.ByteString
 import play.api.Logger
 import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result, Results }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
@@ -100,14 +100,10 @@ class PreferenceController @Inject() (
 
   def process(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger warn s"Request received with headers ${request.headers.headers}; Body ${request.body} "
-    entityResolver.processItsa(request.body).flatMap { resp =>
-      val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
-      (resp.status, resultBody) match {
-        case (OK, Some(result)) =>
-          updateEtmp(result.isDigitalStatus)
-        case _ =>
-          Future.successful(Status(resp.status)(resp.body))
-      }
+    authorised() {
+      entityResolver.processItsa(request.body).map(r => Status(r.status)(r.body))
+    }.recoverWith { case err =>
+      Future.successful(Unauthorized(Json.obj("error" -> err.getMessage)))
     }
   }
 
