@@ -100,10 +100,10 @@ class PreferenceController @Inject() (
 
   def process(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger warn s"Request received with headers ${request.headers.headers}; Body ${request.body} "
-    authorised() {
-      entityResolver.processItsa(request.body).map(r => Status(r.status)(r.body))
-    }.recoverWith { case err =>
-      Future.successful(Unauthorized(Json.obj("error" -> err.getMessage)))
+    entityResolver.processItsa(request.body).map(r => Status(r.status)(r.body)).recoverWith {
+      case err: AuthorisationException =>
+        Future.successful(Unauthorized(Json.obj("error" -> err.getMessage)))
+      case e => Future.successful(BadRequest(Json.obj("error" -> e.getMessage)))
     }
   }
 
