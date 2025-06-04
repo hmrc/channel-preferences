@@ -50,6 +50,5 @@ class EntityResolverConnector @Inject() (config: Configuration, httpClient: Http
     httpClient
       .post(new URI(s"$serviceUrl/preferences/process-itsa").toURL)
       .withBody(requestBody)
-      .setHeader(hc.headers(Seq(HeaderNames.authorisation)): _*)
       .execute[HttpResponse]
 }
