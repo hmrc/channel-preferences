@@ -20,7 +20,7 @@ import org.apache.pekko.util.ByteString
 import play.api.Logger
 import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result, Results }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
@@ -100,7 +100,11 @@ class PreferenceController @Inject() (
 
   def process(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger warn s"Request received with headers ${request.headers.headers}; Body ${request.body} "
-    Future.successful(Ok("Request reached successfully to channel preferences"))
+    entityResolver.processItsa(request.body).map(r => Status(r.status)(r.body)).recoverWith {
+      case err: AuthorisationException =>
+        Future.successful(Unauthorized(Json.obj("error" -> err.getMessage)))
+      case e => Future.successful(BadRequest(Json.obj("error" -> e.getMessage)))
+    }
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
