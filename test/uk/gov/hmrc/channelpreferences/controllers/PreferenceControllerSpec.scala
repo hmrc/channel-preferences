@@ -199,6 +199,257 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     }
   }
 
+  "Calling process endpoint to link the itsa id to the given identifiers" should {
+
+    "Not update ETMP and forward the result form the entity-resolver enrolment endpoint when the status" +
+      "is not ok" in new TestSetup with EnrolmentGenerator {
+        forAll(ninoGen, sautrGen, itsaIdGen, httpResponseGen) { (nino, sautr, itsaId, httpResponse) =>
+          when(mockEntityResolver.processItsa(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+            .thenReturn(Future.successful(httpResponse))
+          val postData: JsValue = Json.obj("nino" -> nino, "sautr" -> sautr, "mtditsaid" -> itsaId)
+          val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+          val response = controller.process().apply(fakePostRequest)
+          status(response) mustBe httpResponse.status
+          contentAsJson(response) mustBe httpResponse.json
+        }
+      }
+
+    "update ETMP when the entity resolver return a digital customer" in new TestSetup {
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "response" -> "Ok",
+          "preference" ->
+            Json.parse("""{
+                         |    "digital": true,
+                         |    "email": {
+                         |        "status": "verified",
+                         |        "mailboxFull": false,
+                         |        "hasBounces": false,
+                         |        "isVerified": true,
+                         |        "email": "satya.josyula@mail.com"
+                         |    }
+                         |}""".stripMargin)
+        )
+      val httpResponse =
+        HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.processItsa(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+      private val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
+        .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+      val expectedResponseBody = Json.obj("response" -> "MTD ITSA ID value updated successfully")
+      val postData: JsValue = Json.obj("nino" -> nino, "sautr" -> sautr, "mtditsaid" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.process().apply(fakePostRequest)
+      status(response) mustBe httpResponse.status
+      contentAsJson(response) mustBe expectedResponseBody
+
+    }
+
+    "forward ETMP failure when the call fails" in new TestSetup {
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "response" -> "Ok",
+          "preference" ->
+            Json.parse("""{
+                         |    "digital": true,
+                         |    "email": {
+                         |        "status": "verified",
+                         |        "mailboxFull": false,
+                         |        "hasBounces": false,
+                         |        "isVerified": true,
+                         |        "email": "pihklyljtgoxeoh@mail.com"
+                         |    }
+                         |}""".stripMargin)
+        )
+      val httpResponse =
+        HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.processItsa(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+      private val failureBody: JsObject = Json.obj("failure" -> "some error")
+      private val etmpHttpResponse: HttpResponse = HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
+        .thenReturn(Future.successful(etmpHttpResponse))
+
+      val postData: JsValue = Json.obj("nino" -> nino, "sautr" -> sautr, "mtditsaid" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.process().apply(fakePostRequest)
+      status(response) mustBe etmpHttpResponse.status
+      contentAsJson(response) mustBe failureBody
+
+    }
+
+    "update ETMP when the entity resolver return a digital customer and email not verified" in new TestSetup {
+      val agentArn = "agent"
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "reason" -> "Ok",
+          "preference" ->
+            Json.parse("""{
+                         |    "digital": true,
+                         |    "email": {
+                         |        "hasBounces": false,
+                         |        "isVerified": false,
+                         |        "email": "pihklyljtgoxeoh@mail.com"
+                         |    }
+                         |}""".stripMargin)
+        )
+      val httpResponse =
+        HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+      private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
+        .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe httpResponse.status
+      contentAsJson(response) mustBe expectedResponseBody
+
+    }
+
+    "update ETMP when the entity resolver return a digital customer that has email bounces" in new TestSetup {
+      val agentArn = "agent"
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "reason" -> "Ok",
+          "preference" ->
+            Json.parse("""{
+                         |    "digital": true,
+                         |    "email": {
+                         |        "hasBounces": true,
+                         |        "isVerified": true,
+                         |        "email": "pihklyljtgoxeoh@mail.com"
+                         |    }
+                         |}""".stripMargin)
+        )
+      val httpResponse =
+        HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+      private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
+        .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe httpResponse.status
+      contentAsJson(response) mustBe expectedResponseBody
+
+    }
+
+    "update ETMP when the entity resolver return a non digital customer" in new TestSetup {
+      val agentArn = "agent"
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "reason" -> "Ok",
+          "preference" ->
+            Json.parse("""{
+                         |    "digital": false
+                         |}""".stripMargin)
+        )
+      val httpResponse =
+        HttpResponse(OK, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+      private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
+        .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+      val expectedResponseBody = Json.obj("reason" -> "ITSA ID successfully added")
+      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe httpResponse.status
+      contentAsJson(response) mustBe expectedResponseBody
+
+    }
+
+    "not update ETMP when the invalid itsa enrolment id found" in new TestSetup {
+      val postData: JsValue =
+        Json.obj("arn" -> "agent", "nino" -> "nino", "sautr" -> "sautr", "itsaId" -> "Invalid~XMIT983509385093485")
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe UNAUTHORIZED
+    }
+
+    "NOT update ETMP when the entity resolver when the preferences is not found" in new TestSetup {
+      val agentArn = "agent"
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "reason" -> "No preferences found"
+        )
+      val httpResponse =
+        HttpResponse(UNAUTHORIZED, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+      private val successBody: JsObject = Json.obj("processingDate" -> "2021-09-07T14:39:51.507Z", "status" -> "OK")
+      when(mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any))
+        .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe UNAUTHORIZED
+      contentAsJson(response) mustBe entityResolverResponseBody
+
+    }
+
+    "NOT update ETMP when the entity resolver fails" in new TestSetup {
+      val agentArn = "agent"
+      val nino = "nino"
+      val sautr = "sautr"
+      val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+      val entityResolverResponseBody =
+        Json.obj(
+          "reason" -> "random one"
+        )
+      val httpResponse =
+        HttpResponse(UNAUTHORIZED, entityResolverResponseBody, Map.empty[String, Seq[String]])
+
+      when(mockEntityResolver.enrolment(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(httpResponse))
+
+      val postData: JsValue = Json.obj("arn" -> agentArn, "nino" -> nino, "sautr" -> sautr, "itsaId" -> itsaId)
+      val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+      val response = controller.enrolment().apply(fakePostRequest)
+      status(response) mustBe httpResponse.status
+      contentAsJson(response) mustBe httpResponse.json
+
+    }
+
+  }
+
   "Calling Agent Enrolment" should {
 
     "Not update ETMP and forward the result form the entity-resolver enrolment endpoint when the status" +

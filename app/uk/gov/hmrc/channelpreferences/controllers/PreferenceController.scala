@@ -27,8 +27,8 @@ import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationExcept
 import uk.gov.hmrc.channelpreferences.audit.Auditing
 import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
-import uk.gov.hmrc.channelpreferences.model.eis.StatusUpdate
-import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody }
+import uk.gov.hmrc.channelpreferences.model.eis.{ ItsaETMPUpdate, StatusUpdate }
+import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, ItsaIdUpdateResponse }
 import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
@@ -100,11 +100,43 @@ class PreferenceController @Inject() (
 
   def process(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger warn s"Request received with headers ${request.headers.headers}; Body ${request.body} "
-    entityResolver.processItsa(request.body).map(r => Status(r.status)(r.body)).recoverWith {
-      case err: AuthorisationException =>
-        Future.successful(Unauthorized(Json.obj("error" -> err.getMessage)))
-      case e => Future.successful(BadRequest(Json.obj("error" -> e.getMessage)))
-    }
+    entityResolver
+      .processItsa(request.body)
+      .flatMap { resp =>
+        val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[ItsaIdUpdateResponse])
+        (resp.status, resultBody) match {
+          case (OK, Some(result)) if result.preference.isDefined =>
+            updateEtmpWithContactPreference(result)
+          case _ =>
+            logger.warn(s"ItsaId update is failed with status ${resp.status} $resultBody")
+            Future.successful(Status(resp.status)(resp.body))
+        }
+      }
+      .recoverWith {
+        case err: AuthorisationException =>
+          Future.successful(Unauthorized(Json.obj("error" -> err.getMessage)))
+        case e =>
+          logger.error(s"Failed to update ItsatID ${e.getMessage}")
+          Future.successful(InternalServerError(Json.obj("error" -> e.getMessage)))
+      }
+  }
+
+  private def updateEtmpWithContactPreference(
+    result: ItsaIdUpdateResponse
+  )(implicit request: Request[JsValue]): Future[Result] = {
+    val itsaId = (request.body \ "mtditsaid").as[String]
+    val correlationId = request.headers.get(CustomHeaders.RequestId)
+
+    logger.warn(s"Update ETMP after successful update of itsaId($itsaId)")
+
+    eisContactPreference
+      .updateContactPreference(ITSA_REGIME, ItsaETMPUpdate("MTDBSA", itsaId, result.isDigitalStatus), correlationId)
+      .map { response =>
+        if (response.status == OK)
+          Ok(Json.obj("response" -> "MTD ITSA ID value updated successfully"))
+        else
+          Status(response.status)(response.json)
+      }
   }
 
   def enrolment(): Action[JsValue] = Action.async(parse.json) { implicit request =>
