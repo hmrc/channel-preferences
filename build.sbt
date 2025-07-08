@@ -5,7 +5,7 @@ import play.sbt.routes.RoutesKeys
 val appName = "channel-preferences"
 
 Global / majorVersion := 1
-Global / scalaVersion := "3.3.3"
+Global / scalaVersion := "3.3.4"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -18,9 +18,6 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= Seq(
       "-Wconf:src=routes/.*:s"
     )
-  )
-  .settings(
-    resolvers += Resolver.jcenterRepo
   )
   .settings(ScoverageSettings())
 
