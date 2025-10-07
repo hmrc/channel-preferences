@@ -22,7 +22,6 @@ import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
-import play.api.http.HeaderNames.CONTENT_TYPE
 
 import javax.inject.{ Inject, Singleton }
 import play.api.http.HeaderNames._
@@ -30,7 +29,7 @@ import play.api.http.HttpEntity.Streamed
 import play.api.mvc._
 import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
+import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.collection.immutable
