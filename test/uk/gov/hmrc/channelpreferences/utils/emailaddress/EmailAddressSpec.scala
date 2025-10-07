@@ -18,7 +18,6 @@ package uk.gov.hmrc.channelpreferences.utils.emailaddress
 
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers._
-import org.scalatest.matchers.should.Matchers.{ a, an, equal, thrownBy }
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress.{ Domain, Mailbox }
 

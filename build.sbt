@@ -15,7 +15,9 @@ lazy val microservice = Project(appName, file("."))
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.cds._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.preferences._",
     scalacOptions ++= Seq(
-      "-Wconf:src=routes/.*:s"
+      "-Wconf:src=routes/.*:s",
+      "-Wconf:msg=Flag.*repeatedly:s",
+      "-language:implicitConversions"
     )
   )
   .settings(ScoverageSettings())

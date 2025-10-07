@@ -1,4 +1,3 @@
-import play.sbt.PlayImport.*
 import sbt.*
 
 object AppDependencies {
