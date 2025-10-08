@@ -24,15 +24,17 @@ import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
 import play.api.http.Status
 import play.api.libs.json.{ JsValue, Json }
+import play.api.test.Helpers.*
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpResponse, RequestId }
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 
 import java.net.URL
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future }
 
 class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with MockitoSugar {
+
   implicit val hc: HeaderCarrier =
     HeaderCarrier(authorization = Some(Authorization("bearer")), requestId = Some(RequestId("Id")))
   implicit val ec: ExecutionContext = ExecutionContext.global
@@ -58,18 +60,45 @@ class EntityResolverConnectorSpec extends PlaySpec with ScalaFutures with Mockit
     }
   }
 
-  trait TestCase {
-    val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
-    val requestBuilder = mock[RequestBuilder]
-    val ec = scala.concurrent.ExecutionContext.Implicits.global
-    val connector = new EntityResolverConnector(configuration, mockHttpClient)(ec)
-    val requestBody: JsValue = Json.parse("{}")
-    val successResponse: HttpResponse = HttpResponse(Status.OK, "success")
+  "processItsa" should {
+    "return the successful response when request is processed successfully" in new TestCase {
+      when(mockHttpClient.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(successResponse))
+
+      val result: HttpResponse = await(connector.processItsa(requestBody))
+
+      result mustBe successResponse
+    }
+
+    "return the failure response when request is not processed successfully" in new TestCase {
+      when(mockHttpClient.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any)(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(failureResponse))
+
+      val result: HttpResponse = await(connector.processItsa(requestBody))
+
+      result mustBe failureResponse
+    }
   }
 
-  val configuration: Configuration = Configuration(
-    "microservice.services.entity-resolver.host"     -> "host",
-    "microservice.services.entity-resolver.port"     -> 443,
-    "microservice.services.entity-resolver.protocol" -> "https"
-  )
+  trait TestCase {
+    val configuration: Configuration = Configuration(
+      "microservice.services.entity-resolver.host"     -> "host",
+      "microservice.services.entity-resolver.port"     -> 443,
+      "microservice.services.entity-resolver.protocol" -> "https"
+    )
+
+    val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
+    val requestBuilder: RequestBuilder = mock[RequestBuilder]
+    val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
+    val connector = new EntityResolverConnector(configuration, mockHttpClient)(ec)
+    val requestBody: JsValue = Json.parse("{}")
+
+    val successResponse: HttpResponse = HttpResponse(Status.OK, "success")
+    val failureResponse: HttpResponse = HttpResponse(Status.BAD_REQUEST)
+  }
 }

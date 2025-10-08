@@ -1,22 +1,23 @@
 import play.sbt.PlayImport.PlayKeys
-import sbt.Resolver
 import play.sbt.routes.RoutesKeys
 
 val appName = "channel-preferences"
 
 Global / majorVersion := 1
-Global / scalaVersion := "3.3.4"
+Global / scalaVersion := "3.3.6"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
-  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
+  .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.ChannelBinder._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.cds._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.preferences._",
     scalacOptions ++= Seq(
-      "-Wconf:src=routes/.*:s"
+      "-Wconf:src=routes/.*:s",
+      "-Wconf:msg=Flag.*repeatedly:s",
+      "-language:implicitConversions"
     )
   )
   .settings(ScoverageSettings())

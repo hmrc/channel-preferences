@@ -20,7 +20,7 @@ import org.apache.pekko.util.ByteString
 import play.api.Logger
 import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result, Results }
+import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result }
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
