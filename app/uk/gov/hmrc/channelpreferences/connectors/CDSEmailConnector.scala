@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.channelpreferences.connectors
 
+import play.api.http.{ ContentTypes, HeaderNames }
 import play.api.http.Status.OK
-import play.api.libs.json.{ JsSuccess, Json }
+import play.api.libs.json.{ JsSuccess, JsValue, Json }
 import play.api.{ Configuration, Logger, LoggerLike }
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError
@@ -26,7 +27,9 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpReads.Implicits.*
-
+import uk.gov.hmrc.channelpreferences.model.cds.Eori
+import uk.gov.hmrc.channelpreferences.model.cds.Eori.writer
+import play.api.libs.ws.writeableOf_JsValue
 import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -38,10 +41,13 @@ class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClient
   private val log: LoggerLike = Logger(this.getClass)
   val serviceUrl: String = baseUrl("customs-data-store")
 
-  def getVerifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[PreferenceError, EmailVerification]] =
+  def verifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[PreferenceError, EmailVerification]] = {
+    val eori = Eori(taxId)
+    val body: JsValue = Json.toJson(eori)
     httpClient
-      .get(new URI(s"$serviceUrl/customs-data-store/eori/$taxId/verified-email").toURL)
-      .setHeader("Authorization" -> "X-Request-Id")
+      .post(new URI(s"$serviceUrl/customs-data-store/eori/verified-email-third-party").toURL)
+      .withBody(body)
+      .setHeader(HeaderNames.CONTENT_TYPE -> ContentTypes.JSON)
       .execute[HttpResponse]
       .map { resp =>
         resp.status match {
@@ -49,6 +55,7 @@ class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClient
           case status => Left(UpstreamError(Option(resp.body).getOrElse(""), status))
         }
       }
+  }
 
   private def parseCDSVerifiedEmailResp(body: String): Either[PreferenceError, EmailVerification] =
     Try(Json.parse(body)) match {
