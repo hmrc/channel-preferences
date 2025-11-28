@@ -26,16 +26,16 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-
 import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.concurrent.duration.Duration
 import play.api.http.Status.{ NOT_FOUND, OK }
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.http.HttpReads.Implicits.*
-
+import play.api.libs.ws.writeableOf_JsValue
 import java.net.{ URI, URL }
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,30 +49,32 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
   private val validEmailVerification = """{"address":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
   private val inValidEmailVerification = """{"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""
 
-  "getVerifiedEmail" should {
+  "verifiedEmail" should {
     "return the email verification if found by CDS" in new TestCase {
 
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
-      when(mockHttpClient.get(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(mockHttpClient.post(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[JsValue])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(mockHttpResponse))
 
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(validEmailVerification)
-      Await.result(connector.getVerifiedEmail("123"), Duration.Inf) mustBe Right(emailVerification)
+      Await.result(connector.verifiedEmail("123"), Duration.Inf) mustBe Right(emailVerification)
     }
 
     "return the status from CDS if the email verification not found" in new TestCase {
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
       when(
-        mockHttpClient.get(
-          ArgumentMatchers.eq(new URI("https://host:443/customs-data-store/eori/123/verified-email").toURL)
+        mockHttpClient.post(
+          ArgumentMatchers.eq(new URI("https://host:443/customs-data-store/eori/verified-email-third-party").toURL)
         )(any[HeaderCarrier])
       ).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[JsValue])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(NOT_FOUND)
-      connector.getVerifiedEmail("123").futureValue mustBe
+      connector.verifiedEmail("123").futureValue mustBe
         Left(UpstreamError("", StatusCodes.NotFound))
     }
 
@@ -80,36 +82,35 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
 
       when(
-        mockHttpClient.get(
-          ArgumentMatchers.eq(new URI("https://host:443/customs-data-store/eori/123/verified-email").toURL)
+        mockHttpClient.post(
+          ArgumentMatchers.eq(new URI("https://host:443/customs-data-store/eori/verified-email-third-party").toURL)
         )(any[HeaderCarrier])
       ).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[JsValue])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(mockHttpResponse))
 
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(inValidEmailVerification)
-      connector.getVerifiedEmail("123").futureValue mustBe
+      connector.verifiedEmail("123").futureValue mustBe
         Left(ParseError("""unable to parse {"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""))
     }
 
     "return Bad Gateway if CDS returns non Json response" in new TestCase {
       private val connector = new CDSEmailConnector(configuration, mockHttpClient)
 
-      when(mockHttpClient.get(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
-      when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(mockHttpResponse))
-
       when(
-        mockHttpClient.get(
-          ArgumentMatchers.eq(new URI("https://host:443/customs-data-store/eori/123/verified-email").toURL)
+        mockHttpClient.post(
+          ArgumentMatchers.eq(new URI("https://host:443/customs-data-store/eori/verified-email-third-party").toURL)
         )(any[HeaderCarrier])
       ).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[JsValue])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(mockHttpResponse))
 
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn("NonJsonResponse")
-      connector.getVerifiedEmail("123").futureValue mustBe
+      connector.verifiedEmail("123").futureValue mustBe
         Left(ParseError("cds response was invalid Json"))
     }
   }

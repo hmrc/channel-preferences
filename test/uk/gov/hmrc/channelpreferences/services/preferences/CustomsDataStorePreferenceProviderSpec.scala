@@ -75,7 +75,7 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
     val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(identifierValue, Email)
     val emailVerification: EmailVerification = EmailVerification(EmailAddress("foo@bar.com"), Instant.now())
 
-    when(cdsEmailConnector.getVerifiedEmail(customsServiceEnrolment.identifierValue.value))
+    when(cdsEmailConnector.verifiedEmail(customsServiceEnrolment.identifierValue.value))
       .thenReturn(Future.successful(emailVerification.asRight))
 
     val customsDataStorePreferenceProvider = new CustomsDataStorePreferenceProvider(

@@ -45,7 +45,7 @@ class CustomsDataStorePreferenceProvider @Inject() (
   )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] =
     enrolment.channel match {
       case Email =>
-        EitherT(cdsEmailConnector.getVerifiedEmail(enrolment.identifierValue.value))
+        EitherT(cdsEmailConnector.verifiedEmail(enrolment.identifierValue.value))
           .map(audit)
           .map(Json.toJson(_))
           .value
