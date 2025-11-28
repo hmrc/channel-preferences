@@ -35,6 +35,7 @@ import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseE
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.http.HttpReads.Implicits.*
+import play.api.libs.ws.writeableOf_JsValue
 import java.net.{ URI, URL }
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -59,7 +60,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
 
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(validEmailVerification)
-      Await.result(connector.verifiedEmail("GB123456789000"), Duration.Inf) mustBe Right(emailVerification)
+      Await.result(connector.verifiedEmail("123"), Duration.Inf) mustBe Right(emailVerification)
     }
 
     "return the status from CDS if the email verification not found" in new TestCase {
@@ -73,7 +74,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
       when(requestBuilder.setHeader(any[(String, String)])).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse]).thenReturn(Future.successful(mockHttpResponse))
       when(mockHttpResponse.status).thenReturn(NOT_FOUND)
-      connector.verifiedEmail("GB123456789000").futureValue mustBe
+      connector.verifiedEmail("123").futureValue mustBe
         Left(UpstreamError("", StatusCodes.NotFound))
     }
 
@@ -91,7 +92,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
 
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn(inValidEmailVerification)
-      connector.verifiedEmail("GB123456789000").futureValue mustBe
+      connector.verifiedEmail("123").futureValue mustBe
         Left(ParseError("""unable to parse {"add":"some@email.com","timestamp":"1987-03-20T01:02:03.000Z"}"""))
     }
 
@@ -109,7 +110,7 @@ class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
 
       when(mockHttpResponse.status).thenReturn(OK)
       when(mockHttpResponse.body).thenReturn("NonJsonResponse")
-      connector.verifiedEmail("GB123456789000").futureValue mustBe
+      connector.verifiedEmail("123").futureValue mustBe
         Left(ParseError("cds response was invalid Json"))
     }
   }

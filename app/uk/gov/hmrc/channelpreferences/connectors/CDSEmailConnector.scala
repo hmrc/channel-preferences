@@ -27,8 +27,9 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.channelpreferences.model.cds.Eori
+import uk.gov.hmrc.channelpreferences.model.cds.Eori.writer
 import play.api.libs.ws.writeableOf_JsValue
-import uk.gov.hmrc.domain.Eori
 import java.net.URI
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -41,7 +42,8 @@ class CDSEmailConnector @Inject() (config: Configuration, httpClient: HttpClient
   val serviceUrl: String = baseUrl("customs-data-store")
 
   def verifiedEmail(taxId: String)(implicit hc: HeaderCarrier): Future[Either[PreferenceError, EmailVerification]] = {
-    val body: JsValue = Json.toJson(Eori(taxId))
+    val eori = Eori(taxId)
+    val body: JsValue = Json.toJson(eori)
     httpClient
       .post(new URI(s"$serviceUrl/customs-data-store/eori/verified-email-third-party").toURL)
       .withBody(body)
