@@ -29,7 +29,7 @@ import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
 import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.eis.{ ItsaETMPUpdate, StatusUpdate }
 import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, ItsaIdUpdateResponse }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferenceError }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferenceError, PreferenceRequest }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
@@ -37,6 +37,7 @@ import uk.gov.hmrc.channelpreferences.utils.EntityIdCrypto
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.channelpreferences.model.preferences
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -66,6 +67,20 @@ class PreferenceController @Inject() (
       preferenceService
         .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
         .map(toResult)
+    }
+
+  def getVerifiedEmail: Action[JsValue] =
+    Action.async(parse.json) { implicit request =>
+      withJsonBody[PreferenceRequest] { enrolmentDetails =>
+        preferenceService
+          .getChannelPreference(
+            enrolmentDetails.enrolmentKey,
+            enrolmentDetails.identifierKey,
+            enrolmentDetails.identifierValue,
+            enrolmentDetails.channel
+          )
+          .map(toResult)
+      }
     }
 
   private def toResult(resolution: Either[PreferenceError, JsValue]): Result = resolution.fold(

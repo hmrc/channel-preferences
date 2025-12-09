@@ -17,6 +17,7 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
+import play.api.libs.json._
 import play.api.mvc.PathBindable
 
 sealed trait IdentifierKey {
@@ -24,6 +25,15 @@ sealed trait IdentifierKey {
 }
 
 object IdentifierKey {
+  implicit val reads: Reads[IdentifierKey] = Reads[IdentifierKey] { json =>
+    json.validate[String].flatMap { value =>
+      fromValue(value).fold(
+        error => JsError(error),
+        identifierKey => JsSuccess(identifierKey)
+      )
+    }
+  }
+
   implicit def identifierKeyBinder(implicit stringBinder: PathBindable[String]): PathBindable[IdentifierKey] =
     new PathBindable[IdentifierKey] {
       override def bind(key: String, value: String): Either[String, IdentifierKey] =

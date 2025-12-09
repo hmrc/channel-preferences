@@ -17,11 +17,16 @@
 package uk.gov.hmrc.channelpreferences.model.preferences
 
 import cats.syntax.either._
+import play.api.libs.json._
 import play.api.mvc.PathBindable
 
 case class IdentifierValue(value: String) extends AnyVal
 
 object IdentifierValue {
+  implicit val reads: Reads[IdentifierValue] = Reads[IdentifierValue] { json =>
+    json.validate[String].map(IdentifierValue(_))
+  }
+
   implicit def identifierValueBinder(implicit stringBinder: PathBindable[String]): PathBindable[IdentifierValue] =
     new PathBindable[IdentifierValue] {
       override def bind(Value: String, value: String): Either[String, IdentifierValue] =
