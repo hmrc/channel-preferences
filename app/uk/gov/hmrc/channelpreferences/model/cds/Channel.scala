@@ -16,11 +16,22 @@
 
 package uk.gov.hmrc.channelpreferences.model.cds
 
+import play.api.libs.json._
+
 sealed abstract class Channel {
   val name: String
 }
 
 object Channel {
+  implicit val reads: Reads[Channel] = Reads[Channel] { json =>
+    json.validate[String].flatMap { value =>
+      channelFromName(value).fold(
+        error => JsError(error),
+        channel => JsSuccess(channel)
+      )
+    }
+  }
+
   def channelFromName(n: String): Either[String, Channel] = n match {
     case Email.name => Right[String, Channel](Email)
     case Phone.name => Right[String, Channel](Phone)

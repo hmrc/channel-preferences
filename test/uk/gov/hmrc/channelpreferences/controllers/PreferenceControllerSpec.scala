@@ -174,6 +174,118 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     }
   }
 
+  "getVerifiedEmail" should {
+    "return OK (200) with the email verification if found" in new TestSetup {
+      when(
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+      )
+        .thenReturn(Future.successful(Json.toJson(emailVerification).asRight))
+
+      val postData: JsValue = Json.obj(
+        "enrolmentKey"    -> "HMRC-CUS-ORG",
+        "identifierKey"   -> "EORINumber",
+        "identifierValue" -> "GB1234567890",
+        "channel"         -> "email"
+      )
+
+      val response =
+        controller.getVerifiedEmail
+          .apply(FakeRequest("POST", "/", Headers("Content-Type" -> "application/json"), postData))
+      status(response) mustBe OK
+      contentAsString(response) mustBe validEmailVerification
+    }
+
+    "return BAD_GATEWAY (502) when get preference returns an unexpected error status" in new TestSetup {
+      when(
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+      )
+        .thenReturn(Future.successful(ParseError("some error").asLeft))
+
+      val postData: JsValue = Json.obj(
+        "enrolmentKey"    -> "HMRC-CUS-ORG",
+        "identifierKey"   -> "EORINumber",
+        "identifierValue" -> "GB1234567890",
+        "channel"         -> "email"
+      )
+
+      val response =
+        controller.getVerifiedEmail.apply(
+          FakeRequest("POST", "/", Headers("Content-Type" -> "application/json"), postData)
+        )
+      status(response) mustBe BAD_GATEWAY
+    }
+
+    "return NotFound (404) when get preference returns a 404 error status" in new TestSetup {
+      when(
+        preferenceService
+          .getChannelPreference(any[EnrolmentKey], any[IdentifierKey], any[IdentifierValue], any[Channel])(
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+      )
+        .thenReturn(Future.successful(UpstreamError("boom", StatusCodes.NotFound).asLeft))
+
+      val postData: JsValue = Json.obj(
+        "enrolmentKey"    -> "HMRC-CUS-ORG",
+        "identifierKey"   -> "EORINumber",
+        "identifierValue" -> "GB1234567890",
+        "channel"         -> "email"
+      )
+
+      val response =
+        controller.getVerifiedEmail
+          .apply(FakeRequest("POST", "/", Headers("Content-Type" -> "application/json"), postData))
+      status(response) mustBe NOT_FOUND
+    }
+
+    "return BAD_REQUEST (400) when JSON is invalid" in new TestSetup {
+      val postData: JsValue = Json.obj(
+        "someField" -> "someValue"
+      )
+
+      val response =
+        controller.getVerifiedEmail
+          .apply(FakeRequest("POST", "/", Headers("Content-Type" -> "application/json"), postData))
+      status(response) mustBe BAD_REQUEST
+    }
+
+    "return BAD_REQUEST (400) when enrolmentKey is invalid" in new TestSetup {
+      val postData: JsValue = Json.obj(
+        "enrolmentKey"    -> "INVALID-KEY",
+        "identifierKey"   -> "EORINumber",
+        "identifierValue" -> "GB1234567890",
+        "channel"         -> "email"
+      )
+
+      val response =
+        controller.getVerifiedEmail
+          .apply(FakeRequest("POST", "/", Headers("Content-Type" -> "application/json"), postData))
+      status(response) mustBe BAD_REQUEST
+    }
+
+    "return BAD_REQUEST (400) when channel is invalid" in new TestSetup {
+      val postData: JsValue = Json.obj(
+        "enrolmentKey"    -> "HMRC-CUS-ORG",
+        "identifierKey"   -> "EORINumber",
+        "identifierValue" -> "GB1234567890",
+        "channel"         -> "invalidChannel"
+      )
+
+      val response =
+        controller.getVerifiedEmail
+          .apply(FakeRequest("POST", "/", Headers("Content-Type" -> "application/json"), postData))
+      status(response) mustBe BAD_REQUEST
+    }
+  }
+
   "Calling itsa activation stub endpoint " should {
 
     "Forward the result form the entity-resolver" in new TestSetup with ConfirmGenerator {
