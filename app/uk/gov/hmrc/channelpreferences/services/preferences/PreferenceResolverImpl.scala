@@ -31,6 +31,6 @@ class PreferenceResolverImpl @Inject() (
     enrolment: Enrolment
   )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] = enrolment match {
     case customsServiceEnrolment: CustomsServiceEnrolment =>
-      customerDataStorePreferenceProvider.getPreference(customsServiceEnrolment)
+      customerDataStorePreferenceProvider.getVerifiedEmail(customsServiceEnrolment)
   }
 }

@@ -44,7 +44,7 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
 
   it should "return the json representation of a email verification" in new Scope {
     customsDataStorePreferenceProvider
-      .getPreference(customsServiceEnrolment)
+      .getVerifiedEmail(customsServiceEnrolment)
       .futureValue shouldBe Json.toJson(emailVerification).asRight
 
     verify(auditConnector).sendExplicitAudit(
@@ -60,7 +60,7 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
     private val unsupportedChannelEnrolment = CustomsServiceEnrolment(identifierValue, Phone)
 
     customsDataStorePreferenceProvider
-      .getPreference(unsupportedChannelEnrolment)
+      .getVerifiedEmail(unsupportedChannelEnrolment)
       .futureValue shouldBe UnsupportedChannelError(Phone).asLeft
 
     verify(auditConnector, never()).sendExplicitAudit(any[String], any[Map[String, String]])(any, any)

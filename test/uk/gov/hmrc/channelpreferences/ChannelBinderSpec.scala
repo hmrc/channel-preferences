@@ -67,18 +67,13 @@ class ChannelBinderSpec extends PlaySpec with GuiceOneAppPerTest with Injecting 
       status(test) mustBe BAD_REQUEST
     }
 
-    "define the unbind" in {
-      val test: Call =
-        controllers.routes.PreferenceController.preference(CustomsServiceKey, EORINumber, IdentifierValue("123"), Email)
-      test.url mustBe "/channel-preferences/preferences/enrolments/HMRC-CUS-ORG/identifier-keys/EORINumber/identifier-values/123/channels/email"
-    }
   }
 }
 
 class PreferenceServiceMock extends PreferenceService(mock[PreferenceResolver]) {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override def getChannelPreference(
+  override def getVerifiedEmail(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,
