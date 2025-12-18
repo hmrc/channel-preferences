@@ -27,28 +27,25 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import play.api.http.Status.*
 import play.api.http.{ HeaderNames, Status }
 import play.api.libs.json.{ JsObject, JsTrue, JsValue, Json }
 import play.api.mvc.Headers
 import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
-import uk.gov.hmrc.auth.core.AuthConnector
 import play.api.test.{ FakeRequest, Helpers }
-import play.api.http.Status.{ BAD_GATEWAY, BAD_REQUEST, CREATED, NOT_FOUND, NOT_IMPLEMENTED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
-import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, Email, EmailVerification, Phone }
+import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, EmailVerification }
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.channelpreferences.model.preferences.EnrolmentKey.CustomsServiceKey
-import uk.gov.hmrc.channelpreferences.model.preferences.IdentifierKey.EORINumber
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UnsupportedChannelError, UpstreamError }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferencesConnectorError, UnExpectedError }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.model.preferences.*
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }

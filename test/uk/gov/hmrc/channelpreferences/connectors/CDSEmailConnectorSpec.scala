@@ -19,26 +19,25 @@ package uk.gov.hmrc.channelpreferences.connectors
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpResponse, RequestId }
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-import scala.concurrent.{ Await, ExecutionContext, Future }
-import scala.concurrent.duration.Duration
 import play.api.http.Status.{ NOT_FOUND, OK }
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.channelpreferences.model.cds.EmailVerification
 import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
-import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
 import uk.gov.hmrc.http.HttpReads.Implicits.*
-import play.api.libs.ws.writeableOf_JsValue
+import uk.gov.hmrc.http.client.{ HttpClientV2, RequestBuilder }
+import uk.gov.hmrc.http.{ Authorization, HeaderCarrier, HttpResponse, RequestId }
 import java.net.{ URI, URL }
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.language.postfixOps
 
 class CDSEmailConnectorSpec extends PlaySpec with ScalaFutures {
