@@ -27,7 +27,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class PreferenceService @Inject() (preferenceResolver: PreferenceResolver) {
-  def getChannelPreference(
+  def getVerifiedEmail(
     enrolmentKey: EnrolmentKey,
     identifierKey: IdentifierKey,
     identifierValue: IdentifierValue,

@@ -40,7 +40,7 @@ class CustomsDataStorePreferenceProvider @Inject() (
 
   private val logger = Logger(this.getClass)
 
-  override def getPreference(
+  override def getVerifiedEmail(
     enrolment: CustomsServiceEnrolment
   )(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]] =
     enrolment.channel match {

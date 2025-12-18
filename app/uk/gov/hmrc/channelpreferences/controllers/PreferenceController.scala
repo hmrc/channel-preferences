@@ -20,25 +20,22 @@ import org.apache.pekko.util.ByteString
 import play.api.Logger
 import play.api.http.{ ContentTypes, HttpEntity }
 import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ Action, AnyContent, ControllerComponents, Request, ResponseHeader, Result }
+import play.api.mvc.*
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.{ AffinityGroup, AuthConnector, AuthorisationException, AuthorisedFunctions, ConfidenceLevel }
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.channelpreferences.audit.Auditing
-import uk.gov.hmrc.channelpreferences.utils.CustomHeaders
-import uk.gov.hmrc.channelpreferences.model.cds.Channel
 import uk.gov.hmrc.channelpreferences.model.eis.{ ItsaETMPUpdate, StatusUpdate }
 import uk.gov.hmrc.channelpreferences.model.entityresolver.{ AgentEnrolment, Enrolment, EnrolmentResponseBody, ItsaIdUpdateResponse }
-import uk.gov.hmrc.channelpreferences.model.preferences.{ EnrolmentKey, Event, IdentifierKey, IdentifierValue, PreferenceError, PreferenceRequest }
+import uk.gov.hmrc.channelpreferences.model.preferences
+import uk.gov.hmrc.channelpreferences.model.preferences.{ Event, PreferenceError, PreferenceRequest }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
-import uk.gov.hmrc.channelpreferences.utils.EntityIdCrypto
+import uk.gov.hmrc.channelpreferences.utils.{ CustomHeaders, EntityIdCrypto }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.channelpreferences.model.preferences
-
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
@@ -57,23 +54,11 @@ class PreferenceController @Inject() (
 
   private val logger: Logger = Logger(this.getClass)
 
-  def preference(
-    enrolmentKey: EnrolmentKey,
-    identifierKey: IdentifierKey,
-    identifierValue: IdentifierValue,
-    channel: Channel
-  ): Action[AnyContent] =
-    Action.async { implicit request =>
-      preferenceService
-        .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
-        .map(toResult)
-    }
-
   def getVerifiedEmail: Action[JsValue] =
     Action.async(parse.json) { implicit request =>
       withJsonBody[PreferenceRequest] { enrolmentDetails =>
         preferenceService
-          .getChannelPreference(
+          .getVerifiedEmail(
             enrolmentDetails.enrolmentKey,
             enrolmentDetails.identifierKey,
             enrolmentDetails.identifierValue,

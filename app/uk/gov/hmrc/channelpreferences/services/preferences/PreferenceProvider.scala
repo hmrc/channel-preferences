@@ -23,5 +23,5 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 
 trait PreferenceProvider[I <: Enrolment] {
-  def getPreference(enrolment: I)(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
+  def getVerifiedEmail(enrolment: I)(implicit headerCarrier: HeaderCarrier): Future[Either[PreferenceError, JsValue]]
 }

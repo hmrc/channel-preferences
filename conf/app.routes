@@ -13,7 +13,6 @@
 #   502:
 #     description: map all upstream error codes to 502
 ###
-GET        /channel-preferences/preferences/enrolments/:enrolmentKey/identifier-keys/:key/identifier-values/:value/channels/:channel uk.gov.hmrc.channelpreferences.controllers.PreferenceController.preference(enrolmentKey: EnrolmentKey, key: IdentifierKey, value: IdentifierValue, channel: Channel)
 POST       /channel-preferences/get-verified-email             uk.gov.hmrc.channelpreferences.controllers.PreferenceController.getVerifiedEmail()
 
 POST       /channel-preferences/process                uk.gov.hmrc.channelpreferences.controllers.PreferenceController.process()

@@ -42,7 +42,7 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
 
   it should "return a preferences error from a provider" in new Scope {
     private val error = UnsupportedChannelError(Phone)
-    when(customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment))
+    when(customsDataStorePreferenceProvider.getVerifiedEmail(customsServiceEnrolment))
       .thenReturn(Future.successful(error.asLeft))
 
     preferenceResolverImpl
@@ -56,7 +56,7 @@ class PreferenceResolverImplSpec extends AnyFlatSpec with Matchers with ScalaFut
     val customsServiceEnrolment: CustomsServiceEnrolment = CustomsServiceEnrolment(IdentifierValue("foo"), Email)
     implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-    when(customsDataStorePreferenceProvider.getPreference(customsServiceEnrolment))
+    when(customsDataStorePreferenceProvider.getVerifiedEmail(customsServiceEnrolment))
       .thenReturn(Future.successful(JsObject.empty.asRight))
 
     val preferenceResolverImpl: PreferenceResolverImpl = new PreferenceResolverImpl(

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.channelpreferences.model.preferences
 
-import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.play.PlaySpec
 
 class PreferenceRequestSpec extends PlaySpec {

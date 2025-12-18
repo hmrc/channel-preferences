@@ -39,7 +39,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
 
   it should "return a preference for valid inputs" in new Scope {
     preferenceService
-      .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
+      .getVerifiedEmail(enrolmentKey, identifierKey, identifierValue, channel)
       .futureValue shouldBe JsObject.empty.asRight
   }
 
@@ -50,7 +50,7 @@ class PreferenceServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
       .thenReturn(Future.successful(error.asLeft))
 
     preferenceService
-      .getChannelPreference(enrolmentKey, identifierKey, identifierValue, channel)
+      .getVerifiedEmail(enrolmentKey, identifierKey, identifierValue, channel)
       .futureValue shouldBe error.asLeft
   }
 

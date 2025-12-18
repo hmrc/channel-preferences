@@ -11,7 +11,6 @@ lazy val microservice = Project(appName, file("."))
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.ChannelBinder._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.cds._",
     RoutesKeys.routesImport += "uk.gov.hmrc.channelpreferences.model.preferences._",
     scalacOptions ++= Seq(
