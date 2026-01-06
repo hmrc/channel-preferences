@@ -20,15 +20,15 @@ import cats.syntax.either.*
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito.{ never, verify, when }
-import org.scalatestplus.mockito.MockitoSugar.*
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar.*
 import play.api.libs.json.Json
 import uk.gov.hmrc.channelpreferences.connectors.CDSEmailConnector
 import uk.gov.hmrc.channelpreferences.model.cds.{ Email, EmailVerification, Phone }
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.UnsupportedChannelError
-import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, IdentifierValue }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ UnsupportedChannelError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, IdentifierValue, PreferenceError }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -54,6 +54,24 @@ class CustomsDataStorePreferenceProviderSpec extends AnyFlatSpec with Matchers w
         "email"           -> emailVerification.address.value
       )
     ) // wasCalled once
+  }
+
+  it should "audit failure case" in new Scope {
+    when(cdsEmailConnector.verifiedEmail(customsServiceEnrolment.identifierValue.value))
+      .thenReturn(Future.successful(UpstreamError("Unexpected Error", 500).asLeft))
+
+    customsDataStorePreferenceProvider
+      .getVerifiedEmail(customsServiceEnrolment)
+      .futureValue shouldBe UpstreamError("Unexpected Error", 500).asLeft
+
+    verify(auditConnector).sendExplicitAudit(
+      EventTypes.Failed,
+      Map(
+        "transactionName" -> "Retrieve Email Address from customs-data-store",
+        "taxId"           -> identifierValue.value,
+        "error"           -> "Unexpected Error"
+      )
+    )
   }
 
   it should "return an error for a channel type other than Email" in new Scope {
