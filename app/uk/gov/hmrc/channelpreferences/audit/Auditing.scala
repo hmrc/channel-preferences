@@ -31,6 +31,9 @@ trait Auditing {
   def auditRetrieveEmail(emailAddress: EmailAddress)(implicit hc: HeaderCarrier, ec: ExecutionContext): Unit =
     auditConnector.sendExplicitAudit(EventTypes.Succeeded, Map(retrieveEmailTxnName, "email" -> emailAddress.value))
 
+  def auditRetrieveEmailFailure(taxId: String, error: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Unit =
+    auditConnector.sendExplicitAudit(EventTypes.Failed, Map(retrieveEmailTxnName, "taxId" -> taxId, "error" -> error))
+
   def sendAuditEvent(auditType: String, details: Map[String, String])(implicit
     hc: HeaderCarrier,
     ec: ExecutionContext

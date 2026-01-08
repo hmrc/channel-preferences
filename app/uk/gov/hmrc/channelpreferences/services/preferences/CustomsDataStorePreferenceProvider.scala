@@ -17,7 +17,7 @@
 package uk.gov.hmrc.channelpreferences.services.preferences
 
 import cats.data.EitherT
-import cats.syntax.either._
+import cats.syntax.either.*
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
 import uk.gov.hmrc.channelpreferences.audit.Auditing
@@ -27,7 +27,6 @@ import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.Unsuppor
 import uk.gov.hmrc.channelpreferences.model.preferences.{ CustomsServiceEnrolment, PreferenceError }
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -46,6 +45,9 @@ class CustomsDataStorePreferenceProvider @Inject() (
     enrolment.channel match {
       case Email =>
         EitherT(cdsEmailConnector.verifiedEmail(enrolment.identifierValue.value))
+          .leftSemiflatTap { error =>
+            Future.successful(auditError(error, enrolment.identifierValue.value))
+          }
           .map(audit)
           .map(Json.toJson(_))
           .value
@@ -59,4 +61,7 @@ class CustomsDataStorePreferenceProvider @Inject() (
     auditRetrieveEmail(emailVerification.address)
     emailVerification
   }
+
+  private def auditError(error: PreferenceError, taxId: String)(implicit headerCarrier: HeaderCarrier): Unit =
+    auditRetrieveEmailFailure(taxId, error.message)
 }
