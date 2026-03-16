@@ -23,7 +23,3 @@ POST       /channel-preferences/preference/:key/status      uk.gov.hmrc.channelp
 
 POST       /channel-preferences/confirm                     uk.gov.hmrc.channelpreferences.controllers.PreferenceController.confirm()
 GET        /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-POST       /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-PUT        /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-PATCH      /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
-DELETE     /*path                                           uk.gov.hmrc.channelpreferences.controllers.ProxyController.proxy(path: String)
