@@ -20,35 +20,36 @@ import cats.syntax.either.*
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
-import org.mockito.ArgumentMatchers.{ any, anyString }
-import org.mockito.Mockito.{ reset, when }
+import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.Mockito.{reset, verifyNoInteractions, when}
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.*
-import play.api.http.{ HeaderNames, Status }
-import play.api.libs.json.{ JsObject, JsTrue, JsValue, Json }
-import play.api.mvc.Headers
-import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
-import play.api.test.{ FakeRequest, Helpers }
+import play.api.http.{HeaderNames, Status}
+import play.api.libs.json.{JsObject, JsTrue, JsValue, Json}
+import play.api.mvc.{Headers, Result}
+import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status}
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
-import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, EmailVerification }
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
+import uk.gov.hmrc.channelpreferences.model.cds.{Channel, EmailVerification}
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ParseError, UpstreamError}
 import uk.gov.hmrc.channelpreferences.model.preferences.*
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
-import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
+import uk.gov.hmrc.channelpreferences.services.preferences.{PreferenceService, ProcessEmail}
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks with ScalaFutures with MockitoSugar {
 
@@ -181,7 +182,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
     "Calling itsa activation stub endpoint " should {
 
-      "Forward the result form the entity-resolver" in new TestSetup with ConfirmGenerator {
+      "Forward the result fromm the entity-resolver" in new TestSetup with ConfirmGenerator {
         forAll(entityIgGen, itsaIdGen, httpResponseGen) { (entityId, itsaId, httpResponse) =>
           when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(httpResponse))
@@ -199,8 +200,44 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           val response = controller.confirm().apply(fakePostRequest)
           status(response) mustBe httpResponse.status
           contentAsJson(response) mustBe Json.parse(httpResponse.body)
+          verifyNoInteractions(mockEISContactPreference)
         }
+      }
 
+      "update ETMP when the entity resolver returns a successful itsaId update" in new TestSetup {
+        val nino = "nino"
+        val sautr = "sautr"
+        val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+        val entityId = "entityId"
+
+        when(
+          mockAuthConnector.authorise[~[Option[String], Option[String]]](
+            any[Predicate],
+            any[Retrieval[~[Option[String], Option[String]]]]
+          )(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(Future.successful(new ~(Some("somesautr"), Some("somenino"))))
+
+        val httpResponse =
+          HttpResponse(
+            OK,
+            Json.obj("reason" -> "itsaId successfully linked to entityId"),
+            Map.empty[String, Seq[String]]
+          )
+        when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(httpResponse))
+
+        val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
+        when(
+          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
+        )
+          .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+        val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response: Future[Result] = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe httpResponse.status
+        contentAsJson(response) mustBe Json.parse("""{"response":"MTD ITSA ID value updated successfully"}""")
       }
     }
 
@@ -897,7 +934,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       val randomWordGen: Gen[String] = Gen.oneOf("foo", "bar", "baz", "fizz", "buzz", "toto", "tata")
       val httpResponseGen: Gen[HttpResponse] =
         for {
-          status <- Gen.oneOf(BAD_GATEWAY, BAD_REQUEST, CREATED, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED)
+          status <- Gen.oneOf(BAD_GATEWAY, BAD_REQUEST, CREATED, SERVICE_UNAVAILABLE, UNAUTHORIZED)
           key    <- randomWordGen
           value  <- randomWordGen
           body = Json.obj(key -> value)
