@@ -20,36 +20,36 @@ import cats.syntax.either.*
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
-import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.Mockito.{reset, verifyNoInteractions, when}
+import org.mockito.ArgumentMatchers.{ any, anyString }
+import org.mockito.Mockito.{ reset, verifyNoInteractions, when }
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.*
-import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.{JsObject, JsTrue, JsValue, Json}
-import play.api.mvc.{Headers, Result}
-import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status}
-import play.api.test.{FakeRequest, Helpers}
+import play.api.http.{ HeaderNames, Status }
+import play.api.libs.json.{ JsObject, JsTrue, JsValue, Json }
+import play.api.mvc.{ Headers, Result }
+import play.api.test.Helpers.{ contentAsJson, contentAsString, defaultAwaitTimeout, status }
+import play.api.test.{ FakeRequest, Helpers }
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.channelpreferences.model.cds.{Channel, EmailVerification}
+import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
+import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, EmailVerification }
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ParseError, UpstreamError}
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 import uk.gov.hmrc.channelpreferences.model.preferences.*
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
-import uk.gov.hmrc.channelpreferences.services.preferences.{PreferenceService, ProcessEmail}
+import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
 import uk.gov.hmrc.channelpreferences.utils.emailaddress.EmailAddress
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks with ScalaFutures with MockitoSugar {
 
@@ -180,29 +180,29 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       }
     }
 
-    "Calling itsa activation stub endpoint " should {
+    "Calling itsa activation confirm endpoint" should {
+      "not update ETMP and forward the result from the entity-resolver enrolment endpoint when the status" +
+        "is not ok" in new TestSetup with ConfirmGenerator {
+          forAll(entityIgGen, itsaIdGen, httpResponseGen) { (entityId, itsaId, httpResponse) =>
+            when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
+              .thenReturn(Future.successful(httpResponse))
+            val retrievals = new ~(Some("somesautr"), Some("somenino"))
+            when(
+              mockAuthConnector.authorise[~[Option[String], Option[String]]](
+                any[Predicate],
+                any[Retrieval[~[Option[String], Option[String]]]]
+              )(any[HeaderCarrier], any[ExecutionContext])
+            )
+              .thenReturn(Future.successful(retrievals))
 
-      "Forward the result fromm the entity-resolver" in new TestSetup with ConfirmGenerator {
-        forAll(entityIgGen, itsaIdGen, httpResponseGen) { (entityId, itsaId, httpResponse) =>
-          when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(Future.successful(httpResponse))
-          val retrievals = new ~(Some("somesautr"), Some("somenino"))
-          when(
-            mockAuthConnector.authorise[~[Option[String], Option[String]]](
-              any[Predicate],
-              any[Retrieval[~[Option[String], Option[String]]]]
-            )(any[HeaderCarrier], any[ExecutionContext])
-          )
-            .thenReturn(Future.successful(retrievals))
-
-          val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
-          val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-          val response = controller.confirm().apply(fakePostRequest)
-          status(response) mustBe httpResponse.status
-          contentAsJson(response) mustBe Json.parse(httpResponse.body)
-          verifyNoInteractions(mockEISContactPreference)
+            val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
+            val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+            val response = controller.confirm().apply(fakePostRequest)
+            status(response) mustBe httpResponse.status
+            contentAsJson(response) mustBe Json.parse(httpResponse.body)
+            verifyNoInteractions(mockEISContactPreference)
+          }
         }
-      }
 
       "update ETMP when the entity resolver returns a successful itsaId update" in new TestSetup {
         val nino = "nino"
@@ -239,11 +239,47 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         status(response) mustBe httpResponse.status
         contentAsJson(response) mustBe Json.parse("""{"response":"MTD ITSA ID value updated successfully"}""")
       }
+
+      "forward ETMP failure when the call fails" in new TestSetup {
+        val nino = "nino"
+        val sautr = "sautr"
+        val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+        val entityId = "entityId"
+
+        when(
+          mockAuthConnector.authorise[~[Option[String], Option[String]]](
+            any[Predicate],
+            any[Retrieval[~[Option[String], Option[String]]]]
+          )(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(Future.successful(new ~(Some("somesautr"), Some("somenino"))))
+
+        val httpResponse =
+          HttpResponse(
+            OK,
+            Json.obj("reason" -> "itsaId successfully linked to entityId"),
+            Map.empty[String, Seq[String]]
+          )
+        when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(httpResponse))
+
+        private val failureBody: JsObject = Json.obj("failure" -> "some error")
+        private val etmpHttpResponse: HttpResponse = HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())
+        when(
+          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
+        )
+          .thenReturn(Future.successful(etmpHttpResponse))
+
+        val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response: Future[Result] = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe etmpHttpResponse.status
+        contentAsJson(response) mustBe failureBody
+      }
     }
 
     "Calling process endpoint to link the itsa id to the given identifiers" should {
-
-      "Not update ETMP and forward the result form the entity-resolver processItsa endpoint when the status" +
+      "not update ETMP and forward the result from the entity-resolver processItsa endpoint when the status" +
         "is not ok" in new TestSetup with EnrolmentGenerator {
           forAll(ninoGen, sautrGen, itsaIdGen, httpResponseGen) { (nino, sautr, itsaId, httpResponse) =>
             when(mockEntityResolver.processItsa(any[JsValue]())(any[HeaderCarrier], any[ExecutionContext]))
@@ -336,8 +372,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
     }
 
     "Calling Agent Enrolment" should {
-
-      "Not update ETMP and forward the result form the entity-resolver enrolment endpoint when the status" +
+      "not update ETMP and forward the result from the entity-resolver enrolment endpoint when the status" +
         "is not ok" in new TestSetup with EnrolmentGenerator {
           forAll(agentArnGen, ninoGen, sautrGen, itsaIdGen, httpResponseGen) {
             (agentArn, nino, sautr, itsaId, httpResponse) =>
