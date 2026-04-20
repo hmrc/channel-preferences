@@ -85,16 +85,23 @@ class PreferenceController @Inject() (
           logger warn s"Unable to decrypt ${enrolment.entityId}, reason: ${e.message}"
           enrolment.entityId
       }
-      for {
-        resp <- entityResolver.confirm(entityId, enrolment.itsaId)
-        _ <- auditConfirm(
-               resp.status,
-               resp.body,
-               enrolment,
-               authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
-                 .retrieve(Retrievals.saUtr and Retrievals.nino)
-             )
-      } yield Status(resp.status)(resp.json)
+      entityResolver.confirm(entityId, enrolment.itsaId).flatMap { resp =>
+        val resultF =
+          resp.status match {
+            case OK => updateEtmpWithContactPreference(true, enrolment.itsaId)
+            case s  => Future.successful(Status(s)(resp.json))
+          }
+
+        resultF.andThen { case _ =>
+          auditConfirm(
+            resp.status,
+            resp.body,
+            enrolment,
+            authorised((AffinityGroup.Organisation or AffinityGroup.Individual) and ConfidenceLevel.L200)
+              .retrieve(Retrievals.saUtr and Retrievals.nino)
+          )
+        }
+      }
     }
   }
 
@@ -104,9 +111,10 @@ class PreferenceController @Inject() (
       .processItsa(request.body)
       .flatMap { resp =>
         val resultBody = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[ItsaIdUpdateResponse])
+        val mtdItsaId = (request.body \ "mtditsaid").as[String]
         (resp.status, resultBody) match {
           case (OK, Some(result)) if result.preference.isDefined =>
-            updateEtmpWithContactPreference(result)
+            updateEtmpWithContactPreference(result.isDigitalStatus, mtdItsaId)
           case _ =>
             logger.warn(s"ItsaId update is failed with status ${resp.status} $resultBody")
             Future.successful(Status(resp.status)(resp.body))
@@ -122,15 +130,13 @@ class PreferenceController @Inject() (
   }
 
   private def updateEtmpWithContactPreference(
-    result: ItsaIdUpdateResponse
+    isDigitalStatus: Boolean,
+    mtdItsaId: String
   )(implicit request: Request[JsValue]): Future[Result] = {
-    val itsaId = (request.body \ "mtditsaid").as[String]
     val correlationId = request.headers.get(CustomHeaders.RequestId)
-
-    logger.warn(s"Update ETMP after successful update of itsaId($itsaId)")
-
+    logger.warn(s"Update ETMP after successful update of itsaId($mtdItsaId)")
     eisContactPreference
-      .updateContactPreference(ITSA_REGIME, ItsaETMPUpdate("MTDBSA", itsaId, result.isDigitalStatus), correlationId)
+      .updateContactPreference(ITSA_REGIME, ItsaETMPUpdate("MTDBSA", mtdItsaId, isDigitalStatus), correlationId)
       .map { response =>
         if (response.status == OK)
           Ok(Json.obj("response" -> "MTD ITSA ID value updated successfully"))
@@ -212,7 +218,7 @@ class PreferenceController @Inject() (
       }
     }
 
-  def auditConfirm(
+  private def auditConfirm(
     responseStatus: Int,
     responseBody: String,
     e: Enrolment,
@@ -239,5 +245,4 @@ class PreferenceController @Inject() (
       sendAuditEvent(auditType, auditDetails ++ ids)
     }
   }
-
 }
