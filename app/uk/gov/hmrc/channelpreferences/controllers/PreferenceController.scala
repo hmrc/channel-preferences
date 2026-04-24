@@ -85,10 +85,13 @@ class PreferenceController @Inject() (
           logger warn s"Unable to decrypt ${enrolment.entityId}, reason: ${e.message}"
           enrolment.entityId
       }
+
       entityResolver.confirm(entityId, enrolment.itsaId).flatMap { resp =>
+        val resultB = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
+        val isDigital = resultB.exists(_.isDigitalStatus)
         val resultF =
           resp.status match {
-            case OK => updateEtmpWithContactPreference(true, enrolment.itsaId)
+            case OK => updateEtmpWithContactPreference(isDigital, enrolment.itsaId)
             case s  => Future.successful(Status(s)(resp.json))
           }
 
@@ -134,7 +137,7 @@ class PreferenceController @Inject() (
     mtdItsaId: String
   )(implicit request: Request[JsValue]): Future[Result] = {
     val correlationId = request.headers.get(CustomHeaders.RequestId)
-    logger.warn(s"Update ETMP after successful update of itsaId($mtdItsaId)")
+    logger.warn(s"Send updates to ETMP after successful update of itsaId - $mtdItsaId")
     eisContactPreference
       .updateContactPreference(ITSA_REGIME, ItsaETMPUpdate("MTDBSA", mtdItsaId, isDigitalStatus), correlationId)
       .map { response =>

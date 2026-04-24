@@ -21,6 +21,7 @@ import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
 import org.mockito.ArgumentMatchers.{ any, anyString }
+import org.mockito.ArgumentMatchers.{ eq => meq }
 import org.mockito.Mockito.{ reset, verifyNoInteractions, when }
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
@@ -204,7 +205,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           }
         }
 
-      "update ETMP when the entity resolver returns a successful itsaId update" in new TestSetup {
+      "update ETMP with preference status when the entity resolver returns a successful itsaId update & digital status" in new TestSetup {
         val nino = "nino"
         val sautr = "sautr"
         val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
@@ -221,15 +222,68 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         val httpResponse =
           HttpResponse(
             OK,
-            Json.obj("reason" -> "itsaId successfully linked to entityId"),
+            Json.obj(
+              "reason" -> "itsaId successfully linked to entityId",
+              "preference" -> Json.parse("""{
+                                           |    "digital": true,
+                                           |    "email": {
+                                           |        "hasBounces": false,
+                                           |        "isVerified": true,
+                                           |        "email": "test@mail.com"
+                                           |    }
+                                           |}""".stripMargin)
+            ),
             Map.empty[String, Seq[String]]
           )
         when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(httpResponse))
 
+        val etmpUpdate = ItsaETMPUpdate("MTDBSA", itsaId, true)
         val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
         when(
-          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
+          mockEISContactPreference.updateContactPreference(anyString(), meq(etmpUpdate), any[Option[String]])(any)
+        )
+          .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+        val postData: JsValue = Json.obj("entityId" -> entityId, "itsaId" -> itsaId)
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response: Future[Result] = controller.confirm().apply(fakePostRequest)
+        status(response) mustBe httpResponse.status
+        contentAsJson(response) mustBe Json.parse("""{"response":"MTD ITSA ID value updated successfully"}""")
+      }
+
+      "update ETMP with preference status when the entity resolver returns a successful itsaId update & non-digital status" in new TestSetup {
+        val nino = "nino"
+        val sautr = "sautr"
+        val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+        val entityId = "entityId"
+
+        when(
+          mockAuthConnector.authorise[~[Option[String], Option[String]]](
+            any[Predicate],
+            any[Retrieval[~[Option[String], Option[String]]]]
+          )(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(Future.successful(new ~(Some("somesautr"), Some("somenino"))))
+
+        val httpResponse =
+          HttpResponse(
+            OK,
+            Json.obj(
+              "reason" -> "itsaId successfully linked to entityId",
+              "preference" -> Json.parse("""{
+                                           |    "digital": false
+                                           |}""".stripMargin)
+            ),
+            Map.empty[String, Seq[String]]
+          )
+        when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(httpResponse))
+
+        val etmpUpdate = ItsaETMPUpdate("MTDBSA", itsaId, false)
+        val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
+        when(
+          mockEISContactPreference.updateContactPreference(anyString(), meq(etmpUpdate), any[Option[String]])(any)
         )
           .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
