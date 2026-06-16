@@ -16,6 +16,7 @@
 POST       /channel-preferences/get-verified-email             uk.gov.hmrc.channelpreferences.controllers.PreferenceController.getVerifiedEmail()
 
 POST       /channel-preferences/process                uk.gov.hmrc.channelpreferences.controllers.PreferenceController.process()
+POST       /channel-preferences/process-itsa-status    uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processItsaStatus()
 
 POST       /channel-preferences/enrolment                   uk.gov.hmrc.channelpreferences.controllers.PreferenceController.enrolment()
 POST       /channel-preferences/process/bounce              @uk.gov.hmrc.channelpreferences.controllers.PreferenceController.processBounce()
