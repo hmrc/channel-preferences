@@ -453,7 +453,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
 
         val postData: JsValue = Json.obj("mtditsaid" -> itsaId, "isDigital" -> "true")
         val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-        val response = controller.process().apply(fakePostRequest)
+        val response = controller.processItsaStatus().apply(fakePostRequest)
         status(response) mustBe etmpHttpResponse.status
         contentAsJson(response) mustBe failureBody
       }
