@@ -136,7 +136,7 @@ class PreferenceController @Inject() (
   def processItsaStatus(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     val mtdItsaId = (request.body \ "mtditsaid").as[String]
     val isDigital = (request.body \ "isDigital").as[String].toBoolean
-    updateITSAStatus(StatusUpdate(mtdItsaId, isDigital))
+    updateEtmpWithContactPreference(isDigital, mtdItsaId)
   }
 
   private def updateEtmpWithContactPreference(
@@ -210,21 +210,22 @@ class PreferenceController @Inject() (
     Action.async(parse.json) { implicit request =>
       key.toUpperCase() match {
         case ITSA_REGIME =>
-          withJsonBody[StatusUpdate](update => updateITSAStatus(update))
+          withJsonBody[StatusUpdate] { statusUpdate =>
+            statusUpdate.getItsaETMPUpdate match {
+              case Right(itsaETMPUpdate) =>
+                val correlationId = request.headers
+                  .get(CustomHeaders.RequestId)
+                eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map {
+                  response =>
+                    Status(response.status)(response.json)
+                }
+              case Left(err) =>
+                Future.successful(BadRequest(err))
+            }
+
+          }
         case _ => Future.successful(BadRequest(s"The key $key is not supported"))
       }
-    }
-
-  private def updateITSAStatus(statusUpdate: StatusUpdate)(implicit request: Request[JsValue]): Future[Result] =
-    statusUpdate.getItsaETMPUpdate match {
-      case Right(itsaETMPUpdate) =>
-        val correlationId = request.headers
-          .get(CustomHeaders.RequestId)
-        eisContactPreference.updateContactPreference(ITSA_REGIME, itsaETMPUpdate, correlationId).map { response =>
-          Status(response.status)(response.json)
-        }
-      case Left(err) =>
-        Future.successful(BadRequest(err))
     }
 
   private def auditConfirm(
