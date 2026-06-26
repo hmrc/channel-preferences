@@ -425,6 +425,40 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
       }
     }
 
+    "Calling process itsa status endpoint" should {
+      "update ETMP when the entity resolver sends a request" in new TestSetup {
+        val itsaId = "XMIT983509385093485"
+        private val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
+        when(
+          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
+        )
+          .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
+
+        val expectedResponseBody = Json.obj("response" -> "MTD ITSA ID value updated successfully")
+        val postData: JsValue = Json.obj("mtditsaid" -> itsaId, "isDigital" -> "true")
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.processItsaStatus().apply(fakePostRequest)
+        status(response) mustBe OK
+        contentAsJson(response) mustBe expectedResponseBody
+      }
+
+      "forward ETMP failure when the call fails" in new TestSetup {
+        val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
+        private val failureBody: JsObject = Json.obj("failure" -> "some error")
+        private val etmpHttpResponse: HttpResponse = HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())
+        when(
+          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
+        )
+          .thenReturn(Future.successful(etmpHttpResponse))
+
+        val postData: JsValue = Json.obj("mtditsaid" -> itsaId, "isDigital" -> "true")
+        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
+        val response = controller.processItsaStatus().apply(fakePostRequest)
+        status(response) mustBe etmpHttpResponse.status
+        contentAsJson(response) mustBe failureBody
+      }
+    }
+
     "Calling Agent Enrolment" should {
       "not update ETMP and forward the result from the entity-resolver enrolment endpoint when the status" +
         "is not ok" in new TestSetup with EnrolmentGenerator {
