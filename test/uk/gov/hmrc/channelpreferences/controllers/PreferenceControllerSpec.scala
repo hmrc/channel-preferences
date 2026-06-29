@@ -435,7 +435,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
           .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
 
         val expectedResponseBody = Json.obj("response" -> "MTD ITSA ID value updated successfully")
-        val postData: JsValue = Json.obj("mtditsaid" -> itsaId, "isDigital" -> "true")
+        val postData: JsValue = Json.obj("mtdItsaId" -> itsaId, "isDigital" -> "true")
         val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
         val response = controller.processItsaStatus().apply(fakePostRequest)
         status(response) mustBe OK
@@ -451,7 +451,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         )
           .thenReturn(Future.successful(etmpHttpResponse))
 
-        val postData: JsValue = Json.obj("mtditsaid" -> itsaId, "isDigital" -> "true")
+        val postData: JsValue = Json.obj("mtdItsaId" -> itsaId, "isDigital" -> "true")
         val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
         val response = controller.processItsaStatus().apply(fakePostRequest)
         status(response) mustBe etmpHttpResponse.status
