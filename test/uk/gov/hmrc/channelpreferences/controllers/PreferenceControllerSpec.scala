@@ -235,10 +235,12 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
             ),
             Map.empty[String, Seq[String]]
           )
-        when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
+        when(
+          mockEntityResolver.confirm(anyString(), meq("XMIT983509385093485"))(any[HeaderCarrier], any[ExecutionContext])
+        )
           .thenReturn(Future.successful(httpResponse))
 
-        val etmpUpdate = ItsaETMPUpdate("MTDBSA", itsaId, true)
+        val etmpUpdate = ItsaETMPUpdate("MTDBSA", "XMIT983509385093485", true)
         val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
         when(
           mockEISContactPreference.updateContactPreference(anyString(), meq(etmpUpdate), any[Option[String]])(any)
@@ -280,7 +282,7 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         when(mockEntityResolver.confirm(anyString(), anyString())(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(httpResponse))
 
-        val etmpUpdate = ItsaETMPUpdate("MTDBSA", itsaId, false)
+        val etmpUpdate = ItsaETMPUpdate("MTDBSA", "XMIT983509385093485", false)
         val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
         when(
           mockEISContactPreference.updateContactPreference(anyString(), meq(etmpUpdate), any[Option[String]])(any)

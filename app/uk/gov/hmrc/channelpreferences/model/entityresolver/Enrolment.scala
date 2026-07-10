@@ -18,7 +18,13 @@ package uk.gov.hmrc.channelpreferences.model.entityresolver
 
 import play.api.libs.json.{ Json, OFormat }
 
-final case class Enrolment(entityId: String, itsaId: String)
+final case class Enrolment(entityId: String, itsaId: String) {
+  val itsaIdWithoutPrefix: String =
+    itsaId.split("~") match {
+      case Array(_, identifierType, identifier) => identifier
+      case _                                    => itsaId
+    }
+}
 
 object Enrolment {
   implicit val format: OFormat[Enrolment] = Json.format[Enrolment]
