@@ -86,12 +86,15 @@ class PreferenceController @Inject() (
           enrolment.entityId
       }
 
-      entityResolver.confirm(entityId, enrolment.itsaId).flatMap { resp =>
+      // DC-9128 MTD signup service sends itsaId values with prefixed enrolment key,
+      // until they have updated to send unprefixed values, we need to remove prefix if exists
+      val itsaIdWithoutPrefix = enrolment.itsaIdWithoutPrefix
+      entityResolver.confirm(entityId, itsaIdWithoutPrefix).flatMap { resp =>
         val resultB = Try(Json.parse(resp.body)).toOption.flatMap(_.asOpt[EnrolmentResponseBody])
         val isDigital = resultB.exists(_.isDigitalStatus)
         val resultF =
           resp.status match {
-            case OK => updateEtmpWithContactPreference(isDigital, enrolment.itsaId)
+            case OK => updateEtmpWithContactPreference(isDigital, itsaIdWithoutPrefix)
             case s  => Future.successful(Status(s)(resp.json))
           }
 
