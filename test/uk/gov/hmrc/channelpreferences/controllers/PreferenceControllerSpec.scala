@@ -20,8 +20,7 @@ import cats.syntax.either.*
 import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
-import org.mockito.ArgumentMatchers.{ any, anyString }
-import org.mockito.ArgumentMatchers.{ eq => meq }
+import org.mockito.ArgumentMatchers.{ any, anyString, eq as meq }
 import org.mockito.Mockito.{ reset, verifyNoInteractions, when }
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
@@ -39,8 +38,8 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{ Retrieval, ~ }
 import uk.gov.hmrc.channelpreferences.model.cds.{ Channel, EmailVerification }
 import uk.gov.hmrc.channelpreferences.model.eis.ItsaETMPUpdate
-import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 import uk.gov.hmrc.channelpreferences.model.preferences.*
+import uk.gov.hmrc.channelpreferences.model.preferences.PreferenceError.{ ParseError, UpstreamError }
 import uk.gov.hmrc.channelpreferences.services.eis.EISContactPreference
 import uk.gov.hmrc.channelpreferences.services.entityresolver.EntityResolver
 import uk.gov.hmrc.channelpreferences.services.preferences.{ PreferenceService, ProcessEmail }
@@ -424,40 +423,6 @@ class PreferenceControllerSpec extends PlaySpec with ScalaCheckPropertyChecks wi
         status(response) mustBe etmpHttpResponse.status
         contentAsJson(response) mustBe failureBody
 
-      }
-    }
-
-    "Calling process itsa status endpoint" should {
-      "update ETMP when the entity resolver sends a request" in new TestSetup {
-        val itsaId = "XMIT983509385093485"
-        private val successBody: JsObject = Json.obj("processingDate" -> "2025-06-11T14:39:51.507Z", "status" -> "OK")
-        when(
-          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
-        )
-          .thenReturn(Future.successful(HttpResponse(OK, successBody, Map[String, Seq[String]]())))
-
-        val expectedResponseBody = Json.obj("response" -> "MTD ITSA ID value updated successfully")
-        val postData: JsValue = Json.obj("mtdItsaId" -> itsaId, "isDigital" -> true)
-        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-        val response = controller.processItsaStatus().apply(fakePostRequest)
-        status(response) mustBe OK
-        contentAsJson(response) mustBe expectedResponseBody
-      }
-
-      "forward ETMP failure when the call fails" in new TestSetup {
-        val itsaId = "MTD-IT~MTDITID~XMIT983509385093485"
-        private val failureBody: JsObject = Json.obj("failure" -> "some error")
-        private val etmpHttpResponse: HttpResponse = HttpResponse(BAD_REQUEST, failureBody, Map[String, Seq[String]]())
-        when(
-          mockEISContactPreference.updateContactPreference(anyString(), any[ItsaETMPUpdate], any[Option[String]])(any)
-        )
-          .thenReturn(Future.successful(etmpHttpResponse))
-
-        val postData: JsValue = Json.obj("mtdItsaId" -> itsaId, "isDigital" -> true)
-        val fakePostRequest = FakeRequest("POST", "", Headers("Content-Type" -> "application/json"), postData)
-        val response = controller.processItsaStatus().apply(fakePostRequest)
-        status(response) mustBe etmpHttpResponse.status
-        contentAsJson(response) mustBe failureBody
       }
     }
 

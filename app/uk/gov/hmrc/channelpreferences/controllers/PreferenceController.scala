@@ -135,13 +135,6 @@ class PreferenceController @Inject() (
       }
   }
 
-  // solution 2
-  def processItsaStatus(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    val mtdItsaId = (request.body \ "mtdItsaId").as[String]
-    val isDigital = (request.body \ "isDigital").as[Boolean]
-    updateEtmpWithContactPreference(isDigital, mtdItsaId)
-  }
-
   private def updateEtmpWithContactPreference(
     isDigitalStatus: Boolean,
     mtdItsaId: String
